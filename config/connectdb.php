@@ -1,9 +1,9 @@
 <meta charset="UTF-8">
 
 <?php
-$host = "103.99.11.63";
+$host = "localhost";
 $user = "root";
-$pwd = "";
+$pwd = "Msu123mbs";
 $dbname = "myproject";
 $conn = mysqli_connect($host, $user, $pwd, $dbname);
 mysqli_query($conn,"SET NAMES utf8");
