@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Oct 01, 2025 at 11:45 AM
+-- Host: 127.0.0.1
+-- Generation Time: Oct 01, 2025 at 02:15 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -170,15 +170,10 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`user_id`, `firstname`, `lastname`, `email`, `password`, `address`, `phone`, `role`) VALUES
-(1, 'Admin', 'One', 'admin@test.com', '$2y$10$k3uU0I0oB0LwQyP5x9nP5u2m6/6yAqP1x9nP5u2m6/6yAqP1x9nP5', NULL, NULL, 'admin'),
-(2, 'aa', 'dsa', 'bb@gmail.com', '$2y$10$an/oxYebUueEWTb9jmtxiurGeXwQeoXyiTeEQ2Gcq2tF.YhRPtCdm', 'la', '0946782293', 'user'),
-(3, 'asd', 'aa', 'asd@gmail.com', '$2y$10$xISx.1FGpNEGP3xM96r5Le7V/VXZjGVid3dO/ESSSzJrEn.DIWtke', 'll', '0946782293', 'admin'),
-(4, 'sss', 'ssa', 'ss@gmail.com', '$2y$10$M9qls0l/wORD/ufLtEuxd.aErsSbSfxE1wWcA28EXkWIXDPcozyim', 'lalla', '0946782293', 'user'),
+(1, 'Admin', 'One', 'admin@admin.gmail.com', '$2y$10$k3uU0I0oB0LwQyP5x9nP5u2m6/6yAqP1x9nP5u2m6/6yAqP1x9nP5', NULL, NULL, 'admin'),
 (5, 'ขจรศักดิ์', 'จันทรเสนา', 'kha@gmail.com', '$2y$10$XdapPIBVKd2Cl1wwpcvmXejVLP4s8Z/Hk53dtilZ/kfBKAhuraEiG', 'kk', '0946782293', 'user'),
-(7, 'rr', 'rr', 'rr@gmail.com', '$2y$10$QfHZ.QiHpiB9s.NPIc5fw.IIZj3vsF7Isx2vBopfMr2112tskcW0.', '', '0946782293', 'admin'),
-(9, 'abc', 'cba', 'ab@gmail.com', '$2y$10$47UcLujRG3MnCGIo517jJeo1oTekx/WIbqo1/VOa9QFAmOx1DHJs6', '', '0946782293', 'user'),
-(10, 'pb', 'bp', 'pb@gmail.com', '$2y$10$U7mlYdLFphHcgZGdBLsVsuGjXVcPbmeiltmBSO9kryHGsn.b7Zqp.', '', '0946782293', 'user'),
-(12, 'ขจรศักดิ์', 'จันทรเสนา', 'kc@gmail.com', '$2y$10$hsIe9bR.Ng.r9UKGHeRXGeXBx4zxZ.wpJiCiejF.PcQ4Jpp2tbDtq', 'la', '0946782293', 'admin');
+(12, 'ขจรศักดิ์', 'จันทรเสนา', 'kc@gmail.com', '$2y$10$hsIe9bR.Ng.r9UKGHeRXGeXBx4zxZ.wpJiCiejF.PcQ4Jpp2tbDtq', 'la', '0946782293', 'admin'),
+(13, '77', '88', '789@admin.gmail.com', '$2y$10$1Ao.5Yb9/8Hova32QFB1hOBeFbTZipqD//ZZm8X0qbFKbodlcAJE.', '55', '0123456799', 'admin');
 
 -- --------------------------------------------------------
 
@@ -291,7 +286,7 @@ ALTER TABLE `promotions`
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `users`
