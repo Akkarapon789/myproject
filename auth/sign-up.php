@@ -1,4 +1,15 @@
-<?php include("../config/connectdb.php"); ?>
+<?php 
+include("../config/connectdb.php"); 
+
+// เปิด error_reporting ไว้ช่วย debug
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// เช็กการเชื่อมต่อ DB
+if (!$conn) {
+    die("❌ Database connection failed: " . mysqli_connect_error());
+}
+?>
 <!doctype html>
 <html lang="th">
 <head>
@@ -6,7 +17,7 @@
   <title>สมัครสมาชิก</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- ✅ SweetAlert2 -->
+  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-light">
@@ -76,7 +87,7 @@ if (isset($_POST['submit'])) {
     $address   = $_POST['address'];
     $phone     = $_POST['phone'];
     
-    // ✅ ตรวจสอบอีเมลเพื่อกำหนด role อัตโนมัติ
+    // ตรวจสอบอีเมลเพื่อกำหนด role อัตโนมัติ
     if (str_ends_with($email, "@admin.gmail.com")) {
         $role = "admin";
     } elseif (str_ends_with($email, "@gmail.com")) {
@@ -95,8 +106,12 @@ if (isset($_POST['submit'])) {
         exit;
     }
 
-    // ✅ กันซ้ำอีเมล
+    // กันซ้ำอีเมล
     $check = mysqli_query($conn, "SELECT * FROM user WHERE email='$email'");
+    if (!$check) {
+        die("❌ SQL Error (check email): " . mysqli_error($conn));
+    }
+
     if (mysqli_num_rows($check) > 0) {
         echo "<script>
                 Swal.fire({
@@ -112,7 +127,7 @@ if (isset($_POST['submit'])) {
         exit;
     }
 
-    // ✅ ถ้าไม่ซ้ำ จึงบันทึกข้อมูล
+    // ถ้าไม่ซ้ำ → บันทึกข้อมูล
     $sql = "INSERT INTO user (firstname, lastname, email, password, address, phone, role)
             VALUES ('$firstname','$lastname','$email','$password','$address','$phone','$role')";
 

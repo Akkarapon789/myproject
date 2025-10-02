@@ -3,7 +3,7 @@
 <?php
 $host = "localhost";
 $user = "root";
-$pwd = "";
+$pwd = "Msu123mbs";
 $dbname = "myproject";
 $conn = mysqli_connect($host, $user, $pwd, $dbname);
 mysqli_query($conn,"SET NAMES utf8");
