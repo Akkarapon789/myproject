@@ -12,7 +12,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
 }
 
 // เชื่อมต่อฐานข้อมูล
-include '../db.php';
+include '../connectdb.php';
 
 // ดึงข้อมูลสรุป
 $users       = $conn->query("SELECT COUNT(*) AS c FROM users")->fetch_assoc()['c'] ?? 0;
