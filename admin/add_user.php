@@ -1,5 +1,5 @@
 <?php
-include '../connectdb.php';
+include '../config/connectdb.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $firstname = $_POST['firstname'];
     $lastname  = $_POST['lastname'];

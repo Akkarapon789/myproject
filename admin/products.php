@@ -4,7 +4,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
     header("Location: ../auth/login.php");
     exit();
 }
-include '../connectdb.php';
+include '../config/connectdb.php';
 ?>
 <!doctype html>
 <html lang="th">

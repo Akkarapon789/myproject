@@ -1,5 +1,5 @@
 <?php
-include '../db.php';
+include '../config/connectdb.php';
 $id = $_GET['id'];
 $order = $conn->query("SELECT * FROM orders WHERE id=$id")->fetch_assoc();
 $details = $conn->query("SELECT od.*, p.title 

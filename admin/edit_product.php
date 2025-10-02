@@ -1,5 +1,5 @@
 <?php
-include '../connectdb.php';
+include '../config/connectdb.php';
 $id = $_GET['id'];
 $product = $conn->query("SELECT * FROM products WHERE id=$id")->fetch_assoc();
 
