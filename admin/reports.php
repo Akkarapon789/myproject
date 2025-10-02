@@ -18,19 +18,19 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
   <div class="row">
     <!-- Sidebar -->
     <div class="col-md-3 col-lg-2 sidebar p-3">
-      <h4>📚 Admin Panel</h4>
-      <a href="index.php">🏠 Dashboard</a>
-      <a href="users.php">👥 จัดการผู้ใช้</a>
-      <a href="products.php">📦 จัดการสินค้า</a>
-      <a href="orders.php">🛒 คำสั่งซื้อ</a>
-      <a href="reports.php" class="active">📊 รายงาน</a>
+      <h4> Admin Panel</h4>
+      <a href="index.php"> Dashboard</a>
+      <a href="users.php"> จัดการผู้ใช้</a>
+      <a href="products.php"> จัดการสินค้า</a>
+      <a href="orders.php"> คำสั่งซื้อ</a>
+      <a href="reports.php" class="active"> รายงาน</a>
       <hr>
-      <a href="adminout.php" class="text-danger">🚪 ออกจากระบบ</a>
+      <a href="adminout.php" class="text-danger"> ออกจากระบบ</a>
     </div>
 
     <!-- Content -->
     <div class="col-md-9 col-lg-10 content">
-      <h1 class="fw-bold mb-4">📊 รายงานสรุป</h1>
+      <h1 class="fw-bold mb-4"> รายงานสรุป</h1>
 
       <div class="row g-4 mb-4">
         <div class="col-md-4">
