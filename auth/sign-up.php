@@ -1,3 +1,4 @@
+
 <?php 
 include("../config/connectdb.php"); 
 
@@ -8,6 +9,15 @@ ini_set('display_errors', 1);
 // เช็กการเชื่อมต่อ DB
 if (!$conn) {
     die("❌ Database connection failed: " . mysqli_connect_error());
+}
+// --- polyfill สำหรับ str_ends_with ถ้าโฮสต์ยังใช้ PHP < 8.0 ---
+if (!function_exists('str_ends_with')) {
+    function str_ends_with($haystack, $needle) {
+        if ($needle === '') return true;
+        // ป้องกันถ้า $needle ยาวกว่า $haystack
+        if (strlen($needle) > strlen($haystack)) return false;
+        return substr($haystack, -strlen($needle)) === $needle;
+    }
 }
 ?>
 <!doctype html>
