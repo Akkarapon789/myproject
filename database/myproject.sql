@@ -21,7 +21,7 @@ SET time_zone = "+00:00";
 -- Database: `myproject`
 --
 
-USE `msu`;
+USE `msu_myproject`;
 
 -- --------------------------------------------------------
 
