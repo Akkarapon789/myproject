@@ -4,70 +4,65 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
     header("Location: ../auth/login.php");
     exit();
 }
+include '../connectdb.php';
 ?>
 <!doctype html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
   <title>จัดการสินค้า</title>
-  <?php include 'style.php'; ?>
+  <?php include 'layout.php'; ?>
 </head>
 <body>
-<div class="container-fluid">
-  <div class="row">
-    <!-- Sidebar -->
-    <div class="col-md-3 col-lg-2 sidebar p-3">
-      <h4> Admin Panel</h4>
-      <a href="index.php"> Dashboard</a>
-      <a href="users.php"> จัดการผู้ใช้</a>
-      <a href="products.php" class="active"> จัดการสินค้า</a>
-      <a href="orders.php"> คำสั่งซื้อ</a>
-      <a href="reports.php"> รายงาน</a>
-      <hr>
-      <a href="adminout.php" class="text-danger"> ออกจากระบบ</a>
-    </div>
+<div class="d-flex">
+  <div class="sidebar p-3">
+    <h4>Admin Panel</h4>
+    <a href="index.php">แดชบอร์ด</a>
+    <a href="users.php">ผู้ใช้</a>
+    <a href="products.php" class="active">สินค้า</a>
+    <a href="orders.php">คำสั่งซื้อ</a>
+    <a href="reports.php">รายงาน</a>
+    <a href="adminout.php" class="text-danger">ออกจากระบบ</a>
+  </div>
 
-    <!-- Content -->
-    <div class="col-md-9 col-lg-10 content">
-      <h1 class="fw-bold mb-4"> จัดการสินค้า</h1>
-      <div class="d-flex justify-content-end mb-3">
-        <button class="btn btn-success">+ เพิ่มสินค้าใหม่</button>
-      </div>
-      <div class="card p-3">
-        <table class="table table-striped table-hover">
-          <thead class="table-light">
-            <tr>
-              <th>#</th>
-              <th>ชื่อสินค้า</th>
-              <th>ราคา</th>
-              <th>สต็อก</th>
-              <th>การจัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>101</td>
-              <td>หนังสือ A</td>
-              <td>350 บาท</td>
-              <td>20</td>
-              <td>
-                <button class="btn btn-sm btn-outline-warning">แก้ไข</button>
-                <button class="btn btn-sm btn-outline-danger">ลบ</button>
-              </td>
-            </tr>
-            <tr>
-              <td>102</td>
-              <td>หนังสือ B</td>
-              <td>220 บาท</td>
-              <td>15</td>
-              <td>
-                <button class="btn btn-sm btn-outline-warning">แก้ไข</button>
-                <button class="btn btn-sm btn-outline-danger">ลบ</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+  <div class="content flex-grow-1">
+    <h2>📦 จัดการสินค้า</h2>
+    <a href="add_product.php" class="btn btn-success mb-3">+ เพิ่มสินค้า</a>
+    <div class="card p-3">
+      <table class="table table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>ชื่อสินค้า</th>
+            <th>ราคา</th>
+            <th>สต็อก</th>
+            <th>หมวดหมู่</th>
+            <th>การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+          $sql = "SELECT p.*, c.title AS category_name FROM products p 
+                  JOIN categories c ON p.category_id = c.id 
+                  ORDER BY p.id DESC";
+          $result = $conn->query($sql);
+          while($row = $result->fetch_assoc()):
+          ?>
+          <tr>
+            <td><?= $row['id']; ?></td>
+            <td><?= htmlspecialchars($row['title']); ?></td>
+            <td><?= number_format($row['price'],2); ?> บาท</td>
+            <td><?= $row['stock']; ?></td>
+            <td><?= htmlspecialchars($row['category_name']); ?></td>
+            <td>
+              <a href="edit_product.php?id=<?= $row['id']; ?>" class="btn btn-sm btn-warning">แก้ไข</a>
+              <a href="delete_product.php?id=<?= $row['id']; ?>" class="btn btn-sm btn-danger" 
+                 onclick="return confirm('ยืนยันการลบสินค้า?');">ลบ</a>
+            </td>
+          </tr>
+          <?php endwhile; ?>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

@@ -4,115 +4,101 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
     header("Location: ../auth/login.php");
     exit();
 }
+include '../connectdb.php';
+
+// ดึงสรุปข้อมูล
+$users = $conn->query("SELECT COUNT(*) as c FROM users")->fetch_assoc()['c'];
+$products = $conn->query("SELECT COUNT(*) as c FROM products")->fetch_assoc()['c'];
+$orders = $conn->query("SELECT COUNT(*) as c FROM orders")->fetch_assoc()['c'];
+$total_sales = $conn->query("SELECT SUM(total) as s FROM orders")->fetch_assoc()['s'] ?? 0;
+
+// ดึงยอดขายรายเดือน
+$sql = "SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total) as sales 
+        FROM orders GROUP BY month ORDER BY month ASC";
+$result = $conn->query($sql);
+$months = [];
+$sales = [];
+while($row = $result->fetch_assoc()) {
+    $months[] = $row['month'];
+    $sales[] = $row['sales'];
+}
+
+// ดึงคำสั่งซื้อล่าสุด 5 รายการ
+$latest = $conn->query("SELECT * FROM orders ORDER BY id DESC LIMIT 5");
 ?>
 <!doctype html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Panel - The Bookmark Society</title>
-  <?php include 'style.php'; ?>
+  <title>Admin Dashboard</title>
+  <?php include 'layout.php'; ?>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+<div class="d-flex">
+  <div class="sidebar p-3">
+    <h4>Admin Panel</h4>
+    <a href="index.php" class="active">แดชบอร์ด</a>
+    <a href="users.php">ผู้ใช้</a>
+    <a href="products.php">สินค้า</a>
+    <a href="orders.php">คำสั่งซื้อ</a>
+    <a href="reports.php">รายงาน</a>
+    <a href="adminout.php" class="text-danger">ออกจากระบบ</a>
+  </div>
 
-<div class="container-fluid">
-  <div class="row">
-    <!-- Sidebar -->
-    <div class="col-md-3 col-lg-2 sidebar p-3">
-      <h4 class="mb-4"> Admin Panel</h4>
-      <a href="index.php"> Dashboard</a>
-      <a href="users.php"> จัดการผู้ใช้</a>
-      <a href="products.php"> จัดการสินค้า</a>
-      <a href="orders.php"> จัดการคำสั่งซื้อ</a>
-      <a href="reports.php"> รายงาน</a>
-      <hr>
-      <a href="../admin/adminout.php" class="text-danger"> ออกจากระบบ</a>
+  <div class="content flex-grow-1">
+    <h2>📊 แดชบอร์ดสรุป</h2>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-3"><div class="card p-3 text-center bg-primary text-white">ผู้ใช้ทั้งหมด <h3><?= $users; ?></h3></div></div>
+      <div class="col-md-3"><div class="card p-3 text-center bg-success text-white">สินค้า <h3><?= $products; ?></h3></div></div>
+      <div class="col-md-3"><div class="card p-3 text-center bg-warning text-dark">คำสั่งซื้อ <h3><?= $orders; ?></h3></div></div>
+      <div class="col-md-3"><div class="card p-3 text-center bg-danger text-white">ยอดขายรวม <h3><?= number_format($total_sales,2); ?>฿</h3></div></div>
     </div>
 
-    <!-- Main Content -->
-    <div class="col-md-9 col-lg-10 content">
-      <h1 class="fw-bold mb-4">ยินดีต้อนรับ Admin: 
-        <span class="text-primary"><?php echo htmlspecialchars($_SESSION['firstname']); ?></span>
-      </h1>
-
-      <!-- Cards Overview -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-3">
-          <div class="card shadow text-center p-3">
-            <h5>ผู้ใช้งาน</h5>
-            <h2 class="text-success">120</h2>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card shadow text-center p-3">
-            <h5>สินค้า</h5>
-            <h2 class="text-info">85</h2>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card shadow text-center p-3">
-            <h5>คำสั่งซื้อ</h5>
-            <h2 class="text-warning">34</h2>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card shadow text-center p-3">
-            <h5>รายได้</h5>
-            <h2 class="text-danger">฿45,000</h2>
-          </div>
+    <div class="row g-4">
+      <div class="col-md-8">
+        <div class="card p-4">
+          <h5>ยอดขายรายเดือน</h5>
+          <canvas id="salesChart"></canvas>
         </div>
       </div>
-
-      <!-- Recent Orders -->
-      <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-          <h5 class="mb-0">📌 คำสั่งซื้อล่าสุด</h5>
-        </div>
-        <div class="card-body">
-          <table class="table table-hover">
-            <thead class="table-light">
+      <div class="col-md-4">
+        <div class="card p-4">
+          <h5>คำสั่งซื้อล่าสุด</h5>
+          <table class="table table-sm">
+            <tr><th>ID</th><th>ลูกค้า</th><th>ยอดรวม</th></tr>
+            <?php while($o=$latest->fetch_assoc()): ?>
               <tr>
-                <th>#</th>
-                <th>ชื่อลูกค้า</th>
-                <th>สินค้า</th>
-                <th>ยอดรวม</th>
-                <th>สถานะ</th>
-                <th>วันที่</th>
+                <td>#<?= $o['id']; ?></td>
+                <td><?= htmlspecialchars($o['fullname']); ?></td>
+                <td><?= number_format($o['total'],2); ?>฿</td>
               </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1001</td>
-                <td>สมชาย ใจดี</td>
-                <td>หนังสือ A</td>
-                <td>฿350</td>
-                <td><span class="badge bg-success">สำเร็จ</span></td>
-                <td>2025-10-01</td>
-              </tr>
-              <tr>
-                <td>1002</td>
-                <td>สมหญิง สายบุญ</td>
-                <td>หนังสือ B</td>
-                <td>฿220</td>
-                <td><span class="badge bg-warning text-dark">รอดำเนินการ</span></td>
-                <td>2025-09-30</td>
-              </tr>
-              <tr>
-                <td>1003</td>
-                <td>อนันต์ คำดี</td>
-                <td>หนังสือ C</td>
-                <td>฿580</td>
-                <td><span class="badge bg-danger">ยกเลิก</span></td>
-                <td>2025-09-29</td>
-              </tr>
-            </tbody>
+            <?php endwhile; ?>
           </table>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const ctx = document.getElementById('salesChart').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: <?= json_encode($months); ?>,
+    datasets: [{
+      label: 'ยอดขาย (บาท)',
+      data: <?= json_encode($sales); ?>,
+      borderColor: 'rgba(75, 192, 192, 1)',
+      backgroundColor: 'rgba(75, 192, 192, 0.3)',
+      fill: true,
+      tension: 0.3
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false } } }
+});
+</script>
 </body>
 </html>
