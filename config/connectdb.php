@@ -1,7 +1,7 @@
 <meta charset="UTF-8">
 
 <?php
-$host = "localhost";
+$host = "103.99.11.63";
 $user = "root";
 $pwd = "";
 $dbname = "myproject";
