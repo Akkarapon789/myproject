@@ -149,7 +149,7 @@ if (isset($_POST['submit'])) {
                     showConfirmButton: false,
                     timer: 2000
                 }).then(() => {
-                    window.location = '".($role == "admin" ? "../admin/index.php" : "../pages/index.php")."';
+                    window.location = '".($role == "admin" ? "../auth/loing.php" : "../auth/loing.php")."';
                 });
               </script>";
     } else {

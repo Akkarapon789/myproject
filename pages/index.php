@@ -1,10 +1,10 @@
 <?php
 
 session_start();
-// 1. เชื่อมต่อฐานข้อมูล: นำเข้าไฟล์เชื่อมต่อของคุณ ซึ่งจะสร้างตัวแปร $conn
+// 1. เชื่อมต่อฐานข้อมูล: นำเข้าไฟล์เชื่อมต่อ สร้างตัวแปร $conn
 include '../config/connectdb.php'; 
 
-// 2. เรียกใช้ไฟล์ฟังก์ชัน (ต้องมั่นใจว่าไฟล์เหล่านี้อยู่ในโฟลเดอร์เดียวกัน)
+// 2. เรียกใช้ไฟล์ฟังก์ชัน 
 require_once 'categories.php';
 // ต้องใช้ products.php ที่แก้ไขตามขั้นตอนที่ 1
 require_once 'products.php'; 
@@ -12,7 +12,7 @@ require_once 'products.php';
 // ตรวจสอบสถานะการล็อกอิน
 $is_logged_in = isset($_SESSION['role']);
 
-// 3. ดึงข้อมูลที่ต้องการแสดง โค้ดส่วนนี้คือส่วนที่ถูกแก้ไข
+// 3. ดึงข้อมูลที่ต้องการแสดง 
 $categories = getAllCategories($conn); 
 
 if ($is_logged_in) {
@@ -24,7 +24,7 @@ if ($is_logged_in) {
 }
 
 
-// ฟังก์ชันสำหรับสร้าง URL ของภาพ (จำลอง)
+// ฟังก์ชันสำหรับสร้าง URL ของภาพ 
 function getCategoryImageUrl(string $slug): string {
     return "https://picsum.photos/100/100?random=" . crc32($slug); 
 }
