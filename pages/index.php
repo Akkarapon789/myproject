@@ -124,24 +124,51 @@ function getProductImageUrl(string $title): string {
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
     <?php if (!empty($products)): ?>
         <?php foreach ($products as $product): ?>
+
+            <?php
+            // ดึงคะแนนเฉลี่ยจากตาราง reviews
+            $pid = $product['id'];
+            $review_sql = "SELECT AVG(rating) as avg_rating, COUNT(*) as total_reviews FROM reviews WHERE product_id = $pid";
+            $review_result = mysqli_query($conn, $review_sql);
+            $review_data = mysqli_fetch_assoc($review_result);
+
+            $avg_rating = round($review_data['avg_rating'], 1);
+            $total_reviews = $review_data['total_reviews'];
+            ?>
+
             <div class="col">
                 <div class="card product-card h-100 shadow-sm">
                     <img src="<?= getProductImageUrl($product['title']) ?>" 
-                         class="card-img-top" 
-                         alt="<?= htmlspecialchars($product['title']) ?>">
+                        class="card-img-top" 
+                        alt="<?= htmlspecialchars($product['title']) ?>">
                     
                     <div class="card-body">
                         <h5 class="card-title fs-6">
-                            <a href="/product/<?= htmlspecialchars($product['slug']) ?>" class="text-decoration-none text-dark">
+                            <a href="product_detail.php?id=<?= $product['id'] ?>" class="text-decoration-none text-dark">
                                 <?= htmlspecialchars($product['title']) ?>
                             </a>
                         </h5>
-                        
+
+                        <!-- 🔹 แสดงคะแนนรีวิวเฉลี่ย -->
+                        <div class="rating-stars mb-2">
+                            <?php
+                            if ($total_reviews > 0) {
+                                $fullStars = floor($avg_rating);
+                                $halfStar = ($avg_rating - $fullStars >= 0.5);
+                                for ($i = 0; $i < $fullStars; $i++) echo "⭐";
+                                if ($halfStar) echo "⭐️";
+                                echo " <small>(" . $avg_rating . "/5 จาก " . $total_reviews . " รีวิว)</small>";
+                            } else {
+                                echo "<small class='text-muted'>ยังไม่มีรีวิว</small>";
+                            }
+                            ?>
+                        </div>
+
                         <div class="mt-2 mb-3">
                             <span class="product-price-new">฿ <?= number_format($product['price'] * 0.8, 2) ?></span>
                             <span class="product-price-old">฿ <?= number_format($product['price'], 2) ?></span>
                         </div>
-                        
+
                         <?php if ($is_logged_in): ?>
                             <form action="../cart/add.php" method="POST" class="d-grid gap-2">
                                 <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
@@ -152,15 +179,20 @@ function getProductImageUrl(string $title): string {
                                 ล็อกอินเพื่อสั่งซื้อ
                             </a>
                         <?php endif; ?>
-                        
-                        </div>
+
+                        <!-- 🔹 ปุ่มดูรายละเอียดสินค้า -->
+                        <a href="product_detail.php?id=<?= $product['id'] ?>" class="btn btn-outline-secondary mt-2 d-grid gap-2">
+                            ดูรายละเอียดสินค้า
+                        </a>
+                    </div>
                 </div>
             </div>
         <?php endforeach; ?>
     <?php else: ?>
         <p>ไม่พบสินค้าในระบบ</p>
     <?php endif; ?>
-</div>
+    </div>
+
 
 <div class="text-center my-5">
     <a href="all_products.php" class="btn btn-lg btn-primary" 
