@@ -62,6 +62,48 @@ function getProductImageUrl(string $title): string {
         .product-price-old { font-size: 0.9em; text-decoration: line-through; color: #6c757d;}
         .sort-bar { display: flex; justify-content: end; gap: 10px; margin-bottom: 20px; }
         .sort-bar select { width: 200px; }
+
+        /* 🔽 Pagination Shopee Style - ปรับสี #2155CD */
+        .pagination {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            list-style: none;
+            gap: 6px;
+            padding: 0;
+        }
+        .pagination .page-item .page-link {
+            border: none;
+            background-color: #f1f3f5;
+            color: #333;
+            font-weight: 500;
+            padding: 10px 18px;
+            border-radius: 8px;
+            transition: all 0.25s ease-in-out;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .pagination .page-item .page-link:hover {
+            background-color: #2155CD;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(33, 85, 205, 0.3);
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #2155CD;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 3px 8px rgba(33, 85, 205, 0.4);
+        }
+        .pagination .page-item.disabled .page-link {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #e9ecef;
+        }
+        nav.pagination-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
     </style>
 </head>
 <body>
@@ -91,9 +133,7 @@ function getProductImageUrl(string $title): string {
                     <div class="card product-card h-100 shadow-sm">
                         <img src="<?= getProductImageUrl($product['title']) ?>" class="card-img-top" alt="<?= htmlspecialchars($product['title']) ?>">
                         <div class="card-body">
-                            <h5 class="card-title fs-6">
-                                <?= htmlspecialchars($product['title']) ?>
-                            </h5>
+                            <h5 class="card-title fs-6"><?= htmlspecialchars($product['title']) ?></h5>
                             <div class="mt-2 mb-3">
                                 <span class="product-price-new">฿ <?= number_format($product['price'] * 0.8, 2) ?></span>
                                 <span class="product-price-old">฿ <?= number_format($product['price'], 2) ?></span>
@@ -117,65 +157,62 @@ function getProductImageUrl(string $title): string {
         <?php endif; ?>
     </div>
 
-        <!-- 🔽 Pagination -->
-    <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-
-            <!-- ปุ่มย้อนกลับ -->
+    <!-- 🔽 Pagination (Shopee-style เต็มรูปแบบ) -->
+    <nav class="pagination-wrapper">
+        <ul class="pagination">
+            <!-- ปุ่มก่อนหน้า -->
             <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                <a class="page-link" href="?page=<?= $page - 1 ?>&sort=<?= $sort ?>" aria-label="Previous">
-                    «
-                </a>
+                <a class="page-link" href="?page=<?= max(1, $page - 1) ?>&sort=<?= $sort ?>">«</a>
             </li>
 
-            <!-- แสดงหน้า 1 ถึง 5 (หรือเท่าที่มี) -->
-            <?php
-            $max_pages = min(5, $total_pages); // แสดงได้สูงสุด 5 หน้า
-            for ($i = 1; $i <= $max_pages; $i++): ?>
-                <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                    <a class="page-link" href="?page=<?= $i ?>&sort=<?= $sort ?>"><?= $i ?></a>
-                </li>
-            <?php endfor; ?>
+        <?php
+            // --- ตั้งค่าการแสดงเลขหน้า ---
+            $visible_pages = 5; // จำนวนหน้าที่จะแสดงตรงกลาง
+            $half = floor($visible_pages / 2);
+
+            $start_page = max(1, $page - $half);
+            $end_page = min($total_pages, $page + $half);
+
+            // ปรับกรณีอยู่ต้น/ท้าย
+            if ($page <= $half) {
+                $end_page = min($visible_pages, $total_pages);
+            }
+            if ($page > $total_pages - $half) {
+                $start_page = max(1, $total_pages - $visible_pages + 1);
+            }
+
+            // --- แสดงหน้าแรก + จุด ... ---
+            if ($start_page > 1) {
+                echo '<li class="page-item"><a class="page-link" href="?page=1&sort=' . $sort . '">1</a></li>';
+                if ($start_page > 2) {
+                    echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+
+            // --- แสดงเลขหน้าหลัก ---
+            for ($i = $start_page; $i <= $end_page; $i++) {
+                $active = ($i == $page) ? 'active' : '';
+                echo '<li class="page-item ' . $active . '">
+                        <a class="page-link" href="?page=' . $i . '&sort=' . $sort . '">' . $i . '</a>
+                      </li>';
+            }
+
+            // --- แสดงจุด ... + หน้าสุดท้าย ---
+            if ($end_page < $total_pages) {
+                if ($end_page < $total_pages - 1) {
+                    echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+                echo '<li class="page-item"><a class="page-link" href="?page=' . $total_pages . '&sort=' . $sort . '">' . $total_pages . '</a></li>';
+            }
+        ?>
 
             <!-- ปุ่มถัดไป -->
             <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
-                <a class="page-link" href="?page=<?= $page + 1 ?>&sort=<?= $sort ?>" aria-label="Next">
-                    »
-                </a>
+                <a class="page-link" href="?page=<?= min($total_pages, $page + 1) ?>&sort=<?= $sort ?>">»</a>
             </li>
-
-        </ul>
+    </ul>
     </nav>
-
-    <style>
-        /* ✅ สไตล์ pagination แบบ Shopee */
-        .pagination .page-link {
-            border: none;
-            margin: 0 3px;
-            background-color: #f1f3f5;
-            color: #333;
-            font-weight: 600;
-            border-radius: 6px;
-            padding: 8px 14px;
-            transition: all 0.2s;
-        }
-
-        .pagination .page-item.active .page-link {
-            background-color: #007bff; /* สีน้ำเงิน Bootstrap */
-            color: #fff;
-        }
-
-        .pagination .page-link:hover {
-            background-color: #e2e6ea;
-        }
-
-        .pagination .page-item.disabled .page-link {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-    </style>
-
-</div>
+    </div>
 
 <?php include '../includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
