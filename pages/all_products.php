@@ -17,12 +17,33 @@ $sort = $_GET['sort'] ?? 'newest';
 $order_sql = '';
 
 switch ($sort) {
-    case 'price_asc': $order_sql = "ORDER BY price ASC"; break;
-    case 'price_desc': $order_sql = "ORDER BY price DESC"; break;
-    case 'name_asc': $order_sql = "ORDER BY title ASC"; break;
-    case 'name_desc': $order_sql = "ORDER BY title DESC"; break;
-    default: $order_sql = "ORDER BY id DESC"; // newest
+    case 'price_asc':
+        $order_sql = "ORDER BY price ASC";
+        break;
+    case 'price_desc':
+        $order_sql = "ORDER BY price DESC";
+        break;
+    case 'name_asc':
+        $order_sql = "ORDER BY title ASC";
+        break;
+    case 'name_desc':
+        $order_sql = "ORDER BY title DESC";
+        break;
+    default:
+        $order_sql = "ORDER BY id DESC"; // newest
+        break;
 }
+
+// ---- นับจำนวนสินค้าทั้งหมด ----
+$count_query = "SELECT COUNT(*) AS total FROM products";
+$count_result = mysqli_query($conn, $count_query);
+$total_rows = mysqli_fetch_assoc($count_result)['total'];
+$total_pages = ceil($total_rows / $limit);
+
+// ---- ดึงข้อมูลสินค้าตามหน้าและการเรียง ----
+$query = "SELECT * FROM products $order_sql LIMIT $limit OFFSET $offset";
+$result = mysqli_query($conn, $query);
+$products = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 // ---- ฟังก์ชันภาพสินค้า ----
 function getProductImageUrl(string $title): string {
@@ -42,7 +63,7 @@ function getProductImageUrl(string $title): string {
         .sort-bar { display: flex; justify-content: end; gap: 10px; margin-bottom: 20px; }
         .sort-bar select { width: 200px; }
 
-        /* Pagination Shopee Style */
+        /* 🔽 Pagination Shopee Style - ปรับสี #2155CD */
         .pagination {
             display: inline-flex;
             justify-content: center;
@@ -92,10 +113,10 @@ function getProductImageUrl(string $title): string {
 <div class="container mt-5 mb-5">
     <h1 class="text-center mb-4">สินค้าทั้งหมด</h1>
 
-    <!-- Sort -->
-    <form method="GET" class="sort-bar" id="sort-form">
+    <!-- 🔽 ปุ่มเรียงตาม -->
+    <form method="GET" class="sort-bar">
         <input type="hidden" name="page" value="<?= $page ?>">
-        <select name="sort" class="form-select" id="sort-select">
+        <select name="sort" class="form-select" onchange="this.form.submit()">
             <option value="newest" <?= $sort == 'newest' ? 'selected' : '' ?>>ใหม่ล่าสุด</option>
             <option value="price_asc" <?= $sort == 'price_asc' ? 'selected' : '' ?>>ราคาต่ำ → สูง</option>
             <option value="price_desc" <?= $sort == 'price_desc' ? 'selected' : '' ?>>ราคาสูง → ต่ำ</option>
@@ -104,46 +125,98 @@ function getProductImageUrl(string $title): string {
         </select>
     </form>
 
-<div id="product-list">
-    <?php include 'fetch_products.php'; ?>
+    <!-- 🔽 แสดงสินค้า -->
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-4">
+        <?php if (!empty($products)): ?>
+            <?php foreach ($products as $product): ?>
+                <div class="col">
+                    <div class="card product-card h-100 shadow-sm">
+                        <img src="<?= getProductImageUrl($product['title']) ?>" class="card-img-top" alt="<?= htmlspecialchars($product['title']) ?>">
+                        <div class="card-body">
+                            <h5 class="card-title fs-6"><?= htmlspecialchars($product['title']) ?></h5>
+                            <div class="mt-2 mb-3">
+                                <span class="product-price-new">฿ <?= number_format($product['price'] * 0.8, 2) ?></span>
+                                <span class="product-price-old">฿ <?= number_format($product['price'], 2) ?></span>
+                            </div>
+                            <?php if ($is_logged_in): ?>
+                                <form action="../cart/add.php" method="POST" class="d-grid gap-2">
+                                    <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
+                                    <button type="submit" class="btn btn-primary">🛒 เพิ่มลงตะกร้า</button>
+                                </form>
+                            <?php else: ?>
+                                <a href="../auth/login.php" class="btn btn-outline-primary d-grid gap-2">
+                                    ล็อกอินเพื่อสั่งซื้อ
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p class="text-center">ไม่พบสินค้าในระบบ</p>
+        <?php endif; ?>
+    </div>
+
+    <!-- 🔽 Pagination (Shopee-style เต็มรูปแบบ) -->
+    <nav class="pagination-wrapper">
+        <ul class="pagination">
+            <!-- ปุ่มก่อนหน้า -->
+            <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                <a class="page-link" href="?page=<?= max(1, $page - 1) ?>&sort=<?= $sort ?>">«</a>
+            </li>
+
+        <?php
+            // --- ตั้งค่าการแสดงเลขหน้า ---
+            $visible_pages = 5; // จำนวนหน้าที่จะแสดงตรงกลาง
+            $half = floor($visible_pages / 2);
+
+            $start_page = max(1, $page - $half);
+            $end_page = min($total_pages, $page + $half);
+
+            // ปรับกรณีอยู่ต้น/ท้าย
+            if ($page <= $half) {
+                $end_page = min($visible_pages, $total_pages);
+            }
+            if ($page > $total_pages - $half) {
+                $start_page = max(1, $total_pages - $visible_pages + 1);
+            }
+
+            // --- แสดงหน้าแรก + จุด ... ---
+            if ($start_page > 1) {
+                echo '<li class="page-item"><a class="page-link" href="?page=1&sort=' . $sort . '">1</a></li>';
+                if ($start_page > 2) {
+                    echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+
+            // --- แสดงเลขหน้าหลัก ---
+            for ($i = $start_page; $i <= $end_page; $i++) {
+                $active = ($i == $page) ? 'active' : '';
+                echo '<li class="page-item ' . $active . '">
+                        <a class="page-link" href="?page=' . $i . '&sort=' . $sort . '">' . $i . '</a>
+                      </li>';
+            }
+
+            // --- แสดงจุด ... + หน้าสุดท้าย ---
+            if ($end_page < $total_pages) {
+                if ($end_page < $total_pages - 1) {
+                    echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+                echo '<li class="page-item"><a class="page-link" href="?page=' . $total_pages . '&sort=' . $sort . '">' . $total_pages . '</a></li>';
+            }
+        ?>
+
+            <!-- ปุ่มถัดไป -->
+            <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                <a class="page-link" href="?page=<?= min($total_pages, $page + 1) ?>&sort=<?= $sort ?>">»</a>
+            </li>
+    </ul>
+    </nav>
 </div>
 
-</div>
 <?php include '../includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-// AJAX Pagination
-document.addEventListener('click', function(e){
-    const link = e.target.closest('.pagination a.page-link');
-    if(link){
-        e.preventDefault();
-        const url = new URL(link.href);
-        const page = url.searchParams.get('page');
-        const sort = url.searchParams.get('sort');
-
-        fetch(`fetch_products.php?page=${page}&sort=${sort}`)
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('product-list').innerHTML = html;
-                window.scrollTo({top:0, behavior:'smooth'});
-            })
-            .catch(err => console.error(err));
-    }
-});
-
-// AJAX Sort
-document.getElementById('sort-form').addEventListener('change', function(){
-    const sort = this.sort.value;
-    fetch(`fetch_products.php?page=1&sort=${sort}`)
-        .then(res => res.text())
-        .then(html => {
-            document.getElementById('product-list').innerHTML = html;
-            window.scrollTo({top:0, behavior:'smooth'});
-        })
-        .catch(err => console.error(err));
-});
-</script>
 </body>
 </html>
 <?php mysqli_close($conn); ?>
+
