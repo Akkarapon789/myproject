@@ -145,7 +145,7 @@ function getProductImageUrl(string $title): string {
                         <?php if ($is_logged_in): ?>
                             <form action="../cart/add.php" method="POST" class="d-grid gap-2">
                                 <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-                                <button type="submit" class="btn btn-primary">🛒 เพิ่มลงตะกร้า</button>
+                                <button type="submit" class="btn btn-primary">เพิ่มลงตะกร้า</button>
                             </form>
                         <?php else: ?>
                             <a href="../auth/login.php" class="btn btn-outline-primary d-grid gap-2">
