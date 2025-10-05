@@ -1,4 +1,6 @@
 <?php
+// fetch_products.php
+session_start();
 include '../config/connectdb.php';
 session_start();
 
@@ -27,9 +29,13 @@ $query = "SELECT * FROM products $order_sql LIMIT $limit OFFSET $offset";
 $result = mysqli_query($conn, $query);
 $products = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
+// ฟังก์ชันภาพสินค้า
 function getProductImageUrl(string $title): string {
     return "https://picsum.photos/300/200?random=" . crc32($title);
 }
+
+// แสดงสินค้า
+if (!empty($products)):
 ?>
 
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-4">
@@ -67,8 +73,9 @@ function getProductImageUrl(string $title): string {
 <nav class="pagination-wrapper">
     <ul class="pagination">
         <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-            <a class="page-link" href="?page=<?= max(1, $page - 1) ?>&sort=<?= $sort ?>">«</a>
+            <a class="page-link" href="?page=<?= max(1,$page-1) ?>&sort=<?= $sort ?>">«</a>
         </li>
+
         <?php
         $visible_pages = 5;
         $half = floor($visible_pages / 2);
@@ -78,15 +85,12 @@ function getProductImageUrl(string $title): string {
         if ($page > $total_pages - $half) $start_page = max(1, $total_pages - $visible_pages + 1);
 
         if ($start_page > 1) {
-            echo '<li class="page-item"><a class="page-link" href="?page=1&sort=' . $sort . '">1</a></li>';
+            echo '<li class="page-item"><a class="page-link" href="?page=1&sort='.$sort.'">1</a></li>';
             if ($start_page > 2) echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
         }
-
-        for ($i = $start_page; $i <= $end_page; $i++) {
-            $active = ($i == $page) ? 'active' : '';
-            echo '<li class="page-item ' . $active . '">
-                    <a class="page-link" href="?page=' . $i . '&sort=' . $sort . '">' . $i . '</a>
-                  </li>';
+        for ($i=$start_page; $i<=$end_page; $i++) {
+            $active = ($i==$page)?'active':'';
+            echo '<li class="page-item '.$active.'"><a class="page-link" href="?page='.$i.'&sort='.$sort.'">'.$i.'</a></li>';
         }
 
         if ($end_page < $total_pages) {
@@ -95,9 +99,14 @@ function getProductImageUrl(string $title): string {
         }
         ?>
         <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
-            <a class="page-link" href="?page=<?= min($total_pages, $page + 1) ?>&sort=<?= $sort ?>">»</a>
+            <a class="page-link" href="?page=<?= min($total_pages,$page+1) ?>&sort=<?= $sort ?>">»</a>
         </li>
     </ul>
 </nav>
+<?php
+else:
+    echo '<p class="text-center">ไม่พบสินค้าในระบบ</p>';
+endif;
 
-<?php mysqli_close($conn); ?>
+mysqli_close($conn);
+?>

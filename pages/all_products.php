@@ -104,49 +104,45 @@ function getProductImageUrl(string $title): string {
         </select>
     </form>
 
-    <!-- Product List (AJAX จะเปลี่ยนเฉพาะส่วนนี้) -->
-    <div id="product-list">
-        <?php
-        // โหลดสินค้าครั้งแรก
-        include 'fetch_products.php';
-        ?>
-    </div>
+<div id="product-list">
+    <?php include 'fetch_products.php'; ?>
 </div>
 
+</div>
 <?php include '../includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// ---- AJAX Pagination & Sort ----
-document.addEventListener('click', function(e) {
+// AJAX Pagination
+document.addEventListener('click', function(e){
     const link = e.target.closest('.pagination a.page-link');
-    if (!link) return;
+    if(link){
+        e.preventDefault();
+        const url = new URL(link.href);
+        const page = url.searchParams.get('page');
+        const sort = url.searchParams.get('sort');
 
-    e.preventDefault();
-    const url = new URL(link.href);
-    const page = url.searchParams.get('page') || 1;
-    const sort = url.searchParams.get('sort') || 'newest';
-
-    fetchProducts(page, sort);
+        fetch(`fetch_products.php?page=${page}&sort=${sort}`)
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('product-list').innerHTML = html;
+                window.scrollTo({top:0, behavior:'smooth'});
+            })
+            .catch(err => console.error(err));
+    }
 });
 
 // AJAX Sort
-document.getElementById('sort-select').addEventListener('change', function() {
-    const sort = this.value;
-    fetchProducts(1, sort); // เมื่อเปลี่ยน sort ให้กลับไปหน้า 1
-});
-
-function fetchProducts(page, sort) {
-    fetch(`fetch_products.php?page=${page}&sort=${sort}`)
+document.getElementById('sort-form').addEventListener('change', function(){
+    const sort = this.sort.value;
+    fetch(`fetch_products.php?page=1&sort=${sort}`)
         .then(res => res.text())
         .then(html => {
             document.getElementById('product-list').innerHTML = html;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            // update hidden input ของ form sort
-            document.querySelector('#sort-form input[name="page"]').value = page;
+            window.scrollTo({top:0, behavior:'smooth'});
         })
         .catch(err => console.error(err));
-}
+});
 </script>
 </body>
 </html>
