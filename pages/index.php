@@ -6,7 +6,6 @@ include '../config/connectdb.php';
 
 // 2. เรียกใช้ไฟล์ฟังก์ชัน 
 require_once 'categories.php';
-// ต้องใช้ products.php ที่แก้ไขตามขั้นตอนที่ 1
 require_once 'products.php'; 
 
 // ตรวจสอบสถานะการล็อกอิน
@@ -15,14 +14,22 @@ $is_logged_in = isset($_SESSION['role']);
 // 3. ดึงข้อมูลที่ต้องการแสดง 
 $categories = getAllCategories($conn); 
 
-if ($is_logged_in) {
-    // ถ้าล็อกอินแล้ว: ดึงสินค้าทั้งหมด (pass null)
-    $products = getAllProducts($conn, null); 
-} else {
-    // ถ้ายังไม่ล็อกอิน: ดึงสินค้าแค่ 12 รายการ
-    $products = getAllProducts($conn, 12);     
-}
+// 🔹 Pagination Start
+$limit = 12; // จำนวนสินค้าต่อหน้า
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$start = ($page - 1) * $limit;
 
+// นับสินค้าทั้งหมด
+$count_sql = "SELECT COUNT(*) AS total FROM products";
+$count_result = mysqli_query($conn, $count_sql);
+$total_items = mysqli_fetch_assoc($count_result)['total'];
+$total_pages = ceil($total_items / $limit);
+
+// ดึงสินค้าตามหน้า
+$query = "SELECT * FROM products LIMIT $start, $limit";
+$result = mysqli_query($conn, $query);
+$products = mysqli_fetch_all($result, MYSQLI_ASSOC);
+// 🔹 Pagination End
 
 // ฟังก์ชันสำหรับสร้าง URL ของภาพ 
 function getCategoryImageUrl(string $slug): string {
@@ -47,8 +54,23 @@ function getProductImageUrl(string $title): string {
         .product-price-old { font-size: 0.9em; text-decoration: line-through; color: #6c757d;}
         .rating-stars { color: gold; font-size: 0.9em;}
         .card-body { position: relative;}
-        /* Link to detail page, cover only the top part */
         .stretched-link-details { position: absolute; top: 0; left: 0; width: 100%; height: 80%; z-index: 1; } 
+
+        /* 🔹 View All Button */
+        .btn-view-all {
+            background-color: #FCC61D;
+            border: none;
+            font-weight: 600;
+            color: #000;
+            padding: 10px 30px;
+            border-radius: 50px;
+            transition: 0.3s;
+        }
+        .btn-view-all:hover {
+            background-color: #ffdd57;
+            transform: scale(1.05);
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -94,7 +116,11 @@ function getProductImageUrl(string $title): string {
     
     <hr class="my-5">
 
-    <h2 class="mb-4">สินค้าแนะนำ</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">สินค้าแนะนำ</h2>
+        <a href="all_products.php" class="btn btn-view-all">ดูสินค้าทั้งหมด</a>
+    </div>
+
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
     <?php if (!empty($products)): ?>
         <?php foreach ($products as $product): ?>
@@ -135,14 +161,13 @@ function getProductImageUrl(string $title): string {
         <p>ไม่พบสินค้าในระบบ</p>
     <?php endif; ?>
 </div>
-    
+
 <div class="text-center my-5">
     <a href="all_products.php" class="btn btn-lg btn-primary" 
        style="padding: 12px 30px; font-size: 1.2em; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
         ดูสินค้าเพิ่มเติม 🛒
     </a>
 </div>
-
 
 </div>
 
@@ -151,7 +176,4 @@ function getProductImageUrl(string $title): string {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-<?php
-// ปิดการเชื่อมต่อฐานข้อมูลเมื่อเสร็จสิ้นการทำงาน
-mysqli_close($conn); 
-?>
+<?php mysqli_close($conn); ?>
