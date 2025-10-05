@@ -15,7 +15,7 @@ $is_logged_in = isset($_SESSION['role']);
 $categories = getAllCategories($conn); 
 
 // 🔹 Pagination Start
-$limit = 12; // จำนวนสินค้าต่อหน้า
+$limit = 20; // จำนวนสินค้าต่อหน้า
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $start = ($page - 1) * $limit;
 
@@ -164,8 +164,8 @@ function getProductImageUrl(string $title): string {
 
 <div class="text-center my-5">
     <a href="all_products.php" class="btn btn-lg btn-primary" 
-       style="padding: 12px 30px; font-size: 1.2em; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-        ดูสินค้าเพิ่มเติม 🛒
+       style="padding: 12px 20px; font-size: 1.2em; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        ดูสินค้าเพิ่มเติม
     </a>
 </div>
 
