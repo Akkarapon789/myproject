@@ -14,23 +14,6 @@ $is_logged_in = isset($_SESSION['role']);
 // 3. ดึงข้อมูลที่ต้องการแสดง 
 $categories = getAllCategories($conn); 
 
-// 🔹 Pagination Start
-$limit = 12; // จำนวนสินค้าต่อหน้า
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$start = ($page - 1) * $limit;
-
-// นับสินค้าทั้งหมด
-$count_sql = "SELECT COUNT(*) AS total FROM products";
-$count_result = mysqli_query($conn, $count_sql);
-$total_items = mysqli_fetch_assoc($count_result)['total'];
-$total_pages = ceil($total_items / $limit);
-
-// ดึงสินค้าตามหน้า
-$query = "SELECT * FROM products LIMIT $start, $limit";
-$result = mysqli_query($conn, $query);
-$products = mysqli_fetch_all($result, MYSQLI_ASSOC);
-// 🔹 Pagination End
-
 // ฟังก์ชันสำหรับสร้าง URL ของภาพ 
 function getCategoryImageUrl(string $slug): string {
     return "https://picsum.photos/100/100?random=" . crc32($slug); 
@@ -55,25 +38,6 @@ function getProductImageUrl(string $title): string {
         .rating-stars { color: gold; font-size: 0.9em;}
         .card-body { position: relative;}
         .stretched-link-details { position: absolute; top: 0; left: 0; width: 100%; height: 80%; z-index: 1; } 
-
-        /* 🔹 Pagination CSS */
-        .pagination .page-item.active .page-link {
-            background-color: #FCC61D;
-            border-color: #FCC61D;
-            color: #fff;
-        }
-        .pagination .page-link {
-            color: #FCC61D;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            text-align: center;
-            line-height: 25px;
-            font-weight: bold;
-        }
-        .pagination .page-link:hover {
-            background-color: #fff6d5;
-        }
 
         /* 🔹 View All Button */
         .btn-view-all {
