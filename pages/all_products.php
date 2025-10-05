@@ -21,19 +21,8 @@ switch ($sort) {
     case 'price_desc': $order_sql = "ORDER BY price DESC"; break;
     case 'name_asc': $order_sql = "ORDER BY title ASC"; break;
     case 'name_desc': $order_sql = "ORDER BY title DESC"; break;
-    default: $order_sql = "ORDER BY id DESC";
+    default: $order_sql = "ORDER BY id DESC"; // newest
 }
-
-// นับจำนวนสินค้าทั้งหมด
-$count_query = "SELECT COUNT(*) AS total FROM products";
-$count_result = mysqli_query($conn, $count_query);
-$total_rows = mysqli_fetch_assoc($count_result)['total'];
-$total_pages = ceil($total_rows / $limit);
-
-// ดึงข้อมูลสินค้าตามหน้า
-$query = "SELECT * FROM products $order_sql LIMIT $limit OFFSET $offset";
-$result = mysqli_query($conn, $query);
-$products = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 // ---- ฟังก์ชันภาพสินค้า ----
 function getProductImageUrl(string $title): string {
@@ -106,7 +95,7 @@ function getProductImageUrl(string $title): string {
     <!-- Sort -->
     <form method="GET" class="sort-bar" id="sort-form">
         <input type="hidden" name="page" value="<?= $page ?>">
-        <select name="sort" class="form-select" onchange="document.getElementById('sort-form').submit()">
+        <select name="sort" class="form-select" id="sort-select">
             <option value="newest" <?= $sort == 'newest' ? 'selected' : '' ?>>ใหม่ล่าสุด</option>
             <option value="price_asc" <?= $sort == 'price_asc' ? 'selected' : '' ?>>ราคาต่ำ → สูง</option>
             <option value="price_desc" <?= $sort == 'price_desc' ? 'selected' : '' ?>>ราคาสูง → ต่ำ</option>
@@ -117,7 +106,10 @@ function getProductImageUrl(string $title): string {
 
     <!-- Product List (AJAX จะเปลี่ยนเฉพาะส่วนนี้) -->
     <div id="product-list">
-        <?php include 'fetch_products.php'; ?>
+        <?php
+        // โหลดสินค้าครั้งแรก
+        include 'fetch_products.php';
+        ?>
     </div>
 </div>
 
@@ -125,26 +117,36 @@ function getProductImageUrl(string $title): string {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// AJAX Pagination
+// ---- AJAX Pagination & Sort ----
 document.addEventListener('click', function(e) {
     const link = e.target.closest('.pagination a.page-link');
-    if (link) {
-        e.preventDefault();
-        const url = new URL(link.href);
-        const params = new URLSearchParams(url.search);
-        const page = params.get('page');
-        const sort = params.get('sort');
+    if (!link) return;
 
-        // fetch_products.php ต้องอยู่ใน path เดียวกับ all_products.php
-        fetch(`fetch_products.php?page=${page}&sort=${sort}`)
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('product-list').innerHTML = html;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            })
-            .catch(err => console.error(err));
-    }
+    e.preventDefault();
+    const url = new URL(link.href);
+    const page = url.searchParams.get('page') || 1;
+    const sort = url.searchParams.get('sort') || 'newest';
+
+    fetchProducts(page, sort);
 });
+
+// AJAX Sort
+document.getElementById('sort-select').addEventListener('change', function() {
+    const sort = this.value;
+    fetchProducts(1, sort); // เมื่อเปลี่ยน sort ให้กลับไปหน้า 1
+});
+
+function fetchProducts(page, sort) {
+    fetch(`fetch_products.php?page=${page}&sort=${sort}`)
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('product-list').innerHTML = html;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // update hidden input ของ form sort
+            document.querySelector('#sort-form input[name="page"]').value = page;
+        })
+        .catch(err => console.error(err));
+}
 </script>
 </body>
 </html>
