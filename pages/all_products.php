@@ -126,6 +126,7 @@ function getProductImageUrl(string $title): string {
     </form>
 
     <!-- 🔽 แสดงสินค้า -->
+    <div id="product-list">
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-4">
         <?php if (!empty($products)): ?>
             <?php foreach ($products as $product): ?>

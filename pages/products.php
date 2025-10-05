@@ -91,3 +91,24 @@ function getProductsByCategory($conn, int $categoryId): array
         return [];
     }
 }
+<script>
+document.addEventListener('click', function(e) {
+    const link = e.target.closest('.pagination a.page-link');
+    if (link) {
+        e.preventDefault();
+        const url = new URL(link.href);
+        const params = new URLSearchParams(url.search);
+        const page = params.get('page');
+        const sort = params.get('sort');
+
+        // โหลดสินค้าใหม่
+        fetch(`fetch_products.php?page=${page}&sort=${sort}`)
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('product-list').innerHTML = html;
+                window.scrollTo({ top: 0, behavior: 'smooth' }); // scroll ขึ้นเบาๆ
+            })
+            .catch(err => console.error(err));
+    }
+});
+</script>
