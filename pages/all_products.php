@@ -117,28 +117,63 @@ function getProductImageUrl(string $title): string {
         <?php endif; ?>
     </div>
 
-    <!-- 🔽 Pagination -->
-    <nav>
+        <!-- 🔽 Pagination -->
+    <nav class="mt-4">
         <ul class="pagination justify-content-center">
+
+            <!-- ปุ่มย้อนกลับ -->
             <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                <a class="page-link" href="?page=<?= $page - 1 ?>&sort=<?= $sort ?>">«</a>
+                <a class="page-link" href="?page=<?= $page - 1 ?>&sort=<?= $sort ?>" aria-label="Previous">
+                    «
+                </a>
             </li>
 
+            <!-- แสดงหน้า 1 ถึง 5 (หรือเท่าที่มี) -->
             <?php
-            // แสดงแค่บางหน้ากลาง ๆ เพื่อไม่ให้ยาวเกิน
-            $start = max(1, $page - 2);
-            $end = min($total_pages, $page + 2);
-            for ($i = $start; $i <= $end; $i++): ?>
+            $max_pages = min(5, $total_pages); // แสดงได้สูงสุด 5 หน้า
+            for ($i = 1; $i <= $max_pages; $i++): ?>
                 <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
                     <a class="page-link" href="?page=<?= $i ?>&sort=<?= $sort ?>"><?= $i ?></a>
                 </li>
             <?php endfor; ?>
 
+            <!-- ปุ่มถัดไป -->
             <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
-                <a class="page-link" href="?page=<?= $page + 1 ?>&sort=<?= $sort ?>">»</a>
+                <a class="page-link" href="?page=<?= $page + 1 ?>&sort=<?= $sort ?>" aria-label="Next">
+                    »
+                </a>
             </li>
+
         </ul>
     </nav>
+
+    <style>
+        /* ✅ สไตล์ pagination แบบ Shopee */
+        .pagination .page-link {
+            border: none;
+            margin: 0 3px;
+            background-color: #f1f3f5;
+            color: #333;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 8px 14px;
+            transition: all 0.2s;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #007bff; /* สีน้ำเงิน Bootstrap */
+            color: #fff;
+        }
+
+        .pagination .page-link:hover {
+            background-color: #e2e6ea;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
 
 </div>
 
