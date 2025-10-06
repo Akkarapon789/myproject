@@ -225,16 +225,16 @@ $(document).ready(function(){
     });
 
     // 🟡 เมื่อคลิกแท็บหมวดหมู่
-    $(document).on('click', '.category-tag', function(){
-        let category = $(this).data('category');
+    $(document).on('click', '.categories-tag', function(){
+        let categories = $(this).data('categories');
         let query = $('#searchInput').val().trim();
 
         $.ajax({
             url: '../search/search_ajax.php',
             method: 'POST',
-            data: {query: query, category: category},
+            data: {query: query, categories: categories},
             success: function(data){
-                $('#categoryTagsContainer').html(data.categories);
+                $('#categoriesTagsContainer').html(data.categories);
                 $('#searchListContainer').html(data.results);
             },
             dataType: 'json'

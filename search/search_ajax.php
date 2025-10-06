@@ -3,27 +3,27 @@ include('../config/connectdb.php');
 header('Content-Type: application/json; charset=utf-8');
 
 $query = isset($_POST['query']) ? trim($_POST['query']) : '';
-$categoryFilter = isset($_POST['category']) ? trim($_POST['category']) : '';
+$categoryFilter = isset($_POST['categories']) ? trim($_POST['categories']) : '';
 
 $response = ['categories' => '', 'results' => ''];
 
 if ($query !== '') {
     $q = mysqli_real_escape_string($conn, $query);
-    $catCondition = $categoryFilter ? "AND category = '".mysqli_real_escape_string($conn, $categoryFilter)."'" : '';
+    $catCondition = $categoryFilter ? "AND categories = '".mysqli_real_escape_string($conn, $categoryFilter)."'" : '';
 
     // 🔸 ดึงหมวดหมู่ที่ตรงกับคำค้น
-    $catSql = "SELECT DISTINCT category FROM products 
+    $catSql = "SELECT DISTINCT categories FROM products 
                WHERE title LIKE '%$q%' 
                   OR author LIKE '%$q%' 
                   OR description LIKE '%$q%' 
-                  OR category LIKE '%$q%' 
-               ORDER BY category ASC";
+                  OR categories LIKE '%$q%' 
+               ORDER BY categories ASC";
     $catResult = mysqli_query($conn, $catSql);
 
-    $categoriesHTML = '<div class="category-tags">';
+    $categoriesHTML = '<div class="categories-tags">';
     while ($catRow = mysqli_fetch_assoc($catResult)) {
-        $active = ($catRow['category'] === $categoryFilter) ? 'style="background:#2155CD; color:white;"' : '';
-        $categoriesHTML .= '<span class="category-tag" '.$active.' data-category="'.$catRow['category'].'">'.$catRow['category'].'</span>';
+        $active = ($catRow['categories'] === $categoryFilter) ? 'style="background:#2155CD; color:white;"' : '';
+        $categoriesHTML .= '<span class="categories-tag" '.$active.' data-categories="'.$catRow['categories'].'">'.$catRow['categories'].'</span>';
     }
     $categoriesHTML .= '</div>';
     $response['categories'] = $categoriesHTML;
@@ -34,7 +34,7 @@ if ($query !== '') {
             WHERE (title LIKE '%$q%' 
                 OR author LIKE '%$q%' 
                 OR description LIKE '%$q%' 
-                OR category LIKE '%$q%')
+                OR categories LIKE '%$q%')
             $catCondition
             LIMIT 10";
     $result = mysqli_query($conn, $sql);
