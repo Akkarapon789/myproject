@@ -4,9 +4,6 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 🔹 เชื่อมฐานข้อมูลจริง
-include '../config/connectdb.php';
-
 // จำนวนสินค้าทั้งหมดในตะกร้า
 $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 ?>
@@ -20,8 +17,6 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
     background-color: #2155CD;
     border-bottom: 1px solid #2155CD;
     padding: 10px 8px;
-    position: relative;
-    overflow: visible !important;
 }
 .navbar-custom .nav-link {
     color: #FDDE55;
@@ -33,77 +28,77 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
     color: #fff;
 }
 
-/* ✅ ปรับ Search Dropdown ใหม่ ให้ดูเหมือน Shopee และอยู่เหนือ navbar */
+/* 🎨 เพิ่มสไตล์สำหรับ Search Bar */
+#searchInput {
+    border-radius: 25px;
+    padding-left: 15px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+#searchInput:focus {
+    box-shadow: 0 0 8px rgba(253, 222, 85, 0.8);
+    border-color: #FDDE55;
+}
+
+/* กล่องผลลัพธ์ */
 #searchResults {
-  display: none;
-  position: absolute;
-  top: 105%;
-  left: 0;
-  right: 0;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  z-index: 99999; 
-  max-height: 350px;
-  overflow-y: auto;
-  padding: 8px 0;
+    border-radius: 10px;
+    background-color: white;
+    border: 2px solid #2155CD;
+    overflow: hidden;
 }
-#searchResults a.item {
-  display: flex;
-  align-items: center;
-  justify-content: start;
-  gap: 10px;
-  padding: 10px 15px;
-  color: #333;
-  text-decoration: none;
-  border-bottom: 1px solid #f1f1f1;
-  transition: background 0.25s ease;
+
+#searchResults a {
+    border: none;
+    color: #2155CD;
+    transition: all 0.2s ease-in-out;
 }
-#searchResults a.item:hover {
-  background: #f7f9fc;
+
+#searchResults a:hover {
+    background-color: #FDDE55;
+    color: #000;
 }
-#searchResults img {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex-shrink: 0;
+
+#searchResults .list-group-item.text-muted {
+    background-color: #f9f9f9;
 }
-#searchResults .info {
-  flex: 1;
+
+/* ปุ่ม Search */
+.btn-outline-warning {
+    border-color: #FDDE55;
+    color: #FDDE55;
+    border-radius: 25px;
 }
-#searchResults .title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 4px;
-  line-height: 1.3;
-}
-#searchResults .price {
-  font-size: 13px;
-  color: #f77f00;
-  font-weight: bold;
-}
-#searchResults .no-result {
-  padding: 15px;
-  text-align: center;
-  color: #999;
-  font-size: 14px;
+
+.btn-outline-warning:hover {
+    background-color: #FDDE55;
+    color: #2155CD;
+    font-weight: 600;
 }
 </style>
 
 <nav class="navbar navbar-expand-lg navbar-custom">
     <div class="container-fluid">
+        <!-- ด้านซ้าย -->
         <a class="nav-link" href="#">Seller Centre</a>
         <a class="nav-link" href="#">เปิดร้านค้า</a>
         <a class="nav-link" href="#">ดาวน์โหลด</a>
+
+        <!-- Social -->
         <span class="nav-link">ติดตามเรา</span>
+
+        <!-- ด้านขวา -->
         <div class="ms-auto d-flex align-items-center">
             <a class="nav-link" href="#">การแจ้งเตือน</a>
             <a class="nav-link" href="#">ช่วยเหลือ</a>
         </div>
+
+        <!-- ภาษา -->
         <div class="dropdown me-3">
-            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">ไทย</a>
+            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                ไทย
+            </a>
             <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="#">ไทย</a></li>
                 <li><a class="dropdown-item" href="#">English</a></li>
@@ -114,27 +109,32 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 
 <nav class="navbar navbar-expand-lg navbar-custom1">
   <div class="container-fluid d-flex align-items-center justify-content-between">
-
+      
       <!-- Logo -->
       <a href="index.php" class="d-flex align-items-center text-decoration-none me-3">
           <img src="../assets/logo/2.png" style="width:80px; height:80px;">
           <span class="ms-3 fs-2 fw-bold" style="color:#FDDE55;">The Bookmark</span>
       </a>
 
-      <!-- 🔍 Search bar -->
-      <div class="position-relative flex-grow-1 mx-3" style="max-width: 500px;">
+      <!-- 🔍 Search bar (Realtime AJAX) -->
+      <div class="position-relative flex-grow-1 mx-3">
         <input id="searchInput" 
                class="form-control" 
-               type="search" 
+               type="text" 
                placeholder="ค้นหาหนังสือ..." 
-               autocomplete="off"
-               style="border-radius: 20px; padding: 10px 15px;">
-        <div id="searchResults"></div>
+               aria-label="Search" 
+               autocomplete="off">
+        <!-- กล่องแสดงผลการค้นหา -->
+        <div id="searchResults" 
+             class="list-group position-absolute w-100 shadow-sm mt-1"
+             style="z-index: 2000; display: none; max-height: 300px; overflow-y: auto;">
+        </div>
       </div>
 
       <!-- User Section -->
       <div class="text-end d-flex align-items-center gap-3">
           <?php if (isset($_SESSION['user_id'])): ?>
+              <!-- ปุ่มตะกร้า -->
               <button id="cartButton"
                       class="cart-btn btn btn-outline-light position-relative"
                       aria-controls="cartOffcanvas"
@@ -167,6 +167,7 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
                   </ul>
               </div>
           <?php else: ?>
+              <!-- ปุ่ม Login / Sign-up -->
               <a href="../auth/login.php" class="btn btn-warning">Login</a>
               <a href="../auth/sign-up.php" class="btn btn-outline-warning">Sign-up</a>
           <?php endif; ?>
@@ -175,12 +176,11 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
   </div>
 </nav>
 
-<!-- ✅ JavaScript Section -->
+<!-- JS อัปเดตจำนวนสินค้าตะกร้า + ระบบค้นหา -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function(){
-
-    // 🛒 อัปเดตตะกร้า (โค้ดเดิม)
+    // ✅ อัปเดตจำนวนสินค้าในตะกร้า
     $('.add-to-cart-btn').click(function(){
         var productId = $(this).data('id');
         $.post('../cart/add_to_cart.php', {product_id: productId}, function(response){
@@ -189,66 +189,29 @@ $(document).ready(function(){
         });
     });
 
-    // 🔍 ค้นหาสินค้าแบบเรียลไทม์
+    // ✅ ระบบค้นหาแบบเรียลไทม์
     $('#searchInput').on('keyup', function(){
         let query = $(this).val().trim();
-
-        if(query.length < 2){
-            $('#searchResults').fadeOut(100);
+        if(query.length === 0){
+            $('#searchResults').hide();
             return;
         }
 
         $.ajax({
-            url: '',
+            url: '../search/search_ajax.php',
             method: 'POST',
-            data: { ajax_search: true, q: query },
+            data: {query: query},
             success: function(data){
-                $('#searchResults').html(data).fadeIn(150);
+                $('#searchResults').html(data).show();
             }
         });
     });
 
-    // 🔘 คลิกข้างนอกเพื่อซ่อน dropdown
-    $(document).on('click', function(e){
-        if (!$(e.target).closest('#searchInput, #searchResults').length){
-            $('#searchResults').fadeOut(150);
+    // คลิกข้างนอกปิด dropdown
+    $(document).click(function(e){
+        if (!$(e.target).closest('#searchInput, #searchResults').length) {
+            $('#searchResults').hide();
         }
     });
-
 });
 </script>
-
-<?php
-// ✅ ส่วน PHP สำหรับประมวลผล AJAX อยู่ท้ายไฟล์นี้เลย
-if (isset($_POST['ajax_search']) && !empty($_POST['q'])) {
-    $q = trim($_POST['q']);
-    $sql = "SELECT id, title, price FROM products 
-            WHERE title LIKE ? OR description LIKE ?
-            ORDER BY RAND() LIMIT 6";
-    $stmt = $conn->prepare($sql);
-    $like = "%$q%";
-    $stmt->bind_param("ss", $like, $like);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0):
-        while($row = $result->fetch_assoc()): 
-            $img = "https://picsum.photos/seed/" . crc32($row['title']) . "/80/80";
-            ?>
-            <a href="../products/product_detail.php?id=<?= $row['id'] ?>" class="item">
-                <img src="<?= $img ?>" alt="<?= htmlspecialchars($row['title']) ?>">
-                <div class="info">
-                    <div class="title"><?= htmlspecialchars($row['title']) ?></div>
-                    <div class="price">฿<?= number_format($row['price'], 2) ?></div>
-                </div>
-            </a>
-        <?php endwhile;
-    else: ?>
-        <div class="no-result">ไม่พบสินค้า</div>
-    <?php endif;
-
-    $stmt->close();
-    $conn->close();
-    exit();
-}
-?>
