@@ -1,36 +1,84 @@
 <?php
-include('../config/connectdb.php');
+include '../config/connectdb.php';
 
-if(isset($_POST['query'])) {
-    $q = mysqli_real_escape_string($conn, $_POST['query']);
+// รับคำค้นหาจากฟอร์ม (GET หรือ POST ก็ได้)
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-    $sql = "SELECT id, title, author, price, image_url 
-            FROM products 
-            WHERE title LIKE '%$q%' 
-               OR author LIKE '%$q%' 
-               OR description LIKE '%$q%' 
-               OR category LIKE '%$q%' 
-            LIMIT 10";
+$sql = "SELECT * FROM products WHERE 1";
 
-    $result = mysqli_query($conn, $sql);
+// ✅ เพิ่มเงื่อนไขค้นหา ถ้ามีคำค้น
+if ($search !== '') {
+    $search = mysqli_real_escape_string($conn, $search);
+    $sql .= " AND (
+        title LIKE '%$search%' 
+        OR author LIKE '%$search%' 
+        OR publisher LIKE '%$search%' 
+        OR description LIKE '%$search%'
+    )";
+}
 
-    if(mysqli_num_rows($result) > 0) {
-        while($row = mysqli_fetch_assoc($result)) {
-            echo '
-            <a href="../products.php?id='.$row['id'].'" 
-               class="list-group-item list-group-item-action d-flex align-items-center">
-                <img src="'.$row['image_url'].'" 
-                     alt="img" 
-                     class="me-3 rounded" 
-                     style="width:50px; height:50px; object-fit:cover;">
-                <div>
-                    <div class="fw-bold">'.$row['title'].'</div>
-                    <small class="text-muted">'.$row['author'].' - ฿'.number_format($row['price'],2).'</small>
-                </div>
-            </a>';
-        }
-    } else {
-        echo '<div class="list-group-item text-muted text-center">ไม่พบผลลัพธ์</div>';
+$result = mysqli_query($conn, $sql);
+?>
+
+<form method="get" class="search-form" style="margin-bottom: 20px;">
+  <input type="text" name="search" placeholder="ค้นหาหนังสือ..." 
+         value="<?= htmlspecialchars($search) ?>" 
+         class="search-box">
+  <button type="submit" class="search-btn">🔍 ค้นหา</button>
+</form>
+
+<style>
+.search-form {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.search-box {
+  width: 300px;
+  padding: 10px 15px;
+  border: 2px solid #2155CD;
+  border-radius: 25px;
+  outline: none;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+.search-box:focus {
+  border-color: #FDDE55;
+  box-shadow: 0 0 6px #FDDE55;
+}
+
+.search-btn {
+  background-color: #2155CD;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.search-btn:hover {
+  background-color: #FDDE55;
+  color: #2155CD;
+}
+</style>
+
+<?php
+if (mysqli_num_rows($result) > 0) {
+    echo "<div class='grid'>";
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo "<div class='item'>
+                <img src='{$row['image_url']}' alt='{$row['title']}' style='width:120px;height:180px;object-fit:cover;'>
+                <h4>{$row['title']}</h4>
+                <p>โดย {$row['author']}</p>
+                <p><b>฿{$row['price']}</b></p>
+              </div>";
     }
+    echo "</div>";
+} else {
+    echo "<p style='text-align:center;color:#999;'>ไม่พบสินค้าที่ค้นหา</p>";
 }
 ?>
