@@ -10,7 +10,7 @@ include '../config/connectdb.php';
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>จัดการผู้ใช้</title>
+  <title>ผู้ใช้</title>
   <?php include 'layout.php'; ?>
 </head>
 <body>
@@ -18,8 +18,8 @@ include '../config/connectdb.php';
   <div class="sidebar p-3">
     <h4>Admin Panel</h4>
     <a href="index.php">แดชบอร์ด</a>
-    <a href="users.php" class="active">จัดการผู้ใช้</a>
-    <a href="products.php">จัดการสินค้า</a>
+    <a href="users.php" class="active">ผู้ใช้</a>
+    <a href="products.php">สินค้า</a>
     <a href="orders.php">คำสั่งซื้อ</a>
     <a href="reports.php">รายงาน</a>
     <a href="adminout.php" class="text-danger">ออกจากระบบ</a>

@@ -10,7 +10,7 @@ include '../config/connectdb.php';
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>จัดการสินค้า</title>
+  <title>สินค้า</title>
   <?php include 'layout.php'; ?>
 </head>
 <body>
