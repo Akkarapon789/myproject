@@ -11,7 +11,7 @@ include '../config/connectdb.php';
 $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 ?>
 <style>
-/* .navbar-custom {
+.navbar-custom {
     background-color: #2155CD;
     border-bottom: 1px solid #2155CD;
     padding: 10px 8px;
@@ -31,10 +31,10 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 }
 .navbar-custom .nav-link:hover {
     color: #fff;
-} */
+}
 
 /* ✅ ปรับ Search Dropdown ใหม่ ให้ดูเหมือน Shopee และอยู่เหนือ navbar */
-#searchResults {
+/* #searchResults {
   display: none;
   position: absolute;
   top: 105%;
@@ -43,11 +43,11 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  z-index: 99999; /* ← อยู่เหนือ navbar แล้ว */
+  z-index: 99999; 
   max-height: 350px;
   overflow-y: auto;
   padding: 8px 0;
-}
+} */
 #searchResults a.item {
   display: flex;
   align-items: center;
