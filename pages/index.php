@@ -26,7 +26,7 @@ $total_items = mysqli_fetch_assoc($count_result)['total'];
 $total_pages = ceil($total_items / $limit);
 
 // ดึงสินค้าตามหน้า
-$query = "SELECT * FROM products LIMIT $start, $limit";
+$query = "SELECT * FROM products ORDER BY RAND() LIMIT $start, $limit";
 $result = mysqli_query($conn, $query);
 $products = mysqli_fetch_all($result, MYSQLI_ASSOC);
 // 🔹 Pagination End
