@@ -17,7 +17,7 @@ if(isset($_POST['query'])) {
     if(mysqli_num_rows($result) > 0) {
         while($row = mysqli_fetch_assoc($result)) {
             echo '
-            <a href="../product_detail.php?id='.$row['id'].'" 
+            <a href="../products.php?id='.$row['id'].'" 
                class="list-group-item list-group-item-action d-flex align-items-center">
                 <img src="'.$row['image_url'].'" 
                      alt="img" 

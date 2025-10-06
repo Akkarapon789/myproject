@@ -183,7 +183,7 @@ $(document).ready(function(){
     // ✅ อัปเดตจำนวนสินค้าในตะกร้า
     $('.add-to-cart-btn').click(function(){
         var productId = $(this).data('id');
-        $.post('../cart/add_to_cart.php', {product_id: productId}, function(response){
+        $.post('../cart/add.php', {product_id: productId}, function(response){
             var data = JSON.parse(response);
             $('#cartCount').text(data.count);
         });
