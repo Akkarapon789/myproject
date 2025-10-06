@@ -27,7 +27,7 @@ $result = mysqli_query($conn, $sql);
   <button type="submit" class="search-btn">🔍 ค้นหา</button>
 </form>
 
-<style>
+<!-- <style>
 .search-form {
   display: flex;
   gap: 10px;
@@ -64,7 +64,7 @@ $result = mysqli_query($conn, $sql);
   background-color: #FDDE55;
   color: #2155CD;
 }
-</style>
+</style> -->
 
 <?php
 if (mysqli_num_rows($result) > 0) {
