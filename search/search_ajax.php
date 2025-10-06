@@ -20,14 +20,9 @@ if ($search !== '') {
 $result = mysqli_query($conn, $sql);
 ?>
 
-<form method="get" class="search-form" style="margin-bottom: 20px;">
-  <input type="text" name="search" placeholder="ค้นหาหนังสือ..." 
-         value="<?= htmlspecialchars($search) ?>" 
-         class="search-box">
-  <button type="submit" class="search-btn">🔍 ค้นหา</button>
-</form>
 
-<!-- <style>
+
+<style>
 .search-form {
   display: flex;
   gap: 10px;
@@ -64,7 +59,7 @@ $result = mysqli_query($conn, $sql);
   background-color: #FDDE55;
   color: #2155CD;
 }
-</style> -->
+</style>
 
 <?php
 if (mysqli_num_rows($result) > 0) {
