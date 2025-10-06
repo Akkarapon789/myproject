@@ -26,7 +26,7 @@ include '../config/connectdb.php';
   </div>
 
   <div class="content flex-grow-1">
-    <h2>📦 จัดการสินค้า</h2>
+    <h2>📦 สินค้า</h2>
     <a href="add_product.php" class="btn btn-success mb-3">+ เพิ่มสินค้า</a>
     <div class="card p-3">
       <table class="table table-striped">

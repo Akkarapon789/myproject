@@ -26,7 +26,7 @@ include '../config/connectdb.php';
   </div>
 
   <div class="content flex-grow-1">
-    <h2>👥 จัดการผู้ใช้</h2>
+    <h2>👥 ผู้ใช้</h2>
     <a href="add_user.php" class="btn btn-success mb-3">+ เพิ่มผู้ใช้</a>
 
     <div class="card p-3">
@@ -43,7 +43,7 @@ include '../config/connectdb.php';
         </thead>
         <tbody>
           <?php
-          $result = $conn->query("SELECT * FROM users ORDER BY user_id DESC");
+          $result = $conn->query("SELECT * FROM user ORDER BY user_id DESC");
           while ($row = $result->fetch_assoc()):
           ?>
           <tr>
