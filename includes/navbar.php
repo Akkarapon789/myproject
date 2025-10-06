@@ -28,66 +28,53 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
     color: #fff;
 }
 
-/* 🎨 Search bar styling */
+/* 🎨 เพิ่มสไตล์สำหรับ Search Bar */
 #searchInput {
-    border: 2px solid #FDDE55;
-    border-radius: 30px;
-    padding: 10px 18px;
-    transition: all 0.2s ease-in-out;
+    border-radius: 25px;
+    padding-left: 15px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
 }
+
 #searchInput:focus {
-    box-shadow: 0 0 8px rgba(253, 222, 85, 0.7);
-    border-color: #fff;
+    box-shadow: 0 0 8px rgba(253, 222, 85, 0.8);
+    border-color: #FDDE55;
 }
+
+/* กล่องผลลัพธ์ */
 #searchResults {
-    background-color: #ffffff;
-    border: 1px solid #FDDE55;
     border-radius: 10px;
+    background-color: white;
+    border: 2px solid #2155CD;
     overflow: hidden;
 }
+
 #searchResults a {
-    color: #333;
-    transition: background 0.15s;
+    border: none;
+    color: #2155CD;
+    transition: all 0.2s ease-in-out;
 }
+
 #searchResults a:hover {
-    background-color: #FFF8DC;
-    color: #2155CD;
-}
-#searchResults img {
-    border: 1px solid #eee;
+    background-color: #FDDE55;
+    color: #000;
 }
 
-/* ปรับ dropdown ให้ดูโปร */
-.dropdown-menu {
-    border-radius: 10px;
-    border: 1px solid #FDDE55;
-}
-.dropdown-menu a:hover {
-    background-color: #FDDE55;
-    color: #2155CD;
+#searchResults .list-group-item.text-muted {
+    background-color: #f9f9f9;
 }
 
-/* 🟡 แถบหมวดหมู่ */
-.category-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px 10px;
-    border-bottom: 1px solid #f1f1f1;
-    background: #fffbea;
+/* ปุ่ม Search */
+.btn-outline-warning {
+    border-color: #FDDE55;
+    color: #FDDE55;
+    border-radius: 25px;
 }
-.category-tag {
+
+.btn-outline-warning:hover {
     background-color: #FDDE55;
     color: #2155CD;
-    font-weight: 500;
-    border-radius: 20px;
-    padding: 4px 12px;
-    cursor: pointer;
-    transition: all 0.15s ease-in-out;
-}
-.category-tag:hover {
-    background-color: #2155CD;
-    color: #fff;
+    font-weight: 600;
 }
 </style>
 
@@ -129,27 +116,25 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
           <span class="ms-3 fs-2 fw-bold" style="color:#FDDE55;">The Bookmark</span>
       </a>
 
-      <!-- 🔍 Search bar -->
+      <!-- 🔍 Search bar (Realtime AJAX) -->
       <div class="position-relative flex-grow-1 mx-3">
-          <input id="searchInput" 
-                 class="form-control" 
-                 type="text" 
-                 placeholder="ค้นหาหนังสือ..." 
-                 aria-label="Search" 
-                 autocomplete="off">
-
-          <!-- กล่องแสดงผลการค้นหา -->
-          <div id="searchResults" 
-               class="list-group position-absolute w-100 shadow-sm mt-1"
-               style="z-index: 2000; display: none; max-height: 400px; overflow-y: auto;">
-              <div id="categoryTagsContainer"></div>
-              <div id="searchListContainer"></div>
-          </div>
+        <input id="searchInput" 
+               class="form-control" 
+               type="text" 
+               placeholder="ค้นหาหนังสือ..." 
+               aria-label="Search" 
+               autocomplete="off">
+        <!-- กล่องแสดงผลการค้นหา -->
+        <div id="searchResults" 
+             class="list-group position-absolute w-100 shadow-sm mt-1"
+             style="z-index: 2000; display: none; max-height: 300px; overflow-y: auto;">
+        </div>
       </div>
 
       <!-- User Section -->
       <div class="text-end d-flex align-items-center gap-3">
           <?php if (isset($_SESSION['user_id'])): ?>
+              <!-- ปุ่มตะกร้า -->
               <button id="cartButton"
                       class="cart-btn btn btn-outline-light position-relative"
                       aria-controls="cartOffcanvas"
@@ -168,6 +153,7 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
                   </span>
               </button>
 
+              <!-- Account Dropdown -->
               <div class="dropdown">
                   <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="avatarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                       <img src="https://down-th.img.susercontent.com/file/6109d8ed7204998f787c35686d70229e_tn" 
@@ -181,6 +167,7 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
                   </ul>
               </div>
           <?php else: ?>
+              <!-- ปุ่ม Login / Sign-up -->
               <a href="../auth/login.php" class="btn btn-warning">Login</a>
               <a href="../auth/sign-up.php" class="btn btn-outline-warning">Sign-up</a>
           <?php endif; ?>
@@ -189,12 +176,11 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
   </div>
 </nav>
 
-<!-- ✅ JS -->
+<!-- JS อัปเดตจำนวนสินค้าตะกร้า + ระบบค้นหา -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function(){
-
-    // 🛒 อัปเดตตะกร้า
+    // ✅ อัปเดตจำนวนสินค้าในตะกร้า
     $('.add-to-cart-btn').click(function(){
         var productId = $(this).data('id');
         $.post('../cart/add_to_cart.php', {product_id: productId}, function(response){
@@ -203,7 +189,7 @@ $(document).ready(function(){
         });
     });
 
-    // 🔍 Real-time search + Category Tags
+    // ✅ ระบบค้นหาแบบเรียลไทม์
     $('#searchInput').on('keyup', function(){
         let query = $(this).val().trim();
         if(query.length === 0){
@@ -216,32 +202,12 @@ $(document).ready(function(){
             method: 'POST',
             data: {query: query},
             success: function(data){
-                $('#searchResults').show();
-                $('#categoryTagsContainer').html(data.categories);
-                $('#searchListContainer').html(data.results);
-            },
-            dataType: 'json'
+                $('#searchResults').html(data).show();
+            }
         });
     });
 
-    // 🟡 เมื่อคลิกแท็บหมวดหมู่
-    $(document).on('click', '.categories-tag', function(){
-        let categories = $(this).data('categories');
-        let query = $('#searchInput').val().trim();
-
-        $.ajax({
-            url: '../search/search_ajax.php',
-            method: 'POST',
-            data: {query: query, categories: categories},
-            success: function(data){
-                $('#categoriesTagsContainer').html(data.categories);
-                $('#searchListContainer').html(data.results);
-            },
-            dataType: 'json'
-        });
-    });
-
-    // คลิกข้างนอกให้ปิดผลลัพธ์
+    // คลิกข้างนอกปิด dropdown
     $(document).click(function(e){
         if (!$(e.target).closest('#searchInput, #searchResults').length) {
             $('#searchResults').hide();
