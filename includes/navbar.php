@@ -34,7 +34,7 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 }
 
 /* ✅ ปรับ Search Dropdown ใหม่ ให้ดูเหมือน Shopee และอยู่เหนือ navbar */
-/* #searchResults {
+#searchResults {
   display: none;
   position: absolute;
   top: 105%;
@@ -47,7 +47,7 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
   max-height: 350px;
   overflow-y: auto;
   padding: 8px 0;
-} */
+}
 #searchResults a.item {
   display: flex;
   align-items: center;
