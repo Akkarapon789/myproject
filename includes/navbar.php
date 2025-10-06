@@ -4,6 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// 🔹 เชื่อมฐานข้อมูลจริง
+include '../config/connectdb.php';
+
 // จำนวนสินค้าทั้งหมดในตะกร้า
 $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 ?>
@@ -27,29 +30,53 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 .navbar-custom .nav-link:hover {
     color: #fff;
 }
+
+/* 🔍 Search dropdown */
+#searchResults {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  z-index: 2000;
+  max-height: 300px;
+  overflow-y: auto;
+}
+#searchResults a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  color: #333;
+  text-decoration: none;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
+}
+#searchResults a:hover {
+  background: #f8f9fa;
+}
+#searchResults .no-result {
+  padding: 10px 15px;
+  color: #999;
+  text-align: center;
+}
 </style>
 
 <nav class="navbar navbar-expand-lg navbar-custom">
     <div class="container-fluid">
-        <!-- ด้านซ้าย -->
         <a class="nav-link" href="#">Seller Centre</a>
         <a class="nav-link" href="#">เปิดร้านค้า</a>
         <a class="nav-link" href="#">ดาวน์โหลด</a>
-
-        <!-- Social -->
         <span class="nav-link">ติดตามเรา</span>
-
-        <!-- ด้านขวา -->
         <div class="ms-auto d-flex align-items-center">
             <a class="nav-link" href="#">การแจ้งเตือน</a>
             <a class="nav-link" href="#">ช่วยเหลือ</a>
         </div>
-
-        <!-- ภาษา -->
         <div class="dropdown me-3">
-            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
-                ไทย
-            </a>
+            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">ไทย</a>
             <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="#">ไทย</a></li>
                 <li><a class="dropdown-item" href="#">English</a></li>
@@ -60,23 +87,22 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 
 <nav class="navbar navbar-expand-lg navbar-custom1">
   <div class="container-fluid d-flex align-items-center justify-content-between">
-      
+
       <!-- Logo -->
       <a href="index.php" class="d-flex align-items-center text-decoration-none me-3">
           <img src="../assets/logo/2.png" style="width:80px; height:80px;">
           <span class="ms-3 fs-2 fw-bold" style="color:#FDDE55;">The Bookmark</span>
       </a>
 
-      <!-- 🔍 Search bar -->
-      <form class="d-flex flex-grow-1 mx-3" role="search">
-          <input class="form-control me-2" type="search" placeholder="ค้นหาหนังสือ..." aria-label="Search">
-          <button class="btn btn-outline-warning" type="submit">Search</button>
-      </form>
+      <!-- 🔍 Search bar (Real-time) -->
+      <div class="position-relative flex-grow-1 mx-3" style="max-width: 500px;">
+        <input id="searchInput" class="form-control" type="search" placeholder="ค้นหาหนังสือ..." autocomplete="off">
+        <div id="searchResults"></div>
+      </div>
 
       <!-- User Section -->
       <div class="text-end d-flex align-items-center gap-3">
           <?php if (isset($_SESSION['user_id'])): ?>
-              <!-- ปุ่มตะกร้า -->
               <button id="cartButton"
                       class="cart-btn btn btn-outline-light position-relative"
                       aria-controls="cartOffcanvas"
@@ -109,7 +135,6 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
                   </ul>
               </div>
           <?php else: ?>
-              <!-- ปุ่ม Login / Sign-up -->
               <a href="../auth/login.php" class="btn btn-warning">Login</a>
               <a href="../auth/sign-up.php" class="btn btn-outline-warning">Sign-up</a>
           <?php endif; ?>
@@ -118,10 +143,12 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
   </div>
 </nav>
 
-<!-- JS อัปเดตจำนวนสินค้าตะกร้าแบบ AJAX -->
+<!-- ✅ JavaScript Section -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function(){
+
+    // 🛒 อัปเดตตะกร้า (โค้ดเดิม)
     $('.add-to-cart-btn').click(function(){
         var productId = $(this).data('id');
         $.post('../cart/add_to_cart.php', {product_id: productId}, function(response){
@@ -129,5 +156,62 @@ $(document).ready(function(){
             $('#cartCount').text(data.count);
         });
     });
+
+    // 🔍 ค้นหาสินค้าแบบเรียลไทม์
+    $('#searchInput').on('keyup', function(){
+        let query = $(this).val().trim();
+
+        if(query.length < 2){
+            $('#searchResults').hide();
+            return;
+        }
+
+        $.ajax({
+            url: '', // ✅ ค้นหาภายในไฟล์เดียว
+            method: 'POST',
+            data: { ajax_search: true, q: query },
+            success: function(data){
+                $('#searchResults').html(data).fadeIn(200);
+            }
+        });
+    });
+
+    // 🔘 คลิกข้างนอกเพื่อซ่อน dropdown
+    $(document).on('click', function(e){
+        if (!$(e.target).closest('#searchInput, #searchResults').length){
+            $('#searchResults').fadeOut(150);
+        }
+    });
+
 });
 </script>
+
+<?php
+// ✅ ส่วน PHP สำหรับประมวลผล AJAX อยู่ท้ายไฟล์นี้เลย
+if (isset($_POST['ajax_search']) && !empty($_POST['q'])) {
+    $q = trim($_POST['q']);
+    $sql = "SELECT id, title, price FROM products 
+            WHERE title LIKE ? OR description LIKE ?
+            ORDER BY RAND() LIMIT 6";
+    $stmt = $conn->prepare($sql);
+    $like = "%$q%";
+    $stmt->bind_param("ss", $like, $like);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0):
+        while($row = $result->fetch_assoc()): ?>
+            <a href="../products/product_detail.php?id=<?= $row['id'] ?>">
+                <span><?= htmlspecialchars($row['title']) ?></span>
+                <span class="badge bg-warning text-dark">฿<?= number_format($row['price'],2) ?></span>
+            </a>
+        <?php endwhile;
+    else: ?>
+        <div class="no-result">ไม่พบสินค้า</div>
+    <?php endif;
+
+    $stmt->close();
+    $conn->close();
+    exit();
+}
+?>
