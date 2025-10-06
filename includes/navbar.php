@@ -20,6 +20,8 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
     background-color: #2155CD;
     border-bottom: 1px solid #2155CD;
     padding: 10px 8px;
+    position: relative;
+    overflow: visible !important;
 }
 .navbar-custom .nav-link {
     color: #FDDE55;
@@ -31,37 +33,61 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
     color: #fff;
 }
 
-/* 🔍 Search dropdown */
+/* 🔍 Search Dropdown Shopee-Style */
 #searchResults {
   display: none;
   position: absolute;
-  top: 100%;
+  top: 105%;
   left: 0;
   right: 0;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  z-index: 2000;
-  max-height: 300px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  z-index: 9999;
+  max-height: 380px;
   overflow-y: auto;
+  padding: 8px 0;
 }
-#searchResults a {
+#searchResults a.item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: start;
+  gap: 10px;
   padding: 10px 15px;
   color: #333;
   text-decoration: none;
   border-bottom: 1px solid #eee;
-  transition: background 0.2s;
+  transition: background 0.25s ease;
 }
-#searchResults a:hover {
-  background: #f8f9fa;
+#searchResults a.item:hover {
+  background: #f9fafb;
+}
+#searchResults img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+#searchResults .info {
+  flex: 1;
+}
+#searchResults .title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+#searchResults .price {
+  font-size: 13px;
+  color: #f77f00;
+  font-weight: bold;
 }
 #searchResults .no-result {
-  padding: 10px 15px;
-  color: #999;
+  padding: 15px;
   text-align: center;
+  color: #999;
+  font-size: 14px;
 }
 </style>
 
@@ -94,8 +120,8 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
           <span class="ms-3 fs-2 fw-bold" style="color:#FDDE55;">The Bookmark</span>
       </a>
 
-      <!-- 🔍 Search bar (Real-time) -->
-      <div class="position-relative flex-grow-1 mx-3" style="max-width: 500px;">
+      <!-- 🔍 Search bar (Real-time Shopee style) -->
+      <div class="position-relative flex-grow-1 mx-3 bg-white rounded" style="max-width: 500px; z-index: 1000;">
         <input id="searchInput" class="form-control" type="search" placeholder="ค้นหาหนังสือ..." autocomplete="off">
         <div id="searchResults"></div>
       </div>
@@ -162,16 +188,16 @@ $(document).ready(function(){
         let query = $(this).val().trim();
 
         if(query.length < 2){
-            $('#searchResults').hide();
+            $('#searchResults').fadeOut(100);
             return;
         }
 
         $.ajax({
-            url: '', // ✅ ค้นหาภายในไฟล์เดียว
+            url: '',
             method: 'POST',
             data: { ajax_search: true, q: query },
             success: function(data){
-                $('#searchResults').html(data).fadeIn(200);
+                $('#searchResults').html(data).fadeIn(150);
             }
         });
     });
@@ -200,10 +226,15 @@ if (isset($_POST['ajax_search']) && !empty($_POST['q'])) {
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0):
-        while($row = $result->fetch_assoc()): ?>
-            <a href="../products/product_detail.php?id=<?= $row['id'] ?>">
-                <span><?= htmlspecialchars($row['title']) ?></span>
-                <span class="badge bg-warning text-dark">฿<?= number_format($row['price'],2) ?></span>
+        while($row = $result->fetch_assoc()): 
+            $img = "https://picsum.photos/seed/" . crc32($row['title']) . "/80/80";
+            ?>
+            <a href="../products/product_detail.php?id=<?= $row['id'] ?>" class="item">
+                <img src="<?= $img ?>" alt="<?= htmlspecialchars($row['title']) ?>">
+                <div class="info">
+                    <div class="title"><?= htmlspecialchars($row['title']) ?></div>
+                    <div class="price">฿<?= number_format($row['price'], 2) ?></div>
+                </div>
             </a>
         <?php endwhile;
     else: ?>
