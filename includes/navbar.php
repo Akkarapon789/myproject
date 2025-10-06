@@ -33,7 +33,7 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
     color: #fff;
 }
 
-/* 🔍 Search Dropdown Shopee-Style */
+/* ✅ ปรับ Search Dropdown ใหม่ ให้ดูเหมือน Shopee และอยู่เหนือ navbar */
 #searchResults {
   display: none;
   position: absolute;
@@ -41,10 +41,10 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
   left: 0;
   right: 0;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-  z-index: 9999;
-  max-height: 380px;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  z-index: 99999; /* ← อยู่เหนือ navbar แล้ว */
+  max-height: 350px;
   overflow-y: auto;
   padding: 8px 0;
 }
@@ -56,17 +56,18 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
   padding: 10px 15px;
   color: #333;
   text-decoration: none;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f1f1f1;
   transition: background 0.25s ease;
 }
 #searchResults a.item:hover {
-  background: #f9fafb;
+  background: #f7f9fc;
 }
 #searchResults img {
   width: 60px;
   height: 60px;
   border-radius: 8px;
   object-fit: cover;
+  flex-shrink: 0;
 }
 #searchResults .info {
   flex: 1;
@@ -75,8 +76,8 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
   font-size: 14px;
   font-weight: 500;
   color: #333;
-  margin-bottom: 2px;
-  line-height: 1.2;
+  margin-bottom: 4px;
+  line-height: 1.3;
 }
 #searchResults .price {
   font-size: 13px;
@@ -120,9 +121,14 @@ $cartCount = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
           <span class="ms-3 fs-2 fw-bold" style="color:#FDDE55;">The Bookmark</span>
       </a>
 
-      <!-- 🔍 Search bar (Real-time Shopee style) -->
-      <div class="position-relative flex-grow-1 mx-3 bg-white rounded" style="max-width: 500px; z-index: 1000;">
-        <input id="searchInput" class="form-control" type="search" placeholder="ค้นหาหนังสือ..." autocomplete="off">
+      <!-- 🔍 Search bar -->
+      <div class="position-relative flex-grow-1 mx-3" style="max-width: 500px;">
+        <input id="searchInput" 
+               class="form-control" 
+               type="search" 
+               placeholder="ค้นหาหนังสือ..." 
+               autocomplete="off"
+               style="border-radius: 20px; padding: 10px 15px;">
         <div id="searchResults"></div>
       </div>
 
