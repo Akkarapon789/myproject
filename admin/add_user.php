@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role      = $_POST['role'];
     $password  = password_hash($_POST['password'], PASSWORD_BCRYPT);
 
-    $stmt = $conn->prepare("INSERT INTO users (firstname, lastname, email, password, phone, role) VALUES (?,?,?,?,?,?)");
+    $stmt = $conn->prepare("INSERT INTO user (firstname, lastname, email, password, phone, role) VALUES (?,?,?,?,?,?)");
     $stmt->bind_param("ssssss", $firstname, $lastname, $email, $password, $phone, $role);
     $stmt->execute();
     header("Location: users.php");
