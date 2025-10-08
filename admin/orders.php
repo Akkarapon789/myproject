@@ -21,7 +21,6 @@ include '../config/connectdb.php';
     <a href="users.php">ผู้ใช้</a>
     <a href="products.php">สินค้า</a>
     <a href="orders.php" class="active">คำสั่งซื้อ</a>
-    <a href="reports.php">รายงาน</a>
     <a href="adminout.php" class="text-danger">ออกจากระบบ</a>
   </div>
 
