@@ -48,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart)) {
     // ✅ ล้างตะกร้า
     unset($_SESSION['cart']);
 
-    // ✅ ไปหน้า success
-    header("Location: success.php?order_id=" . $order_id);
+    // ✅ ไปหน้า place_order
+    header("Location: place_order.php?order_id=" . $order_id);
     exit;
 }
 
@@ -95,7 +95,7 @@ foreach ($cart as $item) {
     <!-- ฟอร์มที่อยู่ -->
     <div class="col-lg-7 mb-4">
       <div class="card checkout-card p-4">
-        <h3 class="mb-4">📦 ข้อมูลผู้สั่งซื้อ</h3>
+        <h3 class="mb-4">ข้อมูลผู้สั่งซื้อ</h3>
         <?php if (empty($cart)): ?>
           <div class="alert alert-warning">ยังไม่มีสินค้าในตะกร้า กรุณากลับไปเลือกซื้อก่อน</div>
           <a href="../pages/index.php" class="btn btn-primary">กลับไปเลือกซื้อ</a>
