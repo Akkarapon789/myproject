@@ -15,6 +15,7 @@ include '../config/connectdb.php';
 </head>
 <body>
 <div class="d-flex">
+  <!-- 🧭 Sidebar -->
   <div class="sidebar p-3">
     <h4>Admin Panel</h4>
     <a href="index.php">แดชบอร์ด</a>
@@ -25,18 +26,19 @@ include '../config/connectdb.php';
     <a href="adminout.php" class="text-danger">ออกจากระบบ</a>
   </div>
 
+  <!-- 📄 Content -->
   <div class="content flex-grow-1">
-    <h2>👥 ผู้ใช้</h2>
+    <h2>👥 จัดการผู้ใช้</h2>
     <a href="add_user.php" class="btn btn-success mb-3">+ เพิ่มผู้ใช้</a>
 
-    <div class="card p-3">
-      <table class="table table-striped">
-        <thead class="table-dark">
+    <div class="card p-3 shadow-sm">
+      <table id="userTable" class="table table-bordered table-hover align-middle">
+        <thead>
           <tr>
             <th>ID</th>
             <th>ชื่อ-นามสกุล</th>
             <th>Email</th>
-            <th>เบอร์</th>
+            <th>เบอร์โทร</th>
             <th>สิทธิ์</th>
             <th>การจัดการ</th>
           </tr>
@@ -51,12 +53,16 @@ include '../config/connectdb.php';
             <td><?= htmlspecialchars($row['firstname'] . " " . $row['lastname']); ?></td>
             <td><?= htmlspecialchars($row['email']); ?></td>
             <td><?= htmlspecialchars($row['phone']); ?></td>
-            <td><span class="badge <?= $row['role']=='admin'?'bg-danger':'bg-primary' ?>">
-                <?= $row['role']; ?></span></td>
+            <td>
+              <span class="badge <?= $row['role']=='admin'?'bg-danger':'bg-primary' ?>">
+                <?= ucfirst($row['role']); ?>
+              </span>
+            </td>
             <td>
               <a href="edit_user.php?id=<?= $row['user_id'] ?>" class="btn btn-sm btn-warning">แก้ไข</a>
-              <a href="delete_user.php?id=<?= $row['user_id'] ?>" class="btn btn-sm btn-danger"
-                 onclick="return confirm('ยืนยันการลบ?');">ลบ</a>
+              <a href="delete_user.php?id=<?= $row['user_id'] ?>" 
+                 class="btn btn-sm btn-danger"
+                 onclick="return confirm('ยืนยันการลบผู้ใช้นี้หรือไม่?');">ลบ</a>
             </td>
           </tr>
           <?php endwhile; ?>
@@ -66,11 +72,12 @@ include '../config/connectdb.php';
   </div>
 </div>
 
+<!-- 📊 DataTable Init -->
 <script>
 $(document).ready(function() {
-  $('#productTable').DataTable({
+  $('#userTable').DataTable({
     language: {
-      search: "Search:",
+      search: "🔍 ค้นหา:",
       lengthMenu: "แสดง _MENU_ รายการต่อหน้า",
       info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
       infoEmpty: "ไม่มีข้อมูล",
@@ -83,7 +90,7 @@ $(document).ready(function() {
       }
     },
     pageLength: 10,
-    order: [[1, "desc"]],
+    order: [[0, "desc"]],
     responsive: true
   });
 });
