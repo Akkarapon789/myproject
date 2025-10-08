@@ -22,21 +22,6 @@ $is_logged_in = isset($_SESSION['role']);
 .pagination .page-item.active .page-link { background:#2155CD; color:#fff; font-weight:bold; box-shadow:0 3px 8px rgba(33,85,205,.4); }
 .pagination .page-item.disabled .page-link { opacity:.5; cursor:not-allowed; background:#e9ecef; }
 nav.pagination-wrapper { display:flex; justify-content:center; margin-top:30px; }
-/* 🔹 View All Button */
-.btn-view-all {
-            background-color: #FCC61D;
-            border: none;
-            font-weight: 600;
-            color: #000;
-            padding: 10px 30px;
-            border-radius: 50px;
-            transition: 0.3s;
-        }
-        .btn-view-all:hover {
-            background-color: #ffdd57;
-            transform: scale(1.05);
-            color: #000;
-        }
 </style>
 </head>
 <body>
