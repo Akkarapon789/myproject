@@ -1,34 +1,34 @@
 <?php
 include '../config/connectdb.php';
 
-// สร้างโฟลเดอร์ uploads/ อัตโนมัติถ้าไม่มี
-$uploadsDir = "../assets/uploads/";
-if (!is_dir($uploadsDir)) {
-    mkdir($uploadsDir, 0775, true);
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'];
     $price = $_POST['price'];
     $stock = $_POST['stock'];
     $category = $_POST['category_id'];
 
-    $imageFileName = null; // รูปหลัก
+    // insert product
+    $stmt = $conn->prepare("INSERT INTO products (title, price, stock, category_id, slug) VALUES (?,?,?,?,?)");
+    $slug = strtolower(str_replace(" ","-", $title));
+    $stmt->bind_param("sdiis", $title, $price, $stock, $category, $slug);
+    $stmt->execute();
+    $product_id = $stmt->insert_id;
 
-    // อัพโหลดรูปหลัก (เลือกรูปแรกถ้ามีหลายรูป)
-    if(isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
-        $fileName = time() . "_" . basename($_FILES['images']['name'][0]);
-        $targetFile = $uploadsDir . $fileName;
-        if(move_uploaded_file($_FILES['images']['tmp_name'][0], $targetFile)) {
-            $imageFileName = $fileName;
+    // อัพโหลดรูปจริง
+    if(isset($_FILES['images'])) {
+        $uploadsDir = "../assets/uploads/";
+        $stmt_img = $conn->prepare("INSERT INTO product_images (product_id, image_url) VALUES (?, ?)");
+
+        foreach($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+            $fileName = time() . "_" . basename($_FILES['images']['name'][$key]);
+            $targetFile = $uploadsDir . $fileName;
+
+            if(move_uploaded_file($tmp_name, $targetFile)) {
+                $stmt_img->bind_param("is", $product_id, $fileName);
+                $stmt_img->execute();
+            }
         }
     }
-
-    // insert product พร้อมชื่อไฟล์รูปหลัก
-    $stmt = $conn->prepare("INSERT INTO products (title, price, stock, category_id, slug, image) VALUES (?,?,?,?,?,?)");
-    $slug = strtolower(str_replace(" ","-", $title));
-    $stmt->bind_param("sdiiss", $title, $price, $stock, $category, $slug, $imageFileName);
-    $stmt->execute();
 
     header("Location: products.php");
     exit();
@@ -68,6 +68,7 @@ $cats = $conn->query("SELECT * FROM categories");
 <body>
 <div class="container mt-5">
   <h2>เพิ่มสินค้าใหม่</h2>
+  <!-- เพิ่ม enctype="multipart/form-data" เพื่อรองรับการอัพโหลดไฟล์ -->
   <form method="post" enctype="multipart/form-data">
     <div class="mb-3"><label>ชื่อสินค้า</label>
       <input type="text" name="title" class="form-control" required>
@@ -88,10 +89,11 @@ $cats = $conn->query("SELECT * FROM categories");
 
     <!-- Drag & Drop Zone -->
     <div class="mb-3">
-      <label>รูปภาพสินค้า (เลือกแค่รูปหลัก)</label>
+      <label>รูปภาพสินค้า (ลากวาง หรือ คลิกเพื่อเลือก)</label>
       <div id="drop-zone" class="drop-zone">คลิกหรือลากไฟล์ภาพมาที่นี่</div>
       <div id="previews" class="d-flex flex-wrap mt-2"></div>
-      <input type="file" name="images[]" id="fileInput" accept="image/*" style="display:none;">
+      <!-- input type file จริง -->
+      <input type="file" name="images[]" id="fileInput" accept="image/*" multiple style="display:none;">
     </div>
 
     <button class="btn btn-success">บันทึก</button>
@@ -114,7 +116,7 @@ dropZone.addEventListener('dragleave', e => dropZone.classList.remove('dragover'
 dropZone.addEventListener('drop', e => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
-    fileInput.files = e.dataTransfer.files;
+    fileInput.files = e.dataTransfer.files; // กำหนดให้ input รับไฟล์ที่ลากมาลง
     updatePreviews(e.dataTransfer.files);
 });
 
@@ -122,17 +124,17 @@ fileInput.addEventListener('change', () => updatePreviews(fileInput.files));
 
 function updatePreviews(files) {
     previews.innerHTML = "";
-    if (files.length === 0) return;
-    const file = files[0]; // ใช้แค่รูปแรกเป็นรูปหลัก
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        img.className = 'preview-img';
-        previews.appendChild(img);
+    for (let file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'preview-img';
+            previews.appendChild(img);
+        }
+        reader.readAsDataURL(file);
     }
-    reader.readAsDataURL(file);
 }
 </script>
 </body>
