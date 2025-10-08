@@ -4,7 +4,14 @@ require_once '../config/connectdb.php';
 
 $cart = $_SESSION['cart'] ?? [];
 
-// ✅ ถ้ามีการส่งข้อมูลจากฟอร์ม
+// ✅ ฟังก์ชันเช็กข้อผิดพลาด SQL
+function check_error($stmt, $conn) {
+    if ($stmt === false) {
+        die("❌ Prepare failed: " . $conn->error);
+    }
+}
+
+// ถ้า form ถูกส่งไป place_order.php ให้ประมวลผล
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart)) {
 
     $fullname = trim($_POST['fullname']);
@@ -19,36 +26,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart)) {
         $total_price += $item['price'] * $item['qty'];
     }
 
-    // ✅ บันทึกข้อมูลคำสั่งซื้อในตาราง orders
+    // บันทึกข้อมูลคำสั่งซื้อในตาราง orders
     $sql_order = "INSERT INTO orders (fullname, email, phone, address, payment, total_price, created_at)
                   VALUES (?, ?, ?, ?, ?, ?, NOW())";
     $stmt = $conn->prepare($sql_order);
+    check_error($stmt, $conn);
     $stmt->bind_param("sssssd", $fullname, $email, $phone, $address, $payment, $total_price);
     $stmt->execute();
+    if ($stmt->error) { die("❌ Order insert error: " . $stmt->error); }
     $order_id = $stmt->insert_id;
     $stmt->close();
 
-    // ✅ บันทึกรายการสินค้าใน order_detail
+    // บันทึกรายการสินค้าใน order_detail
     $sql_detail = "INSERT INTO order_detail (order_id, product_id, qty, price) VALUES (?, ?, ?, ?)";
     $stmt_detail = $conn->prepare($sql_detail);
+    check_error($stmt_detail, $conn);
 
     foreach ($cart as $pid => $item) {
         $stmt_detail->bind_param("iiid", $order_id, $pid, $item['qty'], $item['price']);
         $stmt_detail->execute();
+        if ($stmt_detail->error) { die("❌ Detail insert error: " . $stmt_detail->error); }
 
-        // 🔹 อัปเดต stock (-จำนวนที่ซื้อ)
+        // อัปเดต stock
         $update_stock = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+        check_error($update_stock, $conn);
         $update_stock->bind_param("ii", $item['qty'], $pid);
         $update_stock->execute();
+        if ($update_stock->error) { die("❌ Update stock error: " . $update_stock->error); }
         $update_stock->close();
     }
 
     $stmt_detail->close();
 
-    // ✅ ล้างตะกร้า
+    // ล้างตะกร้า
     unset($_SESSION['cart']);
 
-    // ✅ ไปหน้า place_order
+    // ไปหน้า place_order.php
     header("Location: place_order.php?order_id=" . $order_id);
     exit;
 }
@@ -66,26 +79,11 @@ foreach ($cart as $item) {
   <title>Checkout - The Bookmark Society</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body {
-      background-color: #f8f9fa;
-    }
-    .checkout-card {
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
-    .order-summary {
-      background: #fffdf5;
-      border: 1px solid #f3eac2;
-      border-radius: 10px;
-    }
-    .order-summary h5 {
-      border-bottom: 2px solid #e9ecef;
-      padding-bottom: .5rem;
-      margin-bottom: 1rem;
-    }
-    .form-label {
-      font-weight: 600;
-    }
+    body { background-color: #f8f9fa; }
+    .checkout-card { border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+    .order-summary { background: #fffdf5; border: 1px solid #f3eac2; border-radius: 10px; }
+    .order-summary h5 { border-bottom: 2px solid #e9ecef; padding-bottom: .5rem; margin-bottom: 1rem; }
+    .form-label { font-weight: 600; }
   </style>
 </head>
 <body>
@@ -95,7 +93,7 @@ foreach ($cart as $item) {
     <!-- ฟอร์มที่อยู่ -->
     <div class="col-lg-7 mb-4">
       <div class="card checkout-card p-4">
-        <h3 class="mb-4">ข้อมูลผู้สั่งซื้อ</h3>
+        <h3 class="mb-4">📦 ข้อมูลผู้สั่งซื้อ</h3>
         <?php if (empty($cart)): ?>
           <div class="alert alert-warning">ยังไม่มีสินค้าในตะกร้า กรุณากลับไปเลือกซื้อก่อน</div>
           <a href="../pages/index.php" class="btn btn-primary">กลับไปเลือกซื้อ</a>

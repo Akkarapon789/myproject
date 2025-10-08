@@ -40,7 +40,7 @@ include '../config/connectdb.php';
         </thead>
         <tbody>
           <?php
-          $orders = $conn->query("SELECT * FROM orders ORDER BY id DESC");
+          $orders = $conn->query("SELECT * FROM orders ORDER BY id ASC");
           while($o=$orders->fetch_assoc()):
           ?>
           <tr>

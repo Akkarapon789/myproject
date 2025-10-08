@@ -42,7 +42,7 @@ include '../config/connectdb.php';
         </thead>
         <tbody>
           <?php
-          $result = $conn->query("SELECT * FROM user ORDER BY user_id DESC") or die("SQL Error: " . $conn->error);
+          $result = $conn->query("SELECT * FROM user ORDER BY user_id ASC") or die("SQL Error: " . $conn->error);
           while ($row = $result->fetch_assoc()):
           ?>
           <tr>

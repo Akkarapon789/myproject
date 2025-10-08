@@ -45,7 +45,7 @@ include '../config/connectdb.php';
           <?php
           $sql = "SELECT p.*, c.title AS category_name FROM products p 
                   JOIN categories c ON p.category_id = c.id 
-                  ORDER BY p.id DESC";
+                  ORDER BY p.id ASC";
           $result = $conn->query($sql);
           while($row = $result->fetch_assoc()):
               $imgUrl = !empty($row['image']) ? "../uploads/" . $row['image'] : "https://picsum.photos/60?random=" . $row['id'];
