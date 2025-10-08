@@ -71,16 +71,11 @@ include '../config/connectdb.php';
   </div>
 </div>
 
-<!-- ✅ DataTables JS -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/2.0.3/js/dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.min.js"></script>
-
 <script>
 $(document).ready(function() {
   $('#productTable').DataTable({
     language: {
-      search: "Search:",
+      search: "🔍 ค้นหา:",
       lengthMenu: "แสดง _MENU_ รายการต่อหน้า",
       info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
       infoEmpty: "ไม่มีข้อมูล",
@@ -98,6 +93,5 @@ $(document).ready(function() {
   });
 });
 </script>
-
 </body>
 </html>
