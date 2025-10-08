@@ -14,37 +14,55 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
 // เชื่อมต่อฐานข้อมูล
 include '../config/connectdb.php';
 
+// ฟังก์ชันช่วยดึงค่าเดียวจาก query ปลอดภัย
+function getSingleValue($conn, $sql, $col) {
+    $res = $conn->query($sql);
+    if ($res && $row = $res->fetch_assoc()) {
+        return $row[$col] ?? 0;
+    }
+    return 0;
+}
+
 // ดึงข้อมูลสรุป
-$users       = $conn->query("SELECT COUNT(*) AS c FROM users")->fetch_assoc()['c'] ?? 0;
-$products    = $conn->query("SELECT COUNT(*) AS c FROM products")->fetch_assoc()['c'] ?? 0;
-$orders      = $conn->query("SELECT COUNT(*) AS c FROM orders")->fetch_assoc()['c'] ?? 0;
-$total_sales = $conn->query("SELECT SUM(total) AS s FROM orders")->fetch_assoc()['s'] ?? 0;
+$users       = getSingleValue($conn, "SELECT COUNT(*) AS c FROM users", 'c');
+$products    = getSingleValue($conn, "SELECT COUNT(*) AS c FROM products", 'c');
+$orders      = getSingleValue($conn, "SELECT COUNT(*) AS c FROM orders", 'c');
+$total_sales = getSingleValue($conn, "SELECT SUM(total) AS s FROM orders", 's');
 
 // ดึงยอดขายรายเดือน
+$months = []; 
+$sales = [];
 $sql = "SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total) as sales 
         FROM orders GROUP BY month ORDER BY month ASC";
 $result = $conn->query($sql);
-$months = []; $sales = [];
-while ($row = $result->fetch_assoc()) {
-    $months[] = $row['month'];
-    $sales[] = $row['sales'];
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $months[] = $row['month'];
+        $sales[]  = $row['sales'];
+    }
 }
 
 // ดึงยอดขายตามหมวดหมู่
+$cats = []; 
+$cat_sales = [];
 $sql2 = "SELECT c.title AS category, SUM(od.qty * od.price) AS total_sales
          FROM order_detail od
          JOIN products p ON od.product_id = p.id
          JOIN categories c ON p.category_id = c.id
          GROUP BY c.id";
 $res2 = $conn->query($sql2);
-$cats = []; $cat_sales = [];
-while ($r = $res2->fetch_assoc()) {
-    $cats[] = $r['category'];
-    $cat_sales[] = $r['total_sales'];
+if ($res2) {
+    while ($r = $res2->fetch_assoc()) {
+        $cats[] = $r['category'];
+        $cat_sales[] = $r['total_sales'];
+    }
 }
 
 // ดึงคำสั่งซื้อล่าสุด 5 รายการ
 $latest = $conn->query("SELECT * FROM orders ORDER BY id DESC LIMIT 5");
+if (!$latest) {
+    $latest = [];
+}
 ?>
 <!doctype html>
 <html lang="th">
@@ -117,13 +135,18 @@ $latest = $conn->query("SELECT * FROM orders ORDER BY id DESC LIMIT 5");
           <h5>คำสั่งซื้อล่าสุด</h5>
           <table class="table table-sm">
             <tr><th>ID</th><th>ลูกค้า</th><th>ยอดรวม</th></tr>
-            <?php while ($o = $latest->fetch_assoc()): ?>
-              <tr>
-                <td>#<?= $o['id']; ?></td>
-                <td><?= htmlspecialchars($o['fullname']); ?></td>
-                <td><?= number_format($o['total'], 2); ?> ฿</td>
-              </tr>
-            <?php endwhile; ?>
+            <?php 
+            if(!empty($latest)){
+                while ($o = $latest->fetch_assoc()): ?>
+                    <tr>
+                      <td>#<?= $o['id']; ?></td>
+                      <td><?= htmlspecialchars($o['fullname']); ?></td>
+                      <td><?= number_format($o['total'], 2); ?> ฿</td>
+                    </tr>
+                <?php endwhile; 
+            } else { ?>
+                <tr><td colspan="3" class="text-center">ไม่มีคำสั่งซื้อ</td></tr>
+            <?php } ?>
           </table>
         </div>
       </div>
