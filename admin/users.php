@@ -86,7 +86,7 @@ $(document).ready(function() {
       }
     },
     pageLength: 10,
-    order: [[0, "ASC"]],
+    user: [[0, "ASC"]],
     responsive: true
   });
 });
