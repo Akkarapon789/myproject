@@ -1,5 +1,7 @@
 <?php
 include '../config/connectdb.php';
+
+// ✅ รับ ID และดึงข้อมูลสินค้า
 $id = $_GET['id'];
 $product = $conn->query("SELECT * FROM products WHERE id=$id")->fetch_assoc();
 
@@ -9,35 +11,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stock = $_POST['stock'];
     $category = $_POST['category_id'];
     $slug = strtolower(str_replace(" ", "-", $title));
-    $image = $product['image']; // เก็บชื่อรูปเก่าไว้ก่อน
 
-    // 📸 ถ้ามีการอัปโหลดรูปใหม่
-    if (!empty($_FILES['image']['name'])) {
+    // ✅ ส่วนอัปโหลดหลายรูป
+    $imagePaths = [];
+
+    // ถ้ามีรูปเก่าใน DB
+    if (!empty($product['image_url'])) {
+        $imagePaths = explode(",", $product['image_url']);
+    }
+
+    // ถ้ามีการอัปโหลดรูปใหม่
+    if (!empty($_FILES['images']['name'][0])) {
         $targetDir = "../uploads/";
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0777, true);
-        }
+        if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
 
-        $fileName = time() . "_" . basename($_FILES['image']['name']);
-        $targetFile = $targetDir . $fileName;
-        $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+        foreach ($_FILES['images']['name'] as $key => $name) {
+            $fileTmp = $_FILES['images']['tmp_name'][$key];
+            $fileName = time() . "_" . basename($name);
+            $targetFile = $targetDir . $fileName;
+            $fileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
 
-        // ตรวจสอบไฟล์ว่าเป็นรูป
-        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        if (in_array($imageFileType, $allowed)) {
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-                // ลบรูปเก่าออกถ้ามี
-                if (!empty($product['image']) && file_exists("../uploads/" . $product['image'])) {
-                    unlink("../uploads/" . $product['image']);
+            if (in_array($fileType, ['jpg','jpeg','png','gif','webp'])) {
+                if (move_uploaded_file($fileTmp, $targetFile)) {
+                    $imagePaths[] = str_replace("../", "", $targetFile);
                 }
-                $image = $fileName;
             }
         }
     }
 
-    // ✅ อัปเดตฐานข้อมูล
-    $stmt = $conn->prepare("UPDATE products SET title=?, price=?, stock=?, category_id=?, slug=?, image=? WHERE id=?");
-    $stmt->bind_param("sdiissi", $title, $price, $stock, $category, $slug, $image, $id);
+    // ✅ รวมชื่อรูปทั้งหมดเก็บในคอลัมน์เดียว
+    $imagePathStr = implode(",", $imagePaths);
+
+    // ✅ อัปเดตข้อมูลสินค้า
+    $stmt = $conn->prepare("UPDATE products SET title=?, price=?, stock=?, category_id=?, slug=?, image_url=? WHERE id=?");
+    $stmt->bind_param("sdiissi", $title, $price, $stock, $category, $slug, $imagePathStr, $id);
     $stmt->execute();
 
     header("Location: products.php");
@@ -55,54 +62,55 @@ $cats = $conn->query("SELECT * FROM categories");
 </head>
 <body>
 <div class="container mt-5">
-  <div class="card shadow-sm p-4">
-    <h2 class="mb-4">🛠 แก้ไขสินค้า</h2>
-    <form method="post" enctype="multipart/form-data">
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label fw-bold">ชื่อสินค้า</label>
-          <input type="text" name="title" class="form-control" value="<?= htmlspecialchars($product['title']); ?>" required>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label fw-bold">ราคา (บาท)</label>
-          <input type="number" step="0.01" name="price" class="form-control" value="<?= $product['price']; ?>" required>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label fw-bold">สต็อก</label>
-          <input type="number" name="stock" class="form-control" value="<?= $product['stock']; ?>" required>
-        </div>
+  <h2>🖋️ แก้ไขสินค้า</h2>
 
-        <div class="col-md-6">
-          <label class="form-label fw-bold">หมวดหมู่</label>
-          <select name="category_id" class="form-select">
-            <?php while($c=$cats->fetch_assoc()): ?>
-              <option value="<?= $c['id']; ?>" <?= $c['id']==$product['category_id']?'selected':''; ?>>
-                <?= htmlspecialchars($c['title']); ?>
-              </option>
-            <?php endwhile; ?>
-          </select>
-        </div>
+  <form method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label>ชื่อสินค้า</label>
+      <input type="text" name="title" class="form-control" value="<?= htmlspecialchars($product['title']); ?>" required>
+    </div>
 
-        <!-- 📸 แสดงและอัปโหลดรูปสินค้า -->
-        <div class="col-md-6">
-          <label class="form-label fw-bold">รูปสินค้า</label>
-          <input type="file" name="image" class="form-control" accept="image/*">
-          <div class="mt-3">
-            <?php if (!empty($product['image']) && file_exists("../uploads/" . $product['image'])): ?>
-              <img src="../uploads/<?= htmlspecialchars($product['image']); ?>" alt="product" class="img-thumbnail" width="150">
-            <?php else: ?>
-              <img src="https://picsum.photos/150?random=<?= $product['id']; ?>" class="img-thumbnail" alt="default">
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
+    <div class="mb-3">
+      <label>ราคา</label>
+      <input type="number" step="0.01" name="price" class="form-control" value="<?= $product['price']; ?>" required>
+    </div>
 
-      <div class="mt-4">
-        <button class="btn btn-primary">💾 บันทึกการเปลี่ยนแปลง</button>
-        <a href="products.php" class="btn btn-secondary">ยกเลิก</a>
-      </div>
-    </form>
-  </div>
+    <div class="mb-3">
+      <label>สต็อก</label>
+      <input type="number" name="stock" class="form-control" value="<?= $product['stock']; ?>" required>
+    </div>
+
+    <div class="mb-3">
+      <label>หมวดหมู่</label>
+      <select name="category_id" class="form-select">
+        <?php while($c = $cats->fetch_assoc()): ?>
+          <option value="<?= $c['id']; ?>" <?= $c['id'] == $product['category_id'] ? 'selected' : ''; ?>>
+            <?= htmlspecialchars($c['title']); ?>
+          </option>
+        <?php endwhile; ?>
+      </select>
+    </div>
+
+    <!-- ✅ ส่วนอัปโหลดหลายรูป -->
+    <div class="mb-3">
+      <label>📸 รูปสินค้า (สามารถเลือกได้หลายรูป)</label>
+      <input type="file" name="images[]" class="form-control" accept="image/*" multiple>
+
+      <?php if (!empty($product['image_url'])): 
+          $images = explode(",", $product['image_url']); ?>
+        <div class="mt-3 d-flex flex-wrap gap-3">
+          <?php foreach($images as $img): ?>
+            <div class="border rounded p-2 text-center" style="width:120px;">
+              <img src="../<?= htmlspecialchars($img); ?>" class="img-fluid mb-1" style="max-height:100px; object-fit:cover;">
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+
+    <button class="btn btn-primary">💾 อัปเดตสินค้า</button>
+    <a href="products.php" class="btn btn-secondary">ย้อนกลับ</a>
+  </form>
 </div>
 </body>
 </html>
