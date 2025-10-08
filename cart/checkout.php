@@ -1,8 +1,59 @@
 <?php
 session_start();
+require_once '../config/connectdb.php';
+
 $cart = $_SESSION['cart'] ?? [];
 
-// คำนวณราคารวม
+// ✅ ถ้ามีการส่งข้อมูลจากฟอร์ม
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart)) {
+
+    $fullname = trim($_POST['fullname']);
+    $email    = trim($_POST['email']);
+    $phone    = trim($_POST['phone']);
+    $address  = trim($_POST['address']);
+    $payment  = trim($_POST['payment']);
+
+    // คำนวณราคารวม
+    $total_price = 0;
+    foreach ($cart as $item) {
+        $total_price += $item['price'] * $item['qty'];
+    }
+
+    // ✅ บันทึกข้อมูลคำสั่งซื้อในตาราง orders
+    $sql_order = "INSERT INTO orders (fullname, email, phone, address, payment, total_price, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, NOW())";
+    $stmt = $conn->prepare($sql_order);
+    $stmt->bind_param("sssssd", $fullname, $email, $phone, $address, $payment, $total_price);
+    $stmt->execute();
+    $order_id = $stmt->insert_id;
+    $stmt->close();
+
+    // ✅ บันทึกรายการสินค้าใน order_detail
+    $sql_detail = "INSERT INTO order_detail (order_id, product_id, qty, price) VALUES (?, ?, ?, ?)";
+    $stmt_detail = $conn->prepare($sql_detail);
+
+    foreach ($cart as $pid => $item) {
+        $stmt_detail->bind_param("iiid", $order_id, $pid, $item['qty'], $item['price']);
+        $stmt_detail->execute();
+
+        // 🔹 อัปเดต stock (-จำนวนที่ซื้อ)
+        $update_stock = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+        $update_stock->bind_param("ii", $item['qty'], $pid);
+        $update_stock->execute();
+        $update_stock->close();
+    }
+
+    $stmt_detail->close();
+
+    // ✅ ล้างตะกร้า
+    unset($_SESSION['cart']);
+
+    // ✅ ไปหน้า success
+    header("Location: success.php?order_id=" . $order_id);
+    exit;
+}
+
+// คำนวณราคารวม (สำหรับตอนแสดง)
 $total_price = 0;
 foreach ($cart as $item) {
     $total_price += $item['price'] * $item['qty'];
@@ -49,7 +100,7 @@ foreach ($cart as $item) {
           <div class="alert alert-warning">ยังไม่มีสินค้าในตะกร้า กรุณากลับไปเลือกซื้อก่อน</div>
           <a href="../pages/index.php" class="btn btn-primary">กลับไปเลือกซื้อ</a>
         <?php else: ?>
-        <form action="place_order.php" method="POST">
+        <form action="" method="POST">
           <div class="mb-3">
             <label class="form-label">ชื่อ-นามสกุล</label>
             <input type="text" class="form-control" name="fullname" required>
@@ -74,8 +125,8 @@ foreach ($cart as $item) {
               <option value="credit">บัตรเครดิต/เดบิต</option>
             </select>
           </div>
-          <button type="submit" class="btn btn-primary btn-lg w-100 mb-4"> ยืนยัน</button>
-          <button type="reset" class="btn btn-outline-secondary btn-lg w-100"> ล้างข้อมูล</button>
+          <button type="submit" class="btn btn-primary btn-lg w-100 mb-4">ยืนยันการสั่งซื้อ</button>
+          <button type="reset" class="btn btn-outline-secondary btn-lg w-100">ล้างข้อมูล</button>
         </form>
         <?php endif; ?>
       </div>
