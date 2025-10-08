@@ -65,5 +65,28 @@ include '../config/connectdb.php';
     </div>
   </div>
 </div>
+
+<script>
+$(document).ready(function() {
+  $('#productTable').DataTable({
+    language: {
+      search: "Search:",
+      lengthMenu: "แสดง _MENU_ รายการต่อหน้า",
+      info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
+      infoEmpty: "ไม่มีข้อมูล",
+      zeroRecords: "ไม่พบข้อมูลที่ค้นหา",
+      paginate: {
+        first: "หน้าแรก",
+        last: "หน้าสุดท้าย",
+        next: "ถัดไป",
+        previous: "ก่อนหน้า"
+      }
+    },
+    pageLength: 10,
+    order: [[1, "desc"]],
+    responsive: true
+  });
+});
+</script>
 </body>
 </html>
