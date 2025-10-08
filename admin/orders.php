@@ -27,7 +27,8 @@ include '../config/connectdb.php';
   <div class="content flex-grow-1">
     <h2>จัดการคำสั่งซื้อ</h2>
     <div class="card p-3">
-      <table class="table table-striped">
+      <!-- เพิ่ม id="ordersTable" -->
+      <table id="ordersTable" class="table table-striped table-bordered table-hover">
         <thead class="table-dark">
           <tr>
             <th>ID</th>
@@ -62,6 +63,7 @@ include '../config/connectdb.php';
   </div>
 </div>
 
+<!-- DataTables Initialization -->
 <script>
 $(document).ready(function() {
   $('#ordersTable').DataTable({
