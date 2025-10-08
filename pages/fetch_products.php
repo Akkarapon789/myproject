@@ -28,24 +28,8 @@ $result = mysqli_query($conn, $query);
 $products = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 // ✅ ฟังก์ชันภาพสินค้า
-function getProductImageUrl(int $product_id, mysqli $conn): string {
-    // ดึงชื่อไฟล์รูปจาก DB
-    $stmt = $conn->prepare("SELECT image_url, title FROM products WHERE id = ?");
-    $stmt->bind_param("i", $product_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-
-    if ($row && !empty($row['image_url'])) {
-        // ถ้ามีรูป ให้ใช้ URL ของไฟล์ใน uploads
-        return "../uploads/" . $row['image_url'];
-    } elseif ($row) {
-        // ถ้าไม่มีรูป ใช้ placeholder แบบเดิม
-        return "https://picsum.photos/300/200?random=" . crc32($row['title']);
-    } else {
-        // ถ้า product ไม่เจอ ให้ใช้ placeholder เฉย ๆ
-        return "https://picsum.photos/300/200?random=" . time();
-    }
+function getProductImageUrl(string $title): string {
+    return "https://picsum.photos/300/200?random=" . crc32($title);
 }
 ?>
 

@@ -101,7 +101,7 @@ $cats = $conn->query("SELECT * FROM categories");
         <div class="mt-3 d-flex flex-wrap gap-3">
           <?php foreach($images as $img): ?>
             <div class="border rounded p-2 text-center" style="width:120px;">
-              <img src="../<?= htmlspecialchars($img); ?>" class="img-fluid mb-1" style="max-height:100px; object-fit:cover;">
+              <img src="../assets/product<?= htmlspecialchars($img); ?>" class="img-fluid mb-1" style="max-height:100px; object-fit:cover;">
             </div>
           <?php endforeach; ?>
         </div>
