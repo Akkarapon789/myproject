@@ -7,26 +7,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stock = $_POST['stock'];
     $category = $_POST['category_id'];
 
-    // insert product
+    // สร้างโฟลเดอร์ uploads ถ้ายังไม่มี
+    $uploadsDir = "../uploads/";
+    if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0775, true);
+
+    // insert product เบื้องต้น โดยยังไม่กำหนด image_url
     $stmt = $conn->prepare("INSERT INTO products (title, price, stock, category_id, slug) VALUES (?,?,?,?,?)");
     $slug = strtolower(str_replace(" ","-", $title));
     $stmt->bind_param("sdiis", $title, $price, $stock, $category, $slug);
     $stmt->execute();
     $product_id = $stmt->insert_id;
 
-    // อัพโหลดรูปจริง
-    if(isset($_FILES['images'])) {
-        $uploadsDir = "../uploads/";
-        $stmt_img = $conn->prepare("INSERT INTO products (title, price, stock, category_id, slug, image_url) VALUES (?, ?, ?, ?, ?, ?)");
-
-        foreach($_FILES['images']['tmp_name'] as $key => $tmp_name) {
-            $fileName = time() . "_" . basename($_FILES['images']['name'][$key]);
-            $targetFile = $uploadsDir . $fileName;
-
-            if(move_uploaded_file($tmp_name, $targetFile)) {
-                $stmt_img->bind_param("is", $product_id, $fileName);
-                $stmt_img->execute();
-            }
+    // อัพโหลดรูปจริง (ใช้แค่รูปแรกเป็นรูปหลัก)
+    if(isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
+        $fileName = time() . "_" . basename($_FILES['images']['name'][0]);
+        $targetFile = $uploadsDir . $fileName;
+        if(move_uploaded_file($_FILES['images']['tmp_name'][0], $targetFile)) {
+            // update product ให้บันทึกชื่อไฟล์ใน image_url
+            $stmt_img = $conn->prepare("UPDATE products SET image_url = ? WHERE id = ?");
+            $stmt_img->bind_param("si", $fileName, $product_id);
+            $stmt_img->execute();
         }
     }
 
