@@ -15,7 +15,6 @@ include '../config/connectdb.php';
 </head>
 <body>
 <div class="d-flex">
-  <!-- 🧭 Sidebar -->
   <div class="sidebar p-3">
     <h4>Admin Panel</h4>
     <a href="index.php">แดชบอร์ด</a>
@@ -26,7 +25,6 @@ include '../config/connectdb.php';
     <a href="adminout.php" class="text-danger">ออกจากระบบ</a>
   </div>
 
-  <!-- 📄 Content -->
   <div class="content flex-grow-1">
     <h2>👥 จัดการผู้ใช้</h2>
     <a href="add_user.php" class="btn btn-success mb-3">+ เพิ่มผู้ใช้</a>
@@ -45,7 +43,7 @@ include '../config/connectdb.php';
         </thead>
         <tbody>
           <?php
-          $result = $conn->query("SELECT * FROM user ORDER BY user_id DESC");
+          $result = $conn->query("SELECT * FROM user ORDER BY user_id DESC") or die("SQL Error: " . $conn->error);
           while ($row = $result->fetch_assoc()):
           ?>
           <tr>
@@ -72,7 +70,6 @@ include '../config/connectdb.php';
   </div>
 </div>
 
-<!-- 📊 DataTable Init -->
 <script>
 $(document).ready(function() {
   $('#userTable').DataTable({
