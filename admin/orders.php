@@ -28,7 +28,7 @@ include '../config/connectdb.php';
     <h2>จัดการคำสั่งซื้อ</h2>
     <div class="card p-3">
       <!-- เพิ่ม id="ordersTable" -->
-      <table id="ordersTable" class="table table-striped table-bordered table-hover">
+      <table id="ordersTable" class="table table-bordered table-hover align-middle">
         <thead class="table-dark">
           <tr>
             <th>ID</th>
