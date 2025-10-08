@@ -15,18 +15,51 @@ include '../config/connectdb.php';
 
   <!-- ✅ DataTables CSS (Bootstrap 5 Integration) -->
   <link href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
   <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: "Sarabun", sans-serif;
+    }
+    .content {
+      padding: 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin: 20px;
+    }
     .dataTables_wrapper .dataTables_paginate .paginate_button {
-      padding: 5px 10px;
-      border-radius: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
       background: transparent;
-      border: 1px solid #000000FF;
+      border: 1px solid #dee2e6;
       margin: 0 2px;
+      font-weight: 500;
     }
     .dataTables_wrapper .dataTables_paginate .paginate_button.current {
       background-color: #2155CD !important;
       color: #fff !important;
       border-color: #2155CD !important;
+    }
+    .table thead th {
+      background-color: #2155CD !important;
+      color: white;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .table tbody td {
+      vertical-align: middle;
+      text-align: center;
+    }
+    .table img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    .btn {
+      border-radius: 6px;
     }
   </style>
 </head>
@@ -43,12 +76,14 @@ include '../config/connectdb.php';
   </div>
 
   <div class="content flex-grow-1">
-    <h2>📦 สินค้า</h2>
+    <h2>📦 จัดการสินค้า</h2>
     <a href="add_product.php" class="btn btn-success mb-3">+ เพิ่มสินค้า</a>
-    <div class="card p-3">
-      <table id="productTable" class="table table-striped table-hover align-middle">
-        <thead class="table-dark">
+
+    <div class="card shadow-sm p-3">
+      <table id="productTable" class="table table-bordered table-hover align-middle">
+        <thead>
           <tr>
+            <th>รูป</th>
             <th>ID</th>
             <th>ชื่อสินค้า</th>
             <th>ราคา</th>
@@ -59,17 +94,18 @@ include '../config/connectdb.php';
         </thead>
         <tbody>
           <?php
-          $sql = "SELECT p.*, c.title AS category_name 
-                  FROM products p 
+          $sql = "SELECT p.*, c.title AS category_name FROM products p 
                   JOIN categories c ON p.category_id = c.id 
                   ORDER BY p.id DESC";
           $result = $conn->query($sql);
           while($row = $result->fetch_assoc()):
+              $imgUrl = !empty($row['image']) ? "../uploads/" . $row['image'] : "https://picsum.photos/60?random=" . $row['id'];
           ?>
           <tr>
+            <td><img src="<?= htmlspecialchars($imgUrl) ?>" alt="product"></td>
             <td><?= $row['id']; ?></td>
             <td><?= htmlspecialchars($row['title']); ?></td>
-            <td><?= number_format($row['price'],2); ?> บาท</td>
+            <td><?= number_format($row['price'], 2); ?> ฿</td>
             <td><?= $row['stock']; ?></td>
             <td><?= htmlspecialchars($row['category_name']); ?></td>
             <td>
@@ -92,24 +128,24 @@ include '../config/connectdb.php';
 
 <script>
 $(document).ready(function() {
-    $('#productTable').DataTable({
-        language: {
-            search: "🔍 ค้นหา:",
-            lengthMenu: "แสดง _MENU_ รายการต่อหน้า",
-            info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
-            infoEmpty: "ไม่มีข้อมูล",
-            zeroRecords: "ไม่พบข้อมูลที่ค้นหา",
-            paginate: {
-                first: "หน้าแรก",
-                last: "หน้าสุดท้าย",
-                next: "ถัดไป",
-                previous: "ก่อนหน้า"
-            }
-        },
-        pageLength: 10,
-        order: [[0, "desc"]],
-        responsive: true
-    });
+  $('#productTable').DataTable({
+    language: {
+      search: "🔍 ค้นหา:",
+      lengthMenu: "แสดง _MENU_ รายการต่อหน้า",
+      info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
+      infoEmpty: "ไม่มีข้อมูล",
+      zeroRecords: "ไม่พบข้อมูลที่ค้นหา",
+      paginate: {
+        first: "หน้าแรก",
+        last: "หน้าสุดท้าย",
+        next: "ถัดไป",
+        previous: "ก่อนหน้า"
+      }
+    },
+    pageLength: 10,
+    order: [[1, "desc"]],
+    responsive: true
+  });
 });
 </script>
 
