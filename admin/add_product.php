@@ -14,15 +14,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute();
     $product_id = $stmt->insert_id;
 
-    // จัดการอัพโหลดรูปภาพจริง
-    if(!empty($_FILES['images']['name'][0])) {
+    // อัพโหลดรูปจริง
+    if(isset($_FILES['images'])) {
+        $uploadsDir = "../assets/uploads/";
         $stmt_img = $conn->prepare("INSERT INTO product_images (product_id, image_url) VALUES (?, ?)");
-        $total_files = count($_FILES['images']['name']);
-        for($i=0; $i<$total_files; $i++) {
-            $tmpName = $_FILES['images']['tmp_name'][$i];
-            $fileName = uniqid() . "_" . basename($_FILES['images']['name'][$i]);
-            $targetDir = "../uploads/";
-            if(move_uploaded_file($tmpName, $targetDir . $fileName)) {
+
+        foreach($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+            $fileName = time() . "_" . basename($_FILES['images']['name'][$key]);
+            $targetFile = $uploadsDir . $fileName;
+
+            if(move_uploaded_file($tmp_name, $targetFile)) {
                 $stmt_img->bind_param("is", $product_id, $fileName);
                 $stmt_img->execute();
             }
@@ -67,7 +68,7 @@ $cats = $conn->query("SELECT * FROM categories");
 <body>
 <div class="container mt-5">
   <h2>เพิ่มสินค้าใหม่</h2>
-  <!-- เพิ่ม enctype สำหรับอัพโหลดไฟล์ -->
+  <!-- เพิ่ม enctype="multipart/form-data" เพื่อรองรับการอัพโหลดไฟล์ -->
   <form method="post" enctype="multipart/form-data">
     <div class="mb-3"><label>ชื่อสินค้า</label>
       <input type="text" name="title" class="form-control" required>
@@ -91,8 +92,8 @@ $cats = $conn->query("SELECT * FROM categories");
       <label>รูปภาพสินค้า (ลากวาง หรือ คลิกเพื่อเลือก)</label>
       <div id="drop-zone" class="drop-zone">คลิกหรือลากไฟล์ภาพมาที่นี่</div>
       <div id="previews" class="d-flex flex-wrap mt-2"></div>
-      <!-- input type=file ซ่อนไว้เพื่อ upload จริง -->
-      <input type="file" id="fileInput" name="images[]" multiple accept="image/*" style="display:none;">
+      <!-- input type file จริง -->
+      <input type="file" name="images[]" id="fileInput" accept="image/*" multiple style="display:none;">
     </div>
 
     <button class="btn btn-success">บันทึก</button>
@@ -107,25 +108,24 @@ const fileInput = document.getElementById('fileInput');
 
 dropZone.addEventListener('click', () => fileInput.click());
 
-dropZone.addEventListener('dragover', (e) => {
+dropZone.addEventListener('dragover', e => {
     e.preventDefault();
     dropZone.classList.add('dragover');
 });
-
-dropZone.addEventListener('dragleave', (e) => dropZone.classList.remove('dragover'));
-
-dropZone.addEventListener('drop', (e) => {
+dropZone.addEventListener('dragleave', e => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
-    handleFiles(e.dataTransfer.files);
+    fileInput.files = e.dataTransfer.files; // กำหนดให้ input รับไฟล์ที่ลากมาลง
+    updatePreviews(e.dataTransfer.files);
 });
 
-fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+fileInput.addEventListener('change', () => updatePreviews(fileInput.files));
 
-function handleFiles(files) {
+function updatePreviews(files) {
+    previews.innerHTML = "";
     for (let file of files) {
         if (!file.type.startsWith('image/')) continue;
-
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = document.createElement('img');
