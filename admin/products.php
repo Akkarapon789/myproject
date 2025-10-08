@@ -80,7 +80,7 @@ include '../config/connectdb.php';
 $(document).ready(function() {
   $('#productTable').DataTable({
     language: {
-      search: "🔍 ค้นหา:",
+      search: "Search:",
       lengthMenu: "แสดง _MENU_ รายการต่อหน้า",
       info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
       infoEmpty: "ไม่มีข้อมูล",
