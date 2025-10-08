@@ -63,7 +63,6 @@ $latest = $conn->query("SELECT * FROM orders ORDER BY id DESC LIMIT 5");
     <a href="users.php">ผู้ใช้</a>
     <a href="products.php">สินค้า</a>
     <a href="orders.php">คำสั่งซื้อ</a>
-    <a href="reports.php">รายงาน</a>
     <a href="adminout.php" class="text-danger">ออกจากระบบ</a>
   </div>
 
