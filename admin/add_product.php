@@ -18,15 +18,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute();
     $product_id = $stmt->insert_id;
 
-    // อัพโหลดรูปจริง (ใช้แค่รูปแรกเป็นรูปหลัก)
+    // อัพโหลดรูปจริง (หลายรูป)
     if(isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
-        $fileName = time() . "_" . basename($_FILES['images']['name'][0]);
-        $targetFile = $uploadsDir . $fileName;
-        if(move_uploaded_file($_FILES['images']['tmp_name'][0], $targetFile)) {
-            // update product ให้บันทึกชื่อไฟล์ใน image_url
-            $stmt_img = $conn->prepare("UPDATE products SET image_url = ? WHERE id = ?");
-            $stmt_img->bind_param("si", $fileName, $product_id);
-            $stmt_img->execute();
+        for($i=0; $i<count($_FILES['images']['name']); $i++){
+            $fileName = time() . "_" . basename($_FILES['images']['name'][$i]);
+            $targetFile = $uploadsDir . $fileName;
+            if(move_uploaded_file($_FILES['images']['tmp_name'][$i], $targetFile)){
+                // insert ลง product_images
+                $stmt_img = $conn->prepare("INSERT INTO product_images (product_id, image_url) VALUES (?, ?)");
+                $stmt_img->bind_param("is", $product_id, $fileName);
+                $stmt_img->execute();
+
+                // ถ้าเป็นรูปแรก ให้เก็บเป็นรูปหลักใน products.image_url
+                if($i === 0){
+                    $stmt_main = $conn->prepare("UPDATE products SET image_url=? WHERE id=?");
+                    $stmt_main->bind_param("si", $fileName, $product_id);
+                    $stmt_main->execute();
+                }
+            }
         }
     }
 
@@ -68,7 +77,6 @@ $cats = $conn->query("SELECT * FROM categories");
 <body>
 <div class="container mt-5">
   <h2>เพิ่มสินค้าใหม่</h2>
-  <!-- เพิ่ม enctype="multipart/form-data" เพื่อรองรับการอัพโหลดไฟล์ -->
   <form method="post" enctype="multipart/form-data">
     <div class="mb-3"><label>ชื่อสินค้า</label>
       <input type="text" name="title" class="form-control" required>
@@ -92,7 +100,6 @@ $cats = $conn->query("SELECT * FROM categories");
       <label>รูปภาพสินค้า (ลากวาง หรือ คลิกเพื่อเลือก)</label>
       <div id="drop-zone" class="drop-zone">คลิกหรือลากไฟล์ภาพมาที่นี่</div>
       <div id="previews" class="d-flex flex-wrap mt-2"></div>
-      <!-- input type file จริง -->
       <input type="file" name="images[]" id="fileInput" accept="image/*" multiple style="display:none;">
     </div>
 
@@ -116,7 +123,7 @@ dropZone.addEventListener('dragleave', e => dropZone.classList.remove('dragover'
 dropZone.addEventListener('drop', e => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
-    fileInput.files = e.dataTransfer.files; // กำหนดให้ input รับไฟล์ที่ลากมาลง
+    fileInput.files = e.dataTransfer.files;
     updatePreviews(e.dataTransfer.files);
 });
 
