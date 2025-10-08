@@ -20,7 +20,7 @@ include '../config/connectdb.php';
       padding: 5px 10px;
       border-radius: 6px;
       background: transparent;
-      border: 1px solid #dee2e6;
+      border: 1px solid #000000FF;
       margin: 0 2px;
     }
     .dataTables_wrapper .dataTables_paginate .paginate_button.current {
