@@ -16,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // อัพโหลดรูปจริง
     if(isset($_FILES['images'])) {
-        $uploadsDir = "../assets/uploads/";
-        $stmt_img = $conn->prepare("INSERT INTO product_images (product_id, image_url) VALUES (?, ?)");
+        $uploadsDir = "../uploads/";
+        $stmt_img = $conn->prepare("INSERT INTO products (title, price, stock, category_id, slug, image_url) VALUES (?, ?, ?, ?, ?, ?)");
 
         foreach($_FILES['images']['tmp_name'] as $key => $tmp_name) {
             $fileName = time() . "_" . basename($_FILES['images']['name'][$key]);
