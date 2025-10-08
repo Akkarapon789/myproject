@@ -6,7 +6,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = $_POST['price'];
     $stock = $_POST['stock'];
     $category = $_POST['category_id'];
-    $images = $_POST['images'] ?? []; // จะเป็น base64 string ของแต่ละรูป
 
     // insert product
     $stmt = $conn->prepare("INSERT INTO products (title, price, stock, category_id, slug) VALUES (?,?,?,?,?)");
@@ -15,12 +14,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute();
     $product_id = $stmt->insert_id;
 
-    // insert product images
-    $stmt_img = $conn->prepare("INSERT INTO product_images (product_id, image_url) VALUES (?, ?)");
-    foreach($images as $img) {
-        if(!empty($img)) {
-            $stmt_img->bind_param("is", $product_id, $img);
-            $stmt_img->execute();
+    // จัดการอัพโหลดรูปภาพจริง
+    if(!empty($_FILES['images']['name'][0])) {
+        $stmt_img = $conn->prepare("INSERT INTO product_images (product_id, image_url) VALUES (?, ?)");
+        $total_files = count($_FILES['images']['name']);
+        for($i=0; $i<$total_files; $i++) {
+            $tmpName = $_FILES['images']['tmp_name'][$i];
+            $fileName = uniqid() . "_" . basename($_FILES['images']['name'][$i]);
+            $targetDir = "../uploads/";
+            if(move_uploaded_file($tmpName, $targetDir . $fileName)) {
+                $stmt_img->bind_param("is", $product_id, $fileName);
+                $stmt_img->execute();
+            }
         }
     }
 
@@ -62,7 +67,8 @@ $cats = $conn->query("SELECT * FROM categories");
 <body>
 <div class="container mt-5">
   <h2>เพิ่มสินค้าใหม่</h2>
-  <form method="post">
+  <!-- เพิ่ม enctype สำหรับอัพโหลดไฟล์ -->
+  <form method="post" enctype="multipart/form-data">
     <div class="mb-3"><label>ชื่อสินค้า</label>
       <input type="text" name="title" class="form-control" required>
     </div>
@@ -85,6 +91,8 @@ $cats = $conn->query("SELECT * FROM categories");
       <label>รูปภาพสินค้า (ลากวาง หรือ คลิกเพื่อเลือก)</label>
       <div id="drop-zone" class="drop-zone">คลิกหรือลากไฟล์ภาพมาที่นี่</div>
       <div id="previews" class="d-flex flex-wrap mt-2"></div>
+      <!-- input type=file ซ่อนไว้เพื่อ upload จริง -->
+      <input type="file" id="fileInput" name="images[]" multiple accept="image/*" style="display:none;">
     </div>
 
     <button class="btn btn-success">บันทึก</button>
@@ -95,27 +103,16 @@ $cats = $conn->query("SELECT * FROM categories");
 <script>
 const dropZone = document.getElementById('drop-zone');
 const previews = document.getElementById('previews');
-const form = document.querySelector('form');
+const fileInput = document.getElementById('fileInput');
 
-let images = []; // เก็บ base64 ของแต่ละรูป
-
-dropZone.addEventListener('click', () => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.multiple = true;
-    fileInput.onchange = () => handleFiles(fileInput.files);
-    fileInput.click();
-});
+dropZone.addEventListener('click', () => fileInput.click());
 
 dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
     dropZone.classList.add('dragover');
 });
 
-dropZone.addEventListener('dragleave', (e) => {
-    dropZone.classList.remove('dragover');
-});
+dropZone.addEventListener('dragleave', (e) => dropZone.classList.remove('dragover'));
 
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
@@ -123,27 +120,18 @@ dropZone.addEventListener('drop', (e) => {
     handleFiles(e.dataTransfer.files);
 });
 
+fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
 function handleFiles(files) {
     for (let file of files) {
         if (!file.type.startsWith('image/')) continue;
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            const base64 = e.target.result;
-            images.push(base64);
-
-            // สร้าง preview
             const img = document.createElement('img');
-            img.src = base64;
+            img.src = e.target.result;
             img.className = 'preview-img';
             previews.appendChild(img);
-
-            // สร้าง hidden input สำหรับส่ง form
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'images[]';
-            input.value = base64;
-            form.appendChild(input);
         }
         reader.readAsDataURL(file);
     }

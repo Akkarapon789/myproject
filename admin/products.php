@@ -43,29 +43,25 @@ include '../config/connectdb.php';
         </thead>
         <tbody>
           <?php
-          $sql = "SELECT p.*, c.title AS category_name 
-                  FROM products p 
+          $sql = "SELECT p.*, c.title AS category_name FROM products p 
                   JOIN categories c ON p.category_id = c.id 
                   ORDER BY p.id ASC";
           $result = $conn->query($sql);
           while($row = $result->fetch_assoc()):
-              // ดึงรูปภาพแรกของสินค้านั้นจาก product_images
-              $imgResult = $conn->query("SELECT image_url FROM product_images WHERE product_id = ".$row['id']." LIMIT 1");
-              if($imgResult && $imgRow = $imgResult->fetch_assoc()){
-                  $imgUrl = $imgRow['image_url']; // ใช้ URL หรือ Base64 จาก DB
+              // ดึงรูปแรกจาก product_images
+              $imgQuery = $conn->prepare("SELECT image_url FROM product_images WHERE product_id = ? LIMIT 1");
+              $imgQuery->bind_param("i", $row['id']);
+              $imgQuery->execute();
+              $imgResult = $imgQuery->get_result();
+              if($imgRow = $imgResult->fetch_assoc()) {
+                  $imgUrl = $imgRow['image_url'];
               } else {
-                  // ถ้าไม่มีรูป fallback
-                  $imgUrl = "https://picsum.photos/60?random=".$row['id'];
+                  // ถ้าไม่มีรูป ใช้ placeholder
+                  $imgUrl = "https://picsum.photos/60?random=" . $row['id'];
               }
           ?>
           <tr>
-            <td>
-              <?php if(str_starts_with($imgUrl, 'data:image')): ?>
-                <img src="<?= $imgUrl ?>" alt="product" style="max-width:60px; max-height:60px;">
-              <?php else: ?>
-                <img src="<?= "../uploads/" . htmlspecialchars($imgUrl) ?>" alt="product" style="max-width:60px; max-height:60px;">
-              <?php endif; ?>
-            </td>
+            <td><img src="<?= htmlspecialchars($imgUrl) ?>" alt="product" style="max-width:60px; max-height:60px;"></td>
             <td><?= $row['id']; ?></td>
             <td><?= htmlspecialchars($row['title']); ?></td>
             <td><?= number_format($row['price'], 2); ?> ฿</td>
@@ -88,7 +84,7 @@ include '../config/connectdb.php';
 $(document).ready(function() {
   $('#productTable').DataTable({
     language: {
-      search: "Search:",
+      search: "Search :",
       lengthMenu: "แสดง _MENU_ รายการต่อหน้า",
       info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
       infoEmpty: "ไม่มีข้อมูล",
