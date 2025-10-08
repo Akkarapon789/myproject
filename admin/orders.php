@@ -25,7 +25,7 @@ include '../config/connectdb.php';
   </div>
 
   <div class="content flex-grow-1">
-    <h2>🛒 จัดการคำสั่งซื้อ</h2>
+    <h2>จัดการคำสั่งซื้อ</h2>
     <div class="card p-3">
       <table class="table table-striped">
         <thead class="table-dark">

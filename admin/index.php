@@ -68,7 +68,7 @@ $latest = $conn->query("SELECT * FROM orders ORDER BY id DESC LIMIT 5");
 
   <!-- Content -->
   <div class="content flex-grow-1">
-    <h2>📊 แดชบอร์ดสรุป</h2>
+    <h2>แดชบอร์ดสรุป</h2>
 
     <!-- Cards -->
     <div class="row g-4 mb-4">
