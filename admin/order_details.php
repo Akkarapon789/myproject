@@ -1,7 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 // order_details.php (Corrected)
 include 'header.php';
 
@@ -20,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
 
 // --- ดึงข้อมูลหลักของ Order (ข้อมูลลูกค้า, ที่อยู่) ---
 // [แก้ไข] เพิ่ม ` ` ครอบ `user`
-$stmt_order = $conn->prepare("SELECT o.*, u.firstname, u.lastname FROM orders o LEFT JOIN `user` u ON o.user_id = u.user_id WHERE o.id = ?");
+$stmt_order = $conn->prepare("SELECT * FROM orders WHERE id = ?");
 $stmt_order->bind_param("i", $order_id);
 $stmt_order->execute();
 $order = $stmt_order->get_result()->fetch_assoc();
