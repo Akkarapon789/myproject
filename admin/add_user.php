@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // เตรียม SQL Query โดยใช้ Prepared Statement เพื่อป้องกัน SQL Injection
-    $sql = "INSERT INTO users (firstname, lastname, email, password, phone, role) VALUES (?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO user (firstname, lastname, email, password, phone, role) VALUES (?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
 
     // "ssssss" หมายถึงตัวแปร 6 ตัวเป็นชนิด String ทั้งหมด

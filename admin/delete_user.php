@@ -21,7 +21,7 @@ if (isset($_SESSION['user_id']) && $user_id_to_delete == $_SESSION['user_id']) {
 
 
 // ใช้ Prepared Statement เพื่อความปลอดภัยสูงสุด
-$sql = "DELETE FROM users WHERE user_id = ?";
+$sql = "DELETE FROM user WHERE user_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id_to_delete);
 
