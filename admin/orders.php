@@ -3,11 +3,7 @@
 include 'header.php';
 
 // [แก้ไข] เพิ่ม ` ` ครอบ `user`
-$sql = "SELECT o.id, o.created_at, o.total, o.status, o.fullname, u.firstname, u.lastname 
-        FROM orders o
-        LEFT JOIN `user` u ON o.user_id = u.user_id
-        ORDER BY o.id DESC";
-$result = $conn->query($sql);
+$result = $conn->query("SELECT * FROM `orders` ORDER BY user_id ASC");
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
