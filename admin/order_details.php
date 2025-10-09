@@ -10,7 +10,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
     $stmt_update = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
     $stmt_update->bind_param("si", $new_status, $order_id);
     if ($stmt_update->execute()) {
-        echo "<script>alert('อัปเดตสถานะเรียบร้อยแล้ว');</script>";
+        // [แก้ไข] เปลี่ยนเป็นคำสั่ง Redirect ไปยัง orders.php
+        header("Location: orders.php");
+        exit(); // สั่งให้หยุดการทำงานของสคริปต์ทันทีหลัง Redirect
+    } else {
+        // (Optional) กรณีอัปเดตไม่สำเร็จ อาจจะแจ้งเตือน
+        echo "<script>alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');</script>";
     }
     $stmt_update->close();
 }
