@@ -121,7 +121,7 @@ $stmt_items->close();
                             <option value="cancelled" <?= $order['status'] == 'cancelled' ? 'selected' : '' ?>>Cancelled (ยกเลิก)</option>
                         </select>
                     </div>
-                    <button type="submit" name="update_status" class="btn btn-primary w-100" a href="orders.php"><i class="fas fa-sync-alt me-2"></i>อัปเดตสถานะ</button>
+                    <button type="submit" name="update_status" class="btn btn-primary w-100" ><i class="fas fa-sync-alt me-2"></i>อัปเดตสถานะ</button>
                 </form>
             </div>
         </div>
