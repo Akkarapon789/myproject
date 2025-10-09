@@ -3,15 +3,17 @@ session_start();
 require_once '../config/connectdb.php';
 
 $cart = $_SESSION['cart'] ?? [];
+// [เพิ่ม 1] ดึง user_id ของลูกค้าที่ล็อกอินอยู่ ถ้าไม่มี (เป็นแขก) ให้เป็น null
+$user_id = $_SESSION['user_id'] ?? null; 
 
-// ✅ ฟังก์ชันเช็กข้อผิดพลาด SQL
+// ฟังก์ชันเช็กข้อผิดพลาด SQL (เหมือนเดิม)
 function check_error($stmt, $conn) {
     if ($stmt === false) {
-        die("❌ Prepare failed: " . $conn->error);
+        die("❌ Prepare failed:" -> $conn->error);
     }
 }
 
-// ถ้า form ถูกส่งไป place_order.php ให้ประมวลผล
+// ถ้า form ถูกส่งมา ให้ประมวลผล
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart)) {
 
     $fullname = trim($_POST['fullname']);
@@ -26,52 +28,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart)) {
         $total_price += $item['price'] * $item['qty'];
     }
 
-    // บันทึกข้อมูลคำสั่งซื้อในตาราง orders
-    $sql_order = "INSERT INTO orders (fullname, email, phone, address, payment, total_price, created_at)
-                  VALUES (?, ?, ?, ?, ?, ?, NOW())";
-    $stmt = $conn->prepare($sql_order);
-    check_error($stmt, $conn);
-    $stmt->bind_param("sssssd", $fullname, $email, $phone, $address, $payment, $total_price);
-    $stmt->execute();
-    if ($stmt->error) { die("❌ Order insert error: " . $stmt->error); }
-    $order_id = $stmt->insert_id;
-    $stmt->close();
+    // [เพิ่ม 3] เริ่มต้น Transaction
+    $conn->begin_transaction();
 
-    // บันทึกรายการสินค้าใน order_detail
-    $sql_detail = "INSERT INTO order_detail (order_id, product_id, qty, price) VALUES (?, ?, ?, ?)";
-    $stmt_detail = $conn->prepare($sql_detail);
-    check_error($stmt_detail, $conn);
+    try {
+        // [แก้ไข 1+2] บันทึกข้อมูลคำสั่งซื้อในตาราง orders เพิ่ม user_id และแก้ชื่อคอลัมน์ total_price
+        $sql_order = "INSERT INTO orders (user_id, fullname, email, phone, address, payment, total, created_at)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+        $stmt = $conn->prepare($sql_order);
+        check_error($stmt, $conn);
+        // "isssssd" คือชนิดข้อมูล: i=integer, s=string, d=double
+        $stmt->bind_param("isssssd", $user_id, $fullname, $email, $phone, $address, $payment, $total_price);
+        $stmt->execute();
+        $order_id = $stmt->insert_id;
+        $stmt->close();
 
-    foreach ($cart as $pid => $item) {
-        $stmt_detail->bind_param("iiid", $order_id, $pid, $item['qty'], $item['price']);
-        $stmt_detail->execute();
-        if ($stmt_detail->error) { die("❌ Detail insert error: " . $stmt_detail->error); }
+        // [แก้ไข 1] บันทึกรายการสินค้าใน order_items (เปลี่ยนชื่อตารางและคอลัมน์)
+        $sql_items = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
+        $stmt_items = $conn->prepare($sql_items);
+        check_error($stmt_items, $conn);
 
-        // อัปเดต stock
-        $update_stock = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
-        check_error($update_stock, $conn);
-        $update_stock->bind_param("ii", $item['qty'], $pid);
-        $update_stock->execute();
-        if ($update_stock->error) { die("❌ Update stock error: " . $update_stock->error); }
-        $update_stock->close();
+        foreach ($cart as $pid => $item) {
+            $stmt_items->bind_param("iiid", $order_id, $pid, $item['qty'], $item['price']);
+            $stmt_items->execute();
+
+            // อัปเดต stock
+            $update_stock = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+            check_error($update_stock, $conn);
+            $update_stock->bind_param("ii", $item['qty'], $pid);
+            $update_stock->execute();
+            $update_stock->close();
+        }
+        $stmt_items->close();
+
+        // [เพิ่ม 3] ถ้าทุกอย่างสำเร็จ ให้ Commit Transaction
+        $conn->commit();
+
+        // ล้างตะกร้า
+        unset($_SESSION['cart']);
+
+        // ไปหน้ายืนยันคำสั่งซื้อ
+        header("Location: place_order.php?order_id=" . $order_id);
+        exit;
+
+    } catch (Exception $e) {
+        // [เพิ่ม 3] ถ้ามีข้อผิดพลาดเกิดขึ้น ให้ Rollback Transaction (ยกเลิกทั้งหมด)
+        $conn->rollback();
+        die("❌ เกิดข้อผิดพลาดร้ายแรงในการบันทึกคำสั่งซื้อ: " . $e->getMessage());
     }
-
-    $stmt_detail->close();
-
-    // ล้างตะกร้า
-    unset($_SESSION['cart']);
-
-    // ไปหน้า place_order.php
-    header("Location: place_order.php?order_id=" . $order_id);
-    exit;
 }
 
-// คำนวณราคารวม (สำหรับตอนแสดง)
+// คำนวณราคารวม (สำหรับตอนแสดงผล)
 $total_price = 0;
 foreach ($cart as $item) {
     $total_price += $item['price'] * $item['qty'];
 }
 ?>
+
 <!doctype html>
 <html lang="th">
 <head>
@@ -90,7 +103,6 @@ foreach ($cart as $item) {
 
 <div class="container py-5">
   <div class="row">
-    <!-- ฟอร์มที่อยู่ -->
     <div class="col-lg-7 mb-4">
       <div class="card checkout-card p-4">
         <h3 class="mb-4">📦 ข้อมูลผู้สั่งซื้อ</h3>
@@ -130,7 +142,6 @@ foreach ($cart as $item) {
       </div>
     </div>
 
-    <!-- สรุปออเดอร์ -->
     <div class="col-lg-5">
       <div class="order-summary p-4">
         <h5>🛒 สรุปรายการสินค้า</h5>
