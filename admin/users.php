@@ -1,15 +1,9 @@
 <?php
-// users.php (Upgraded)
-include 'header.php';
-include '../config/connectdb.php';
+// users.php (Corrected Version)
+include 'header.php'; // header.php ทำการเชื่อมต่อฐานข้อมูลให้แล้ว
 
-// ดึงข้อมูลผู้ใช้ทั้งหมด
+// ดึงข้อมูลผู้ใช้ทั้งหมด (เรียกใช้ Query แค่ครั้งเดียว)
 $result = $conn->query("SELECT * FROM user ORDER BY user_id ASC");
-$result = $conn->query($sql);
-if (!$result) {
-    // ถ้า query ไม่สำเร็จ ให้แสดงข้อผิดพลาดแล้วหยุดทำงาน
-    die("SQL Error: " . $conn->error);
-}
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -37,7 +31,11 @@ if (!$result) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($row = $result->fetch_assoc()): ?>
+                    <?php 
+                    // ตรวจสอบว่ามีข้อมูลหรือไม่ก่อนเริ่มลูป
+                    if ($result && $result->num_rows > 0):
+                        while ($row = $result->fetch_assoc()): 
+                    ?>
                     <tr>
                         <td><?= $row['user_id'] ?></td>
                         <td><?= htmlspecialchars($row['firstname'] . " " . $row['lastname']) ?></td>
@@ -58,7 +56,14 @@ if (!$result) {
                             </a>
                         </td>
                     </tr>
-                    <?php endwhile; ?>
+                    <?php 
+                        endwhile;
+                    else:
+                    ?>
+                    <tr>
+                        <td colspan="6" class="text-center">ไม่พบข้อมูลผู้ใช้งาน</td>
+                    </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -70,8 +75,8 @@ if (!$result) {
 <script>
 $(document).ready(function() {
     $('#userTable').DataTable({
-        "order": [[0, "asc"]], // เรียงลำดับตามคอลัมน์แรก (ID) จากน้อยไปมาก
-        "language": { // หากต้องการภาษาไทย สามารถใช้ส่วนนี้ได้
+        "order": [[0, "asc"]],
+        "language": {
             "search": "ค้นหา:",
             "lengthMenu": "แสดง _MENU_ รายการ",
             "info": "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
