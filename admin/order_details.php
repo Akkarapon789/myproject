@@ -14,7 +14,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
         echo "<script>
                 alert('อัปเดตสถานะเรียบร้อยแล้ว!');
                 a href = 'orders.php';
-                setTimeout(function() {}, 4000);
               </script>";
         exit(); // exit() ยังคงสำคัญ เพื่อให้แน่ใจว่าสคริปต์หยุดทำงาน
     } else {
