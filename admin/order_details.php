@@ -5,16 +5,21 @@ include 'header.php';
 $order_id = $_GET['id'] ?? 0;
 
 // --- ส่วนจัดการอัปเดตสถานะ ---
-if ($stmt_update->execute()) {
-    // เลือกใช้แบบใดแบบหนึ่งด้านล่าง
-
-    // แบบมี Alert
-    echo "<script>
-            alert('อัปเดตสถานะเรียบร้อยแล้ว!');
-            window.location.href = 'orders.php';
-          </script>";
-    // หรือแบบไม่มี Alert
-    // echo "<script>window.location.href = 'orders.php';</script>";
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
+    $new_status = $_POST['status'];
+    $stmt_update = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
+    $stmt_update->bind_param("si", $new_status, $order_id);
+    if ($stmt_update->execute()) {
+        // [แก้ไข] เปลี่ยนเป็น JavaScript Redirect
+        echo "<script>
+                alert('อัปเดตสถานะเรียบร้อยแล้ว!');
+                window.location.href = 'orders.php';
+              </script>";
+        exit(); // exit() ยังคงสำคัญ เพื่อให้แน่ใจว่าสคริปต์หยุดทำงาน
+    } else {
+        echo "<script>alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');</script>";
+    }
+    $stmt_update->close();
 }
 
 // --- ดึงข้อมูลหลักของ Order (ข้อมูลลูกค้า, ที่อยู่) ---
