@@ -7,27 +7,20 @@ $category_id = $_POST['category_id'];
 $price = $_POST['price'];
 $stock = $_POST['stock'];
 
-$sql = "UPDATE products SET title=?, category_id=?, price=?, stock=?";
-$params = [$title, $category_id, $price, $stock];
-$types = "sidi";
-
+$image_sql = '';
 if(isset($_FILES['image']) && $_FILES['image']['error'] == 0){
     $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-    $image = uniqid().'.'.$ext;
-    move_uploaded_file($_FILES['image']['tmp_name'], '../uploads/'.$image);
-    $sql .= ", image=?";
-    $types .= "s";
-    $params[] = $image;
+    $image_name = time().rand(1000,9999).'.'.$ext;
+    move_uploaded_file($_FILES['image']['tmp_name'], '../uploads/'.$image_name);
+    $image_sql = ", image='$image_name'";
 }
 
-$sql .= " WHERE id=?";
-$types .= "i";
-$params[] = $id;
+$sql = "UPDATE products SET title='$title', category_id='$category_id', price='$price', stock='$stock' $image_sql WHERE id=$id";
 
-$stmt = $conn->prepare($sql);
-$stmt->bind_param($types, ...$params);
-$stmt->execute();
-
-header("Location: products.php");
-exit();
+if($conn->query($sql)){
+    header("Location: products.php");
+    exit();
+}else{
+    echo "Error: ".$conn->error;
+}
 ?>

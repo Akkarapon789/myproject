@@ -5,20 +5,21 @@ $title = $_POST['title'];
 $category_id = $_POST['category_id'];
 $price = $_POST['price'];
 $stock = $_POST['stock'];
-$image = '';
 
+$image_name = '';
 if(isset($_FILES['image']) && $_FILES['image']['error'] == 0){
     $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-    $image = uniqid().'.'.$ext;
-    move_uploaded_file($_FILES['image']['tmp_name'], '../uploads/'.$image);
+    $image_name = time().rand(1000,9999).'.'.$ext;
+    move_uploaded_file($_FILES['image']['tmp_name'], '../uploads/'.$image_name);
 }
 
-$sql = "INSERT INTO products (title, category_id, price, stock, image, created_at) 
-        VALUES (?, ?, ?, ?, ?, NOW())";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("sidis", $title, $category_id, $price, $stock, $image);
-$stmt->execute();
+$sql = "INSERT INTO products (title, category_id, price, stock, image) 
+        VALUES ('$title', '$category_id', '$price', '$stock', '$image_name')";
 
-header("Location: products.php");
-exit();
+if($conn->query($sql)){
+    header("Location: products.php");
+    exit();
+}else{
+    echo "Error: ".$conn->error;
+}
 ?>
