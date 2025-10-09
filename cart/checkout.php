@@ -6,10 +6,10 @@ $cart = $_SESSION['cart'] ?? [];
 // [เพิ่ม 1] ดึง user_id ของลูกค้าที่ล็อกอินอยู่ ถ้าไม่มี (เป็นแขก) ให้เป็น null
 $user_id = $_SESSION['user_id'] ?? null; 
 
-// ฟังก์ชันเช็กข้อผิดพลาด SQL (เหมือนเดิม)
+// ฟังก์ชันเช็กข้อผิดพลาด SQL
 function check_error($stmt, $conn) {
     if ($stmt === false) {
-        die("❌ Prepare failed:" -> $conn->error);
+        die("❌ Prepare failed: " . $conn->error);
     }
 }
 
@@ -28,11 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart)) {
         $total_price += $item['price'] * $item['qty'];
     }
 
-    // [เพิ่ม 3] เริ่มต้น Transaction
+    // [เพิ่ม] เริ่มต้น Transaction เพื่อความปลอดภัยของข้อมูล
     $conn->begin_transaction();
 
     try {
-        // [แก้ไข 1+2] บันทึกข้อมูลคำสั่งซื้อในตาราง orders เพิ่ม user_id และแก้ชื่อคอลัมน์ total_price
+        // [แก้ไข] บันทึกข้อมูลลงตาราง orders (เพิ่ม user_id และแก้ชื่อคอลัมน์ total)
         $sql_order = "INSERT INTO orders (user_id, fullname, email, phone, address, payment, total, created_at)
                       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
         $stmt = $conn->prepare($sql_order);
@@ -43,16 +43,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart)) {
         $order_id = $stmt->insert_id;
         $stmt->close();
 
-        // [แก้ไข 1] บันทึกรายการสินค้าใน order_items (เปลี่ยนชื่อตารางและคอลัมน์)
+        // [แก้ไข] บันทึกรายการสินค้าลงตาราง order_items (เปลี่ยนชื่อตารางและคอลัมน์)
         $sql_items = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
         $stmt_items = $conn->prepare($sql_items);
         check_error($stmt_items, $conn);
 
         foreach ($cart as $pid => $item) {
+            // qty ถูกเปลี่ยนเป็น quantity
             $stmt_items->bind_param("iiid", $order_id, $pid, $item['qty'], $item['price']);
             $stmt_items->execute();
 
-            // อัปเดต stock
+            // อัปเดต stock (ส่วนนี้ถูกต้องแล้ว)
             $update_stock = $conn->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
             check_error($update_stock, $conn);
             $update_stock->bind_param("ii", $item['qty'], $pid);
@@ -61,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart)) {
         }
         $stmt_items->close();
 
-        // [เพิ่ม 3] ถ้าทุกอย่างสำเร็จ ให้ Commit Transaction
+        // [เพิ่ม] ถ้าทุกอย่างสำเร็จ ให้ Commit Transaction (ยืนยันการบันทึก)
         $conn->commit();
 
         // ล้างตะกร้า
@@ -72,16 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($cart)) {
         exit;
 
     } catch (Exception $e) {
-        // [เพิ่ม 3] ถ้ามีข้อผิดพลาดเกิดขึ้น ให้ Rollback Transaction (ยกเลิกทั้งหมด)
+        // [เพิ่ม] ถ้ามีข้อผิดพลาด ให้ Rollback Transaction (ยกเลิกการบันทึกทั้งหมด)
         $conn->rollback();
         die("❌ เกิดข้อผิดพลาดร้ายแรงในการบันทึกคำสั่งซื้อ: " . $e->getMessage());
     }
-}
-
-// คำนวณราคารวม (สำหรับตอนแสดงผล)
-$total_price = 0;
-foreach ($cart as $item) {
-    $total_price += $item['price'] * $item['qty'];
 }
 ?>
 
