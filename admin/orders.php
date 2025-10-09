@@ -1,90 +1,76 @@
 <?php
-session_start();
-if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
-    header("Location: ../auth/login.php");
-    exit();
-}
-include '../config/connectdb.php';
-?>
-<!doctype html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>คำสั่งซื้อ</title>
-  <?php include 'layout.php'; ?>
-</head>
-<body>
-<div class="d-flex">
-  <div class="sidebar p-3">
-    <h4>Admin Panel</h4>
-    <a href="index.php">แดชบอร์ด</a>
-    <a href="users.php">ผู้ใช้</a>
-    <a href="products.php">สินค้า</a>
-    <a href="orders.php" class="active">คำสั่งซื้อ</a>
-    <a href="adminout.php" class="text-danger">ออกจากระบบ</a>
-  </div>
+// orders.php
+include 'header.php';
 
-  <div class="content flex-grow-1">
-    <h2>จัดการคำสั่งซื้อ</h2>
-    <div class="card p-3">
-      <!-- เพิ่ม id="ordersTable" -->
-      <table id="ordersTable" class="table table-bordered table-hover align-middle">
-        <thead class="table-dark">
-          <tr>
-            <th>ID</th>
-            <th>ชื่อลูกค้า</th>
-            <th>Email</th>
-            <th>ยอดรวม</th>
-            <th>วันที่</th>
-            <th>การจัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php
-          $orders = $conn->query("SELECT * FROM orders ORDER BY id ASC");
-          while($o=$orders->fetch_assoc()):
-          ?>
-          <tr>
-            <td><?= $o['id']; ?></td>
-            <td><?= htmlspecialchars($o['fullname']); ?></td>
-            <td><?= htmlspecialchars($o['email']); ?></td>
-            <td><?= number_format($o['total'],2); ?> บาท</td>
-            <td><?= $o['created_at']; ?></td>
-            <td>
-              <a href="edit_order.php?id=<?= $o['id']; ?>" class="btn btn-sm btn-warning">ดู / แก้ไข</a>
-              <a href="delete_order.php?id=<?= $o['id']; ?>" class="btn btn-sm btn-danger"
-                 onclick="return confirm('ยืนยันการลบ?');">ลบ</a>
-            </td>
-          </tr>
-          <?php endwhile; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
+// ดึงข้อมูล orders ทั้งหมด พร้อม join ตาราง users เพื่อเอาชื่อลูกค้า
+$sql = "SELECT o.id, o.created_at, o.total, o.status, u.firstname, u.lastname 
+        FROM orders o
+        LEFT JOIN users u ON o.user_id = u.user_id
+        ORDER BY o.id DESC";
+$result = $conn->query($sql);
+?>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800">จัดการคำสั่งซื้อ</h1>
 </div>
 
-<!-- DataTables Initialization -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">รายการคำสั่งซื้อทั้งหมด</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="ordersTable" class="table table-bordered table-hover" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID คำสั่งซื้อ</th>
+                        <th>ชื่อลูกค้า</th>
+                        <th>วันที่สั่งซื้อ</th>
+                        <th>ยอดรวม (บาท)</th>
+                        <th>สถานะ</th>
+                        <th>จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                    <tr>
+                        <td>#<?= $row['id'] ?></td>
+                        <td><?= htmlspecialchars($row['firstname'] . ' ' . $row['lastname']) ?></td>
+                        <td><?= date('d M Y, H:i', strtotime($row['created_at'])) ?></td>
+                        <td><?= number_format($row['total'], 2) ?></td>
+                        <td>
+                            <?php
+                                $status = $row['status'];
+                                $badge_class = 'bg-secondary'; // Default
+                                if ($status == 'completed') $badge_class = 'bg-success';
+                                if ($status == 'pending') $badge_class = 'bg-warning text-dark';
+                                if ($status == 'processing') $badge_class = 'bg-info text-dark';
+                                if ($status == 'shipped') $badge_class = 'bg-primary';
+                                if ($status == 'cancelled') $badge_class = 'bg-danger';
+                            ?>
+                            <span class="badge rounded-pill <?= $badge_class ?>">
+                                <?= ucfirst($status) ?>
+                            </span>
+                        </td>
+                        <td>
+                            <a href="order_details.php?id=<?= $row['id'] ?>" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> ดูรายละเอียด
+                            </a>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php include 'footer.php'; ?>
+
 <script>
 $(document).ready(function() {
-  $('#ordersTable').DataTable({
-    language: {
-      search: "🔍 ค้นหา:",
-      lengthMenu: "แสดง _MENU_ รายการต่อหน้า",
-      info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
-      infoEmpty: "ไม่มีข้อมูล",
-      zeroRecords: "ไม่พบข้อมูลที่ค้นหา",
-      paginate: {
-        first: "หน้าแรก",
-        last: "หน้าสุดท้าย",
-        next: "ถัดไป",
-        previous: "ก่อนหน้า"
-      }
-    },
-    pageLength: 10,
-    order: [[0, "ASC"]],
-    responsive: true
-  });
+    $('#ordersTable').DataTable({
+        "order": [[0, "desc"]] // เรียงจาก IDล่าสุดไปเก่าสุด
+    });
 });
 </script>
-</body>
-</html>
