@@ -1,6 +1,7 @@
 <?php
 // users.php (Upgraded)
 include 'header.php';
+include '../config/connectdb.php';
 
 // ดึงข้อมูลผู้ใช้ทั้งหมด
 $result = $conn->query("SELECT * FROM user ORDER BY user_id ASC");
