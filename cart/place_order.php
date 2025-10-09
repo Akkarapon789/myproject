@@ -73,7 +73,7 @@ if (!$order) {
                     
                     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
                         <a href="order_history.php?id=<?= $order_id ?>" class="btn btn-outline-primary btn-lg px-4 gap-3">ดูรายละเอียดคำสั่งซื้อ</a>
-                        <a href="../index.php" class="btn btn-primary btn-lg px-4">กลับไปหน้าแรก</a>
+                        <a href="../pages/index.php" class="btn btn-primary btn-lg px-4">กลับไปหน้าแรก</a>
                     </div>
                 </div>
             </div>
