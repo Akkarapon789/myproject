@@ -4,23 +4,17 @@ include 'header.php';
 
 $order_id = $_GET['id'] ?? 0;
 
-// --- ส่วนจัดการอัปเดตสถานะ ---
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
-    $new_status = $_POST['status'];
-    $stmt_update = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
-    $stmt_update->bind_param("si", $new_status, $order_id);
-    if ($stmt_update->execute()) {
-        // [แก้ไข] เปลี่ยนเป็น JavaScript Redirect
-        echo "<script>
-                alert('อัปเดตสถานะเรียบร้อยแล้ว!');
-                a href = 'orders.php';
-              </script>";
-        exit(); // exit() ยังคงสำคัญ เพื่อให้แน่ใจว่าสคริปต์หยุดทำงาน
-    } else {
-        echo "<script>alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');</script>";
-    }
-    $stmt_update->close();
+// ...
+if ($stmt_update->execute()) {
+    // --- แบบที่ 2: แสดงข้อความบนหน้าจอ แล้วหน่วงเวลา (แนะนำแบบนี้) ---
+    echo "อัปเดตสถานะเรียบร้อย! กำลังนำคุณกลับไปหน้ารายการใน 4 วินาที... <i class='fas fa-spinner fa-spin'></i>";
+    echo "<script>
+            setTimeout(function() {
+                window.location.href = 'orders.php';
+            }, 4000); // 4000 milliseconds = 4 วินาที
+          </script>";
 }
+// ...
 
 // --- ดึงข้อมูลหลักของ Order (ข้อมูลลูกค้า, ที่อยู่) ---
 // [แก้ไข] เพิ่ม ` ` ครอบ `user`
