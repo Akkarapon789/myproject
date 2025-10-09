@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
         // [แก้ไข] เปลี่ยนเป็น JavaScript Redirect
         echo "<script>
                 alert('อัปเดตสถานะเรียบร้อยแล้ว!');
-                window.location.href = 'orders.php';
+                a href = 'orders.php';
               </script>";
         exit(); // exit() ยังคงสำคัญ เพื่อให้แน่ใจว่าสคริปต์หยุดทำงาน
     } else {
