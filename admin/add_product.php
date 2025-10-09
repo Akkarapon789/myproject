@@ -1,13 +1,9 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 session_start();
 if(!isset($_SESSION['role']) || $_SESSION['role'] != 'admin'){
     header("Location: ../auth/login.php");
     exit();
 }
-
 include '../config/connectdb.php';
 
 // รับค่าจาก Form
@@ -16,7 +12,6 @@ $category_id = $_POST['category_id'];
 $price       = $_POST['price'];
 $stock       = $_POST['stock'];
 
-// อัปโหลดรูป
 $image_name = '';
 if(isset($_FILES['image']) && $_FILES['image']['error'] == 0){
     $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
@@ -24,14 +19,20 @@ if(isset($_FILES['image']) && $_FILES['image']['error'] == 0){
     move_uploaded_file($_FILES['image']['tmp_name'], '../uploads/'.$image_name);
 }
 
-// Insert ลงฐานข้อมูล
-$sql = "INSERT INTO products (title, category_id, price, stock, image_url) 
-        VALUES ('$title', '$category_id', '$price', '$stock', '$image_name')";
+// ใช้ Prepared Statement เพื่อความปลอดภัย
+$sql = "INSERT INTO products (title, category_id, price, stock, image_url) VALUES (?, ?, ?, ?, ?)";
+$stmt = $conn->prepare($sql);
+// "sidis" คือ data types: s=string, i=integer, d=double
+$stmt->bind_param("sidis", $title, $category_id, $price, $stock, $image_name);
 
-if($conn->query($sql)){
-    header("Location: products.php");
-    exit();
-}else{
-    echo "เกิดข้อผิดพลาด: ".$conn->error;
+if($stmt->execute()){
+    $_SESSION['success'] = "เพิ่มสินค้าเรียบร้อยแล้ว!";
+} else {
+    $_SESSION['error'] = "เกิดข้อผิดพลาด: " . $stmt->error;
 }
+
+$stmt->close();
+$conn->close();
+header("Location: products.php");
+exit();
 ?>
