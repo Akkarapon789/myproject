@@ -3,7 +3,7 @@
 include 'header.php';
 
 // ดึงข้อมูลผู้ใช้ทั้งหมด
-$result = $conn->query("SELECT * FROM user ORDER BY user_id ASC");
+$result = $conn->query("SELECT * FROM users ORDER BY user_id ASC");
 $result = $conn->query($sql);
 if (!$result) {
     // ถ้า query ไม่สำเร็จ ให้แสดงข้อผิดพลาดแล้วหยุดทำงาน
