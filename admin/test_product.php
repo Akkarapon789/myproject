@@ -1,7 +1,8 @@
 <?php
-if(!is_dir('uploads')){
-    mkdir('uploads', 0755);
-    echo "สร้างโฟลเดอร์ uploads สำเร็จ";
+$file = 'uploads/test.txt';
+if(file_put_contents($file, "ทดสอบเขียนไฟล์") !== false){
+    echo "เขียนไฟล์สำเร็จ";
+    unlink($file); // ลบไฟล์ทดสอบ
 } else {
-    echo "โฟลเดอร์ uploads มีอยู่แล้ว";
+    echo "เขียนไฟล์ไม่สำเร็จ";
 }
