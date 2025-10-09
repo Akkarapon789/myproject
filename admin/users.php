@@ -1,9 +1,9 @@
 <?php
-// users.php (Corrected Version)
-include 'header.php'; // header.php ทำการเชื่อมต่อฐานข้อมูลให้แล้ว
+// users.php (Corrected)
+include 'header.php';
 
-// ดึงข้อมูลผู้ใช้ทั้งหมด (เรียกใช้ Query แค่ครั้งเดียว)
-$result = $conn->query("SELECT * FROM user ORDER BY user_id ASC");
+// [แก้ไข] เพิ่ม ` ` ครอบ `user`
+$result = $conn->query("SELECT * FROM `user` ORDER BY user_id ASC");
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -32,7 +32,6 @@ $result = $conn->query("SELECT * FROM user ORDER BY user_id ASC");
                 </thead>
                 <tbody>
                     <?php 
-                    // ตรวจสอบว่ามีข้อมูลหรือไม่ก่อนเริ่มลูป
                     if ($result && $result->num_rows > 0):
                         while ($row = $result->fetch_assoc()): 
                     ?>
@@ -77,17 +76,8 @@ $(document).ready(function() {
     $('#userTable').DataTable({
         "order": [[0, "asc"]],
         "language": {
-            "search": "ค้นหา:",
-            "lengthMenu": "แสดง _MENU_ รายการ",
-            "info": "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
-            "infoEmpty": "ไม่พบข้อมูล",
-            "zeroRecords": "ไม่พบข้อมูลที่ตรงกับการค้นหา",
-            "paginate": {
-                "first": "แรกสุด",
-                "last": "ท้ายสุด",
-                "next": "ถัดไป",
-                "previous": "ก่อนหน้า"
-            }
+            "search": "ค้นหา:", "lengthMenu": "แสดง _MENU_ รายการ", "info": "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ", "infoEmpty": "ไม่พบข้อมูล", "zeroRecords": "ไม่พบข้อมูลที่ตรงกับการค้นหา",
+            "paginate": { "first": "แรกสุด", "last": "ท้ายสุด", "next": "ถัดไป", "previous": "ก่อนหน้า" }
         }
     });
 });

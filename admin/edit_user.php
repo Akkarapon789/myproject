@@ -1,11 +1,11 @@
 <?php
-// edit_user.php
+// edit_user.php (Corrected)
 include 'header.php';
 
-$user_id = $_GET['id'] ?? 0; // รับ ID จาก URL
+$user_id = $_GET['id'] ?? 0;
 
-// ดึงข้อมูลผู้ใช้เดิมมาแสดงในฟอร์ม
-$sql_select = "SELECT * FROM user WHERE user_id = ?";
+// [แก้ไข] เพิ่ม ` ` ครอบ `user`
+$sql_select = "SELECT * FROM `user` WHERE user_id = ?";
 $stmt_select = $conn->prepare($sql_select);
 $stmt_select->bind_param("i", $user_id);
 $stmt_select->execute();
@@ -18,7 +18,6 @@ if (!$user) {
     exit;
 }
 
-// ตรวจสอบถ้ามีการส่งข้อมูลฟอร์มมาเพื่ออัปเดต
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $firstname = $_POST['firstname'];
     $lastname  = $_POST['lastname'];
@@ -27,29 +26,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $role      = $_POST['role'];
     $password  = $_POST['password'];
 
-    // เตรียม Query สำหรับ Update
-    // ถ้ามีการกรอกรหัสผ่านใหม่ ให้ Update รหัสผ่านด้วย
     if (!empty($password)) {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $sql_update = "UPDATE user SET firstname=?, lastname=?, email=?, password=?, phone=?, role=? WHERE user_id=?";
+        // [แก้ไข] เพิ่ม ` ` ครอบ `user`
+        $sql_update = "UPDATE `user` SET firstname=?, lastname=?, email=?, password=?, phone=?, role=? WHERE user_id=?";
         $stmt_update = $conn->prepare($sql_update);
         $stmt_update->bind_param("ssssssi", $firstname, $lastname, $email, $hashed_password, $phone, $role, $user_id);
     } else {
-        // ถ้าไม่กรอกรหัสผ่านใหม่ ไม่ต้อง Update รหัสผ่าน
-        $sql_update = "UPDATE user SET firstname=?, lastname=?, email=?, phone=?, role=? WHERE user_id=?";
+        // [แก้ไข] เพิ่ม ` ` ครอบ `user`
+        $sql_update = "UPDATE `user` SET firstname=?, lastname=?, email=?, phone=?, role=? WHERE user_id=?";
         $stmt_update = $conn->prepare($sql_update);
         $stmt_update->bind_param("sssssi", $firstname, $lastname, $email, $phone, $role, $user_id);
     }
 
     if ($stmt_update->execute()) {
-        echo "<script>
-                alert('อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว!');
-                window.location.href = 'users.php';
-              </script>";
+        echo "<script>alert('อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว!'); window.location.href = 'users.php';</script>";
     } else {
-         echo "<script>
-                alert('เกิดข้อผิดพลาด: " . htmlspecialchars($stmt_update->error) . "');
-              </script>";
+         echo "<script>alert('เกิดข้อผิดพลาด: " . htmlspecialchars($stmt_update->error) . "');</script>";
     }
     $stmt_update->close();
 }
@@ -57,9 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0 text-gray-800">แก้ไขผู้ใช้: <?= htmlspecialchars($user['firstname']) ?></h1>
-    <a href="users.php" class="btn btn-secondary">
-        <i class="fas fa-arrow-left fa-sm me-2"></i>กลับไปหน้าผู้ใช้
-    </a>
+    <a href="users.php" class="btn btn-secondary"><i class="fas fa-arrow-left fa-sm me-2"></i>กลับไปหน้าผู้ใช้</a>
 </div>
 
 <div class="card shadow-sm">
@@ -94,10 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <option value="admin" <?= $user['role'] == 'admin' ? 'selected' : '' ?>>Admin</option>
                 </select>
             </div>
-
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-sync-alt me-2"></i>อัปเดตข้อมูล
-            </button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-sync-alt me-2"></i>อัปเดตข้อมูล</button>
         </form>
     </div>
 </div>
