@@ -69,7 +69,7 @@ if (!$latest) {
 <head>
   <meta charset="UTF-8">
   <title>Admin Dashboard</title>
-  <?php include 'layout.php'; ?>
+  <?php include 'admin_style.css'; ?>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
