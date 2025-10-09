@@ -1,195 +1,270 @@
 <?php
-// แสดง error ถ้ามี (สำหรับ debug)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// index.php (Upgraded)
+include 'header.php';
 
-session_start();
-
-// ตรวจสอบสิทธิ์
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
-    header("Location: ../auth/login.php");
-    exit();
-}
-
-// เชื่อมต่อฐานข้อมูล
-include '../config/connectdb.php';
-
-// ฟังก์ชันช่วยดึงค่าเดียวจาก query ปลอดภัย
-function getSingleValue($conn, $sql, $col) {
-    $res = $conn->query($sql);
-    if ($res && $row = $res->fetch_assoc()) {
-        return $row[$col] ?? 0;
+// --- ดึงข้อมูลสำหรับ Stat Cards ---
+// ใช้ prepared statements เพื่อความปลอดภัยและประสิทธิภาพ
+function getSingleValue($conn, $sql, $types = null, $params = []) {
+    $stmt = $conn->prepare($sql);
+    if ($types && $params) {
+        $stmt->bind_param($types, ...$params);
     }
-    return 0;
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    // Return the first value from the result array, or 0 if null
+    return $result ? array_values($result)[0] ?? 0 : 0;
 }
 
-// ดึงข้อมูลสรุป
-$users       = getSingleValue($conn, "SELECT COUNT(*) AS c FROM users", 'c');
-$products    = getSingleValue($conn, "SELECT COUNT(*) AS c FROM products", 'c');
-$orders      = getSingleValue($conn, "SELECT COUNT(*) AS c FROM orders", 'c');
-$total_sales = getSingleValue($conn, "SELECT SUM(total) AS s FROM orders", 's');
+$total_sales = getSingleValue($conn, "SELECT SUM(total) FROM orders WHERE status = 'completed'");
+$total_orders = getSingleValue($conn, "SELECT COUNT(id) FROM orders");
+$total_users = getSingleValue($conn, "SELECT COUNT(user_id) FROM users");
+$total_products = getSingleValue($conn, "SELECT COUNT(id) FROM products");
 
-// ดึงยอดขายรายเดือน
-$months = []; 
-$sales = [];
-$sql = "SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total) as sales 
-        FROM orders GROUP BY month ORDER BY month ASC";
-$result = $conn->query($sql);
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $months[] = $row['month'];
-        $sales[]  = $row['sales'];
-    }
+
+// --- ดึงข้อมูลสำหรับกราฟยอดขายรายเดือน ---
+$sales_by_month_labels = [];
+$sales_by_month_data = [];
+$sql_sales = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, SUM(total) AS monthly_sales 
+              FROM orders 
+              WHERE status = 'completed' AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+              GROUP BY month 
+              ORDER BY month ASC";
+$result_sales = $conn->query($sql_sales);
+while($row = $result_sales->fetch_assoc()) {
+    $sales_by_month_labels[] = $row['month'];
+    $sales_by_month_data[] = $row['monthly_sales'];
 }
 
-// ดึงยอดขายตามหมวดหมู่
-$cats = []; 
-$cat_sales = [];
-$sql2 = "SELECT c.title AS category, SUM(od.qty * od.price) AS total_sales
-         FROM order_detail od
-         JOIN products p ON od.product_id = p.id
-         JOIN categories c ON p.category_id = c.id
-         GROUP BY c.id";
-$res2 = $conn->query($sql2);
-if ($res2) {
-    while ($r = $res2->fetch_assoc()) {
-        $cats[] = $r['category'];
-        $cat_sales[] = $r['total_sales'];
-    }
+// --- ดึงข้อมูลสำหรับกราฟหมวดหมู่สินค้าขายดี ---
+$category_labels = [];
+$category_data = [];
+$sql_cats = "SELECT c.title, SUM(oi.quantity * oi.price) AS category_sales
+             FROM order_items oi
+             JOIN products p ON oi.product_id = p.id
+             JOIN categories c ON p.category_id = c.id
+             GROUP BY c.title
+             ORDER BY category_sales DESC LIMIT 5"; // แสดง 5 หมวดหมู่ขายดีที่สุด
+$result_cats = $conn->query($sql_cats);
+while($row = $result_cats->fetch_assoc()){
+    $category_labels[] = $row['title'];
+    $category_data[] = $row['category_sales'];
 }
 
-// ดึงคำสั่งซื้อล่าสุด 5 รายการ
-$latest = $conn->query("SELECT * FROM orders ORDER BY id DESC LIMIT 5");
-if (!$latest) {
-    $latest = [];
+
+// --- ดึงข้อมูลออเดอร์ล่าสุด ---
+$recent_orders = [];
+$sql_recent = "SELECT o.id, u.firstname, u.lastname, o.total, o.status 
+               FROM orders o
+               JOIN users u ON o.user_id = u.user_id
+               ORDER BY o.created_at DESC LIMIT 5";
+$result_recent = $conn->query($sql_recent);
+while($row = $result_recent->fetch_assoc()){
+    $recent_orders[] = $row;
 }
 ?>
-<!doctype html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>Admin Dashboard</title>
-  <?php include 'admin_style.css'; ?>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-<div class="d-flex">
-  <!-- Sidebar -->
-  <div class="sidebar p-3">
-    <h4>Admin Panel</h4>
-    <a href="index.php" class="active">แดชบอร์ด</a>
-    <a href="users.php">ผู้ใช้</a>
-    <a href="products.php">สินค้า</a>
-    <a href="orders.php">คำสั่งซื้อ</a>
-    <a href="adminout.php" class="text-danger">ออกจากระบบ</a>
-  </div>
 
-  <!-- Content -->
-  <div class="content flex-grow-1">
-    <h2>แดชบอร์ดสรุป</h2>
+<div class="container-fluid">
 
-    <!-- Cards -->
-    <div class="row g-4 mb-4">
-      <div class="col-md-3">
-        <div class="card p-3 text-center bg-primary text-white">
-          ผู้ใช้ทั้งหมด <h3><?= $users; ?></h3>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card p-3 text-center bg-success text-white">
-          สินค้า <h3><?= $products; ?></h3>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card p-3 text-center bg-warning text-dark">
-          คำสั่งซื้อ <h3><?= $orders; ?></h3>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card p-3 text-center bg-danger text-white">
-          ยอดขายรวม <h3><?= number_format($total_sales, 2); ?> ฿</h3>
-        </div>
-      </div>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">แดชบอร์ด</h1>
+        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> สร้างรายงาน</a>
     </div>
 
-    <!-- Graphs -->
-    <div class="row g-4">
-      <div class="col-md-8">
-        <div class="card p-4">
-          <h5>ยอดขายรายเดือน</h5>
-          <canvas id="salesChart"></canvas>
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">ยอดขายทั้งหมด</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">฿<?= number_format($total_sales, 2) ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card p-4">
-          <h5>สัดส่วนยอดขายตามหมวดหมู่</h5>
-          <canvas id="categoryChart"></canvas>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">คำสั่งซื้อทั้งหมด</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= number_format($total_orders) ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">สินค้าทั้งหมด</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= number_format($total_products) ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">ผู้ใช้งานทั้งหมด</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?= number_format($total_users) ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Latest Orders -->
-    <div class="row g-4 mt-4">
-      <div class="col-md-12">
-        <div class="card p-4">
-          <h5>คำสั่งซื้อล่าสุด</h5>
-          <table class="table table-sm">
-            <tr><th>ID</th><th>ลูกค้า</th><th>ยอดรวม</th></tr>
-            <?php 
-            if(!empty($latest)){
-                while ($o = $latest->fetch_assoc()): ?>
-                    <tr>
-                      <td>#<?= $o['id']; ?></td>
-                      <td><?= htmlspecialchars($o['fullname']); ?></td>
-                      <td><?= number_format($o['total'], 2); ?> ฿</td>
-                    </tr>
-                <?php endwhile; 
-            } else { ?>
-                <tr><td colspan="3" class="text-center">ไม่มีคำสั่งซื้อ</td></tr>
-            <?php } ?>
-          </table>
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">ภาพรวมยอดขายรายเดือน</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">5 หมวดหมู่ขายดี</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">5 คำสั่งซื้อล่าสุด</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ชื่อลูกค้า</th>
+                            <th>ยอดรวม (บาท)</th>
+                            <th>สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($recent_orders as $order): ?>
+                        <tr>
+                            <td>#<?= $order['id'] ?></td>
+                            <td><?= htmlspecialchars($order['firstname'] . ' ' . $order['lastname']) ?></td>
+                            <td><?= number_format($order['total'], 2) ?></td>
+                            <td>
+                                <span class="badge bg-<?= ($order['status'] == 'completed' ? 'success' : 'warning') ?>">
+                                    <?= htmlspecialchars($order['status']) ?>
+                                </span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
+<?php include 'footer.php'; ?>
 
-<!-- Chart.js Scripts -->
 <script>
-const ctx = document.getElementById('salesChart').getContext('2d');
-new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: <?= json_encode($months); ?>,
-    datasets: [{
-      label: 'ยอดขาย (บาท)',
-      data: <?= json_encode($sales); ?>,
-      borderColor: 'rgba(75, 192, 192, 1)',
-      backgroundColor: 'rgba(75, 192, 192, 0.3)',
-      fill: true,
-      tension: 0.3
-    }]
-  },
-  options: { responsive: true }
-});
+document.addEventListener("DOMContentLoaded", function() {
+    // Sales Chart (Line)
+    var ctxSales = document.getElementById("salesChart").getContext('2d');
+    var salesChart = new Chart(ctxSales, {
+        type: 'line',
+        data: {
+            labels: <?= json_encode($sales_by_month_labels) ?>,
+            datasets: [{
+                label: "ยอดขาย",
+                lineTension: 0.3,
+                backgroundColor: "rgba(78, 115, 223, 0.05)",
+                borderColor: "rgba(78, 115, 223, 1)",
+                pointRadius: 3,
+                pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointBorderColor: "rgba(78, 115, 223, 1)",
+                pointHoverRadius: 3,
+                pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                data: <?= json_encode($sales_by_month_data) ?>,
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return '฿' + new Intl.NumberFormat().format(value);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
 
-const ctx2 = document.getElementById('categoryChart').getContext('2d');
-new Chart(ctx2, {
-  type: 'pie',
-  data: {
-    labels: <?= json_encode($cats); ?>,
-    datasets: [{
-      data: <?= json_encode($cat_sales); ?>,
-      backgroundColor: [
-        'rgba(255, 99, 132, 0.6)',
-        'rgba(54, 162, 235, 0.6)',
-        'rgba(255, 206, 86, 0.6)',
-        'rgba(75, 192, 192, 0.6)',
-        'rgba(153, 102, 255, 0.6)'
-      ]
-    }]
-  }
+    // Category Chart (Pie)
+    var ctxCategory = document.getElementById("categoryChart").getContext('2d');
+    var categoryChart = new Chart(ctxCategory, {
+        type: 'doughnut',
+        data: {
+            labels: <?= json_encode($category_labels) ?>,
+            datasets: [{
+                data: <?= json_encode($category_data) ?>,
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+                hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#c73024'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            cutout: '80%',
+             plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        },
+    });
 });
 </script>
-</body>
-</html>
