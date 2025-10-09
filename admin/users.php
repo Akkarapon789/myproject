@@ -5,7 +5,7 @@ include 'header.php';
 // ดึงข้อมูลผู้ใช้ทั้งหมด
 // *** หมายเหตุ: ผมเปลี่ยนชื่อตารางจาก 'user' เป็น 'users' ให้ตรงกับหน้า Dashboard
 // หากตารางของคุณชื่อ 'user' ให้แก้บรรทัดด้านล่างกลับไปนะครับ ***
-$result = $conn->query("SELECT * FROM users ORDER BY user_id ASC");
+$result = $conn->query("SELECT * FROM user ORDER BY user_id ASC");
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
