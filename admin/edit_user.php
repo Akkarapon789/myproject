@@ -5,7 +5,7 @@ include 'header.php';
 $user_id = $_GET['id'] ?? 0; // รับ ID จาก URL
 
 // ดึงข้อมูลผู้ใช้เดิมมาแสดงในฟอร์ม
-$sql_select = "SELECT * FROM users WHERE user_id = ?";
+$sql_select = "SELECT * FROM user WHERE user_id = ?";
 $stmt_select = $conn->prepare($sql_select);
 $stmt_select->bind_param("i", $user_id);
 $stmt_select->execute();
@@ -31,12 +31,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // ถ้ามีการกรอกรหัสผ่านใหม่ ให้ Update รหัสผ่านด้วย
     if (!empty($password)) {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $sql_update = "UPDATE users SET firstname=?, lastname=?, email=?, password=?, phone=?, role=? WHERE user_id=?";
+        $sql_update = "UPDATE user SET firstname=?, lastname=?, email=?, password=?, phone=?, role=? WHERE user_id=?";
         $stmt_update = $conn->prepare($sql_update);
         $stmt_update->bind_param("ssssssi", $firstname, $lastname, $email, $hashed_password, $phone, $role, $user_id);
     } else {
         // ถ้าไม่กรอกรหัสผ่านใหม่ ไม่ต้อง Update รหัสผ่าน
-        $sql_update = "UPDATE users SET firstname=?, lastname=?, email=?, phone=?, role=? WHERE user_id=?";
+        $sql_update = "UPDATE user SET firstname=?, lastname=?, email=?, phone=?, role=? WHERE user_id=?";
         $stmt_update = $conn->prepare($sql_update);
         $stmt_update->bind_param("sssssi", $firstname, $lastname, $email, $phone, $role, $user_id);
     }
