@@ -61,7 +61,12 @@ include '../config/connectdb.php';
               }
           ?>
           <tr>
-            <td><img src="<?= htmlspecialchars($imgUrl) ?>" alt="product" style="max-width:60px; max-height:60px;"></td>
+          <td>
+            <img src="../assets/product/<?= htmlspecialchars($imgUrl) ?>" 
+              onerror="this.src='https://picsum.photos/60?random=<?= $row['id'] ?>';"
+              alt="product" 
+              style="width:60px; height:60px; object-fit:cover; border-radius:8px; border:1px solid #ddd;">
+            </td>
             <td><?= $row['id']; ?></td>
             <td><?= htmlspecialchars($row['title']); ?></td>
             <td><?= number_format($row['price'], 2); ?> ฿</td>
