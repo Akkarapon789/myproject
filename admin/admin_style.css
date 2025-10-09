@@ -1,4 +1,4 @@
-/* admin_style.css */
+/* admin_style.css (ฉบับแก้ไข) */
 body {
     font-family: 'Prompt', sans-serif;
     overflow-x: hidden;
@@ -6,21 +6,21 @@ body {
 }
 
 #wrapper {
-    display: flex;
-    transition: all 0.4s ease;
+    display: flex; /* <-- กฎสำคัญที่สุด ให้ Sidebar กับ Content อยู่ข้างกัน */
 }
 
+/* --- Sidebar Styles --- */
 #sidebar-wrapper {
+    width: 250px; /* กำหนดความกว้าง Sidebar ให้คงที่ */
     min-height: 100vh;
-    width: 250px;
-    margin-left: -250px;
-    transition: margin .25s ease-out;
+    transition: margin .25s ease-out; /* ทำให้การซ่อน/แสดงเมนูลื่นไหล */
     display: flex;
     flex-direction: column;
 }
 
+/* เมื่อ #wrapper มีคลาส toggled (ตอนกดปุ่ม) ให้ซ่อน Sidebar ไปทางซ้าย */
 #wrapper.toggled #sidebar-wrapper {
-    margin-left: 0;
+    margin-left: -250px;
 }
 
 .sidebar-heading {
@@ -36,45 +36,34 @@ body {
 }
 .list-group-item.active {
     background-color: #4e73df !important;
-    border: none;
+    border-color: #4e73df !important;
 }
-.list-group-item:hover {
+.list-group-item:hover:not(.active) {
     background-color: #334155;
 }
 
+/* --- Page Content Styles --- */
 #page-content-wrapper {
-    flex-grow: 1;
-    width: 100%;
-    transition: all 0.4s ease;
+    flex: 1; /* ทำให้ส่วนเนื้อหายืดเต็มพื้นที่ที่เหลือ */
+    min-width: 0; /* ป้องกันเนื้อหาล้นจอ */
 }
 
-#wrapper.toggled #page-content-wrapper {
-    padding-left: 250px;
-}
-
-@media (min-width: 768px) {
+/* สำหรับจอเล็ก (มือถือ) ให้ซ่อนเมนูไว้ก่อนเป็นค่าเริ่มต้น */
+@media (max-width: 768px) {
     #sidebar-wrapper {
-        margin-left: 0;
-    }
-    #page-content-wrapper {
-        min-width: 0;
-        width: 100%;
-    }
-    #wrapper.toggled #sidebar-wrapper {
         margin-left: -250px;
     }
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: 0;
+    }
 }
 
+/* --- Styles สำหรับ Card และ Table (เหมือนเดิม) --- */
 .card {
     border: none;
     border-radius: 0.75rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, .15) !important;
 }
-
-.table-responsive {
-    border-radius: 0.5rem;
-    overflow: hidden;
-}
-
 .table thead {
     background-color: #4e73df;
     color: white;
