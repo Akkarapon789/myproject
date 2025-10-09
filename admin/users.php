@@ -1,95 +1,85 @@
 <?php
-session_start();
-if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
-    header("Location: ../auth/login.php");
-    exit();
-}
-include '../config/connectdb.php';
+// users.php (Upgraded)
+include 'header.php';
+
+// ดึงข้อมูลผู้ใช้ทั้งหมด
+// *** หมายเหตุ: ผมเปลี่ยนชื่อตารางจาก 'user' เป็น 'users' ให้ตรงกับหน้า Dashboard
+// หากตารางของคุณชื่อ 'user' ให้แก้บรรทัดด้านล่างกลับไปนะครับ ***
+$result = $conn->query("SELECT * FROM users ORDER BY user_id ASC");
 ?>
-<!doctype html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>ผู้ใช้</title>
-  <?php include 'layout.php'; ?>
-</head>
-<body>
-<div class="d-flex">
-  <div class="sidebar p-3">
-    <h4>Admin Panel</h4>
-    <a href="index.php">แดชบอร์ด</a>
-    <a href="users.php" class="active">ผู้ใช้</a>
-    <a href="products.php">สินค้า</a>
-    <a href="orders.php">คำสั่งซื้อ</a>
-    <a href="adminout.php" class="text-danger">ออกจากระบบ</a>
-  </div>
 
-  <div class="content flex-grow-1">
-    <h2>จัดการผู้ใช้</h2>
-    <a href="add_user.php" class="btn btn-success mb-3">+ เพิ่มผู้ใช้</a>
-
-    <div class="card p-3 shadow-sm">
-      <table id="userTable" class="table table-bordered table-hover align-middle">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>ชื่อ-นามสกุล</th>
-            <th>Email</th>
-            <th>เบอร์โทร</th>
-            <th>สิทธิ์</th>
-            <th>การจัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php
-          $result = $conn->query("SELECT * FROM user ORDER BY user_id ASC") or die("SQL Error: " . $conn->error);
-          while ($row = $result->fetch_assoc()):
-          ?>
-          <tr>
-            <td><?= $row['user_id'] ?></td>
-            <td><?= htmlspecialchars($row['firstname'] . " " . $row['lastname']); ?></td>
-            <td><?= htmlspecialchars($row['email']); ?></td>
-            <td><?= htmlspecialchars($row['phone']); ?></td>
-            <td>
-              <span class="badge <?= $row['role']=='admin'?'bg-danger':'bg-primary' ?>">
-                <?= ucfirst($row['role']); ?>
-              </span>
-            </td>
-            <td>
-              <a href="edit_user.php?id=<?= $row['user_id'] ?>" class="btn btn-sm btn-warning">แก้ไข</a>
-              <a href="delete_user.php?id=<?= $row['user_id'] ?>" 
-                 class="btn btn-sm btn-danger"
-                 onclick="return confirm('ยืนยันการลบผู้ใช้นี้หรือไม่?');">ลบ</a>
-            </td>
-          </tr>
-          <?php endwhile; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800">จัดการผู้ใช้งาน</h1>
+    <a href="add_user.php" class="btn btn-success">
+        <i class="fas fa-plus fa-sm me-2"></i>เพิ่มผู้ใช้ใหม่
+    </a>
 </div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">รายชื่อผู้ใช้ทั้งหมด</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="userTable" class="table table-bordered table-hover" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>Email</th>
+                        <th>เบอร์โทร</th>
+                        <th>สิทธิ์</th>
+                        <th>จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= $row['user_id'] ?></td>
+                        <td><?= htmlspecialchars($row['firstname'] . " " . $row['lastname']) ?></td>
+                        <td><?= htmlspecialchars($row['email']) ?></td>
+                        <td><?= htmlspecialchars($row['phone']) ?></td>
+                        <td>
+                            <span class="badge rounded-pill <?= $row['role'] == 'admin' ? 'bg-danger' : 'bg-primary' ?>">
+                                <?= ucfirst($row['role']) ?>
+                            </span>
+                        </td>
+                        <td>
+                            <a href="edit_user.php?id=<?= $row['user_id'] ?>" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="delete_user.php?id=<?= $row['user_id'] ?>" class="btn btn-danger btn-sm" 
+                               onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php include 'footer.php'; ?>
 
 <script>
 $(document).ready(function() {
-  $('#userTable').DataTable({
-    language: {
-      search: "🔍 ค้นหา:",
-      lengthMenu: "แสดง _MENU_ รายการต่อหน้า",
-      info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
-      infoEmpty: "ไม่มีข้อมูล",
-      zeroRecords: "ไม่พบข้อมูลที่ค้นหา",
-      paginate: {
-        first: "หน้าแรก",
-        last: "หน้าสุดท้าย",
-        next: "ถัดไป",
-        previous: "ก่อนหน้า"
-      }
-    },
-    pageLength: 10,
-    user: [[0, "ASC"]],
-    responsive: true
-  });
+    $('#userTable').DataTable({
+        "order": [[0, "asc"]], // เรียงลำดับตามคอลัมน์แรก (ID) จากน้อยไปมาก
+        "language": { // หากต้องการภาษาไทย สามารถใช้ส่วนนี้ได้
+            "search": "ค้นหา:",
+            "lengthMenu": "แสดง _MENU_ รายการ",
+            "info": "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+            "infoEmpty": "ไม่พบข้อมูล",
+            "zeroRecords": "ไม่พบข้อมูลที่ตรงกับการค้นหา",
+            "paginate": {
+                "first": "แรกสุด",
+                "last": "ท้ายสุด",
+                "next": "ถัดไป",
+                "previous": "ก่อนหน้า"
+            }
+        }
+    });
 });
 </script>
-</body>
-</html>
