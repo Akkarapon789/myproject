@@ -173,17 +173,16 @@ function getProductImageUrl(string $title): string {
                             <form action="../cart/add.php" method="POST" class="d-grid gap-2">
                                 <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
                                 <button type="submit" class="btn btn-primary">เพิ่มลงตะกร้า</button>
+                                <!-- 🔹 ปุ่มดูรายละเอียดสินค้า -->
+                                <a href="product_detail.php?id=<?= $product['id'] ?>" class="btn btn-outline-secondary mt-2 d-grid gap-2">
+                                    ดูรายละเอียดสินค้า
+                                </a>
                             </form>
                         <?php else: ?>
                             <a href="../auth/login.php" class="btn btn-outline-primary d-grid gap-2">
                                 ล็อกอินเพื่อสั่งซื้อ
                             </a>
                         <?php endif; ?>
-
-                        <!-- 🔹 ปุ่มดูรายละเอียดสินค้า -->
-                        <a href="product_detail.php?id=<?= $product['id'] ?>" class="btn btn-outline-secondary mt-2 d-grid gap-2">
-                            ดูรายละเอียดสินค้า
-                        </a>
                     </div>
                 </div>
             </div>
