@@ -52,24 +52,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // --- บันทึกข้อมูลลงฐานข้อมูล ---
-    // ❌ BUG FIX: ลบคอลัมน์ `slug` ที่ไม่มีในฐานข้อมูลออก
-    $sql = "INSERT INTO products (category_id, title, price, stock, image_url) VALUES (?, ?, ?, ?, ?)";
+    // ✅ สร้าง slug จากชื่อสินค้า (กันซ้ำ)
+    $slug = strtolower(str_replace(' ', '-', $title));
+
+    // ✅ ใช้ Prepared Statement ปลอดภัย
+    // คำสั่งนี้ถูกต้องแล้ว เพราะใน DB มีคอลัมน์ slug แล้ว
+    $sql = "INSERT INTO products (category_id, title, slug, price, stock, image_url) VALUES (?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    
-    // ❌ BUG FIX: แก้ไขประเภทข้อมูลใน bind_param ให้ตรงกับ query (ลบ 's' ของ slug ออก)
-    // i = integer, s = string, d = double
-    $stmt->bind_param("isdis", $category_id, $title, $price, $stock, $image_url);
+
+    // ✅ bind_param นี้ก็ถูกต้องแล้วเช่นกัน
+    // i = integer, s = string, s = string, d = double, i = integer, s = string
+    $stmt->bind_param("issdis", $category_id, $title, $slug, $price, $stock, $image_url);
 
     if ($stmt->execute()) {
-        $_SESSION['success'] = "✅ เพิ่มสินค้า '" . htmlspecialchars($title) . "' เรียบร้อยแล้ว!";
+        $_SESSION['success'] = "✅ เพิ่มสินค้าเรียบร้อยแล้ว!";
     } else {
-        $_SESSION['error'] = "❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล: " . $stmt->error;
+        $_SESSION['error'] = "❌ เกิดข้อผิดพลาด: " . $stmt->error;
     }
 
     $stmt->close();
     $conn->close();
 
-    header("Location: products.php"); // กลับไปหน้าแสดงรายการสินค้า
+    header("Location: products.php");
     exit();
 }
 ?>
