@@ -1,17 +1,21 @@
 <?php
-// products.php (Refactored)
 include 'header.php';
 
-// ดึงหมวดหมู่ (สำหรับ dropdown ในฟอร์ม)
+// ✅ ดึงหมวดหมู่ (สำหรับ dropdown)
 $categories = [];
 $res_cat = $conn->query("SELECT * FROM categories ORDER BY title ASC");
 while($row_cat = $res_cat->fetch_assoc()){
     $categories[] = $row_cat;
 }
 
-// ดึงสินค้าทั้งหมด
+// ✅ ดึงสินค้าทั้งหมด พร้อมชื่อหมวดหมู่
 $products = [];
-$res_prod = $conn->query("SELECT p.*, c.title AS category_title FROM products p LEFT JOIN categories c ON p.category_id=c.id ORDER BY p.id DESC");
+$res_prod = $conn->query("
+    SELECT p.*, c.title AS category_title 
+    FROM products p 
+    LEFT JOIN categories c ON p.category_id = c.id 
+    ORDER BY p.id DESC
+");
 while($row_prod = $res_prod->fetch_assoc()){
     $products[] = $row_prod;
 }
@@ -23,7 +27,6 @@ while($row_prod = $res_prod->fetch_assoc()){
         <i class="fas fa-plus fa-sm me-2"></i>เพิ่มสินค้าใหม่
     </button>
 </div>
-
 
 <div class="card shadow-sm mb-4">
     <div class="card-header py-3">
@@ -48,25 +51,31 @@ while($row_prod = $res_prod->fetch_assoc()){
                     <tr>
                         <td><?= $prod['id'] ?></td>
                         <td>
-                            <img src="../uploads/<?= !empty($prod['image_url']) ? htmlspecialchars($prod['image_url']) : 'no-image.jpg' ?>" 
-                                 alt="<?= htmlspecialchars($prod['title']) ?>" width="60" class="img-thumbnail">
+                            <?php 
+                                $img_path = !empty($prod['image_url']) ? "../" . htmlspecialchars($prod['image_url']) : "../uploads/no-image.jpg";
+                            ?>
+                            <img src="<?= $img_path ?>" 
+                                 alt="<?= htmlspecialchars($prod['title']) ?>" 
+                                 width="60" class="img-thumbnail rounded shadow-sm">
                         </td>
                         <td><?= htmlspecialchars($prod['title']) ?></td>
                         <td><?= htmlspecialchars($prod['category_title']) ?></td>
                         <td><?= number_format($prod['price'], 2) ?></td>
                         <td><?= $prod['stock'] ?></td>
                         <td>
-                            <button class="btn btn-warning btn-sm editBtn" 
-                                    data-id="<?= $prod['id'] ?>" 
+                            <button class="btn btn-warning btn-sm editBtn"
+                                    data-id="<?= $prod['id'] ?>"
                                     data-title="<?= htmlspecialchars($prod['title']) ?>"
                                     data-category-id="<?= $prod['category_id'] ?>"
                                     data-price="<?= $prod['price'] ?>"
                                     data-stock="<?= $prod['stock'] ?>"
-                                    data-image-url="../uploads/<?= htmlspecialchars($prod['image_url']) ?>"
+                                    data-image-url="../<?= htmlspecialchars($prod['image_url']) ?>"
                                     data-bs-toggle="modal" data-bs-target="#editProductModal">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <a href="delete_product.php?id=<?= $prod['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?')">
+                            <a href="delete_product.php?id=<?= $prod['id'] ?>" 
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?')">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </td>
@@ -78,11 +87,12 @@ while($row_prod = $res_prod->fetch_assoc()){
     </div>
 </div>
 
+<!-- Modal: Add Product -->
 <div class="modal fade" id="addProductModal" tabindex="-1">
   <div class="modal-dialog">
     <form action="add_product.php" method="POST" enctype="multipart/form-data">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">เพิ่มสินค้าใหม่</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -122,12 +132,13 @@ while($row_prod = $res_prod->fetch_assoc()){
   </div>
 </div>
 
+<!-- Modal: Edit Product -->
 <div class="modal fade" id="editProductModal" tabindex="-1">
   <div class="modal-dialog">
     <form action="edit_product.php" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="id" id="edit_id">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header bg-warning">
                 <h5 class="modal-title">แก้ไขสินค้า</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -160,7 +171,7 @@ while($row_prod = $res_prod->fetch_assoc()){
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+                <button type="submit" class="btn btn-warning">บันทึกการเปลี่ยนแปลง</button>
             </div>
         </div>
     </form>
@@ -175,22 +186,14 @@ $(document).ready(function() {
         "order": [[0, "desc"]]
     });
 
+    // ✅ ดึงข้อมูลไปใส่ในฟอร์มแก้ไข
     $('.editBtn').click(function() {
-        // ดึงข้อมูลจาก data-* attributes ของปุ่มที่ถูกคลิก
-        const id = $(this).data('id');
-        const title = $(this).data('title');
-        const categoryId = $(this).data('category-id');
-        const price = $(this).data('price');
-        const stock = $(this).data('stock');
-        const imageUrl = $(this).data('image-url');
-
-        // นำข้อมูลไปใส่ในฟอร์มของ Modal แก้ไข
-        $('#edit_id').val(id);
-        $('#edit_title').val(title);
-        $('#edit_category_id').val(categoryId);
-        $('#edit_price').val(price);
-        $('#edit_stock').val(stock);
-        $('#edit_image_preview').attr('src', imageUrl);
+        $('#edit_id').val($(this).data('id'));
+        $('#edit_title').val($(this).data('title'));
+        $('#edit_category_id').val($(this).data('category-id'));
+        $('#edit_price').val($(this).data('price'));
+        $('#edit_stock').val($(this).data('stock'));
+        $('#edit_image_preview').attr('src', $(this).data('image-url'));
     });
 });
 </script>
