@@ -118,6 +118,7 @@ function getProductImageUrl(string $title): string {
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">สินค้าแนะนำ</h2>
+        <a href="all_products.php" class="btn btn-view-all">ดูสินค้าทั้งหมด</a>
     </div>
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
@@ -172,7 +173,6 @@ function getProductImageUrl(string $title): string {
                             <form action="../cart/add.php" method="POST" class="d-grid gap-2">
                                 <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
                                 <button type="submit" class="btn btn-primary">เพิ่มลงตะกร้า</button>
-                                <a href="all_products.php" class="btn btn-view-all">ดูสินค้าทั้งหมด</a>
                                 <!-- 🔹 ปุ่มดูรายละเอียดสินค้า -->
                                 <a href="product_detail.php?id=<?= $product['id'] ?>" class="btn btn-outline-secondary mt-2 d-grid gap-2">
                                     ดูรายละเอียดสินค้า
