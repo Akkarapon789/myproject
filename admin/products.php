@@ -1,14 +1,14 @@
 <?php
 include 'header.php';
 
-// ✅ ดึงหมวดหมู่ (สำหรับ dropdown)
+// ดึงหมวดหมู่ (สำหรับ dropdown)
 $categories = [];
 $res_cat = $conn->query("SELECT * FROM categories ORDER BY title ASC");
 while($row_cat = $res_cat->fetch_assoc()){
     $categories[] = $row_cat;
 }
 
-// ✅ ดึงสินค้าทั้งหมด พร้อมชื่อหมวดหมู่
+// ดึงสินค้าทั้งหมด พร้อมชื่อหมวดหมู่
 $products = [];
 $res_prod = $conn->query("
     SELECT p.*, c.title AS category_title 
@@ -23,10 +23,26 @@ while($row_prod = $res_prod->fetch_assoc()){
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0 text-gray-800">จัดการสินค้า</h1>
-    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal">
+    <a href="add_product.php" class="btn btn-success">
         <i class="fas fa-plus fa-sm me-2"></i>เพิ่มสินค้าใหม่
-    </button>
+    </a>
 </div>
+
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>สำเร็จ!</strong> <?= htmlspecialchars($_SESSION['success']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php unset($_SESSION['success']); ?>
+<?php endif; ?>
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>เกิดข้อผิดพลาด!</strong> <?= htmlspecialchars($_SESSION['error']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php unset($_SESSION['error']); ?>
+<?php endif; ?>
+
 
 <div class="card shadow-sm mb-4">
     <div class="card-header py-3">
@@ -51,10 +67,7 @@ while($row_prod = $res_prod->fetch_assoc()){
                     <tr>
                         <td><?= $prod['id'] ?></td>
                         <td>
-                            <?php 
-                                $img_path = !empty($prod['image_url']) ? "../" . htmlspecialchars($prod['image_url']) : "../uploads/no-image.jpg";
-                            ?>
-                            <img src="<?= $img_path ?>" 
+                            <img src="../<?= htmlspecialchars($prod['image_url'] ?? 'uploads/no-image.jpg') ?>" 
                                  alt="<?= htmlspecialchars($prod['title']) ?>" 
                                  width="60" class="img-thumbnail rounded shadow-sm">
                         </td>
@@ -87,52 +100,6 @@ while($row_prod = $res_prod->fetch_assoc()){
     </div>
 </div>
 
-<!-- Modal: Add Product -->
-<div class="modal fade" id="addProductModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form action="add_product.php" method="POST" enctype="multipart/form-data">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">เพิ่มสินค้าใหม่</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">ชื่อสินค้า</label>
-                    <input type="text" name="title" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">หมวดหมู่</label>
-                    <select name="category_id" class="form-select" required>
-                        <option value="">-- เลือกหมวดหมู่ --</option>
-                        <?php foreach($categories as $cat): ?>
-                        <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['title']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">ราคา</label>
-                    <input type="number" name="price" step="0.01" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">จำนวนในสต็อก</label>
-                    <input type="number" name="stock" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">รูปสินค้า</label>
-                    <input type="file" name="image" class="form-control" accept="image/*">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                <button type="submit" class="btn btn-primary">บันทึก</button>
-            </div>
-        </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal: Edit Product -->
 <div class="modal fade" id="editProductModal" tabindex="-1">
   <div class="modal-dialog">
     <form action="edit_product.php" method="POST" enctype="multipart/form-data">
@@ -186,7 +153,7 @@ $(document).ready(function() {
         "order": [[0, "desc"]]
     });
 
-    // ✅ ดึงข้อมูลไปใส่ในฟอร์มแก้ไข
+    // Script สำหรับฟอร์มแก้ไข (ยังทำงานเหมือนเดิม)
     $('.editBtn').click(function() {
         $('#edit_id').val($(this).data('id'));
         $('#edit_title').val($(this).data('title'));

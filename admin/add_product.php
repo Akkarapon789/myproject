@@ -1,78 +1,139 @@
 <?php
+//--- STEP 1: SETUP & ERROR REPORTING ---
+// เปิดการแสดงผลข้อผิดพลาดทั้งหมดบนหน้าจอ (สำคัญมากสำหรับการ Debug)
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
-// ตรวจสอบสิทธิ์ผู้ใช้ (ต้องเป็น admin)
+//--- STEP 2: SECURITY CHECK ---
+// ตรวจสอบสิทธิ์ผู้ใช้ (ต้องเป็น admin เท่านั้น)
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {
+    // ถ้าไม่ใช่ admin ให้ส่งกลับไปหน้า login พร้อมข้อความแจ้งเตือน
+    $_SESSION['error'] = 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้';
     header("Location: ../auth/login.php");
-    exit();
+    exit(); // หยุดการทำงานของสคริปต์ทันที
 }
 
-// เชื่อมต่อฐานข้อมูล
-include '../config/connectdb.php'; 
+//--- STEP 3: DATABASE CONNECTION ---
+// เรียกใช้ไฟล์เชื่อมต่อฐานข้อมูล
+include '../config/connectdb.php';
 
-// ดึงข้อมูลหมวดหมู่สำหรับ Dropdown
-$categories_result = $conn->query("SELECT id, title FROM categories ORDER BY title ASC");
+// ตรวจสอบว่าการเชื่อมต่อสำเร็จหรือไม่
+if ($conn->connect_error) {
+    // หากเชื่อมต่อไม่ได้ ให้หยุดทำงานและแสดงข้อผิดพลาด
+    die("Connection failed: " . $conn->connect_error);
+}
 
-// ตรวจสอบว่า form ถูกส่งมาหรือไม่
+//--- STEP 4: FORM SUBMISSION HANDLING ---
+// ตรวจสอบว่ามีการส่งข้อมูลมาจากฟอร์มด้วยเมธอด POST หรือไม่
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // รับค่าจาก Form และป้องกัน Injection
-    $title       = trim($_POST['title']);
-    $category_id = intval($_POST['category_id']);
-    $price       = floatval($_POST['price']);
-    $stock       = intval($_POST['stock']);
+    //--- 4.1: รับค่าและทำความสะอาดข้อมูล ---
+    // trim() ตัดช่องว่าง, intval() แปลงเป็นเลขจำนวนเต็ม, floatval() แปลงเป็นเลขทศนิยม
+    $title       = isset($_POST['title']) ? trim($_POST['title']) : '';
+    $category_id = isset($_POST['category_id']) ? intval($_POST['category_id']) : 0;
+    $price       = isset($_POST['price']) ? floatval($_POST['price']) : 0;
+    $stock       = isset($_POST['stock']) ? intval($_POST['stock']) : 0;
 
-    // --- จัดการอัปโหลดรูปภาพ ---
-    $image_url = null;
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $target_dir = "../uploads/"; // โฟลเดอร์สำหรับเก็บรูปภาพ
-        // สร้างโฟลเดอร์ถ้ายังไม่มี
-        if (!is_dir($target_dir)) {
-            mkdir($target_dir, 0777, true);
-        }
-
-        // ตั้งชื่อไฟล์ใหม่เพื่อป้องกันการซ้ำกัน
-        $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-        $image_name = "product_" . time() . rand(1000, 9999) . '.' . $ext;
-        $target_file = $target_dir . $image_name;
-
-        // อัปโหลดไฟล์
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $target_file)) {
-            // เก็บ path ที่จะใช้แสดงผลในเว็บ
-            $image_url = "uploads/" . $image_name; 
-        } else {
-            $_SESSION['error'] = "❌ ไม่สามารถอัปโหลดรูปภาพได้";
-            header("Location: add_product.php"); // กลับไปหน้าฟอร์มเดิม
-            exit();
-        }
-    } else {
-        $_SESSION['error'] = "❌ กรุณาเลือกรูปภาพสินค้า";
-        header("Location: add_product.php");
+    // ตรวจสอบข้อมูลพื้นฐานว่าครบถ้วนหรือไม่
+    if (empty($title) || $category_id <= 0 || $price < 0 || $stock < 0) {
+        $_SESSION['error'] = 'กรุณากรอกข้อมูลสินค้าให้ครบถ้วนและถูกต้อง';
+        header("Location: products.php");
         exit();
     }
 
-    // --- บันทึกข้อมูลลงฐานข้อมูล ---
-    // ✅ สร้าง slug จากชื่อสินค้า (กันซ้ำ)
-    $slug = strtolower(str_replace(' ', '-', $title));
+    // สร้าง slug ที่ปลอดภัยสำหรับ URL จากชื่อสินค้า
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
 
-    // ✅ ใช้ Prepared Statement ปลอดภัย
-    // คำสั่งนี้ถูกต้องแล้ว เพราะใน DB มีคอลัมน์ slug แล้ว
+    //--- 4.2: จัดการการอัปโหลดรูปภาพอย่างปลอดภัย ---
+    $image_url = null;
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
+        
+        $target_dir = "../uploads/"; // โฟลเดอร์สำหรับเก็บไฟล์
+        // ตรวจสอบและสร้างโฟลเดอร์หากยังไม่มี
+        if (!is_dir($target_dir)) {
+            if (!mkdir($target_dir, 0755, true)) {
+                $_SESSION['error'] = 'ไม่สามารถสร้างโฟลเดอร์สำหรับอัปโหลดได้';
+                header("Location: products.php");
+                exit();
+            }
+        }
+
+        $image_name = $_FILES['image']['name'];
+        $tmp_name = $_FILES['image']['tmp_name'];
+        $image_size = $_FILES['image']['size'];
+        
+        // ตรวจสอบประเภทไฟล์ที่อนุญาต (MIME Type)
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+        $file_type = mime_content_type($tmp_name);
+        if (!in_array($file_type, $allowed_types)) {
+            $_SESSION['error'] = 'อนุญาตให้อัปโหลดเฉพาะไฟล์รูปภาพ (JPG, PNG, GIF) เท่านั้น';
+            header("Location: products.php");
+            exit();
+        }
+
+        // ตรวจสอบขนาดไฟล์ (ไม่เกิน 2MB)
+        if ($image_size > 2 * 1024 * 1024) {
+            $_SESSION['error'] = 'ขนาดไฟล์รูปภาพต้องไม่เกิน 2 MB';
+            header("Location: products.php");
+            exit();
+        }
+
+        // สร้างชื่อไฟล์ใหม่ที่ไม่ซ้ำกันเพื่อป้องกันการเขียนทับ
+        $ext = pathinfo($image_name, PATHINFO_EXTENSION);
+        $new_image_name = "product_" . time() . uniqid() . '.' . $ext;
+        $target_file = $target_dir . $new_image_name;
+
+        // ย้ายไฟล์ไปยังโฟลเดอร์เป้าหมาย
+        if (move_uploaded_file($tmp_name, $target_file)) {
+            // เก็บ Path ที่จะใช้บันทึกลง DB
+            $image_url = "uploads/" . $new_image_name;
+        } else {
+            $_SESSION['error'] = 'เกิดข้อผิดพลาดระหว่างการอัปโหลดไฟล์';
+            header("Location: products.php");
+            exit();
+        }
+    } else {
+        // กรณีไม่เลือกไฟล์ หรือไฟล์มีปัญหา
+        $_SESSION['error'] = 'กรุณาเลือกรูปภาพสินค้า';
+        header("Location: products.php");
+        exit();
+    }
+
+    //--- 4.3: บันทึกข้อมูลลงฐานข้อมูลด้วย Prepared Statement ---
+    // ใช้ Prepared Statement เพื่อป้องกัน SQL Injection
     $sql = "INSERT INTO products (category_id, title, slug, price, stock, image_url) VALUES (?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
 
-    // ✅ bind_param นี้ก็ถูกต้องแล้วเช่นกัน
-    // i = integer, s = string, s = string, d = double, i = integer, s = string
+    // ตรวจสอบว่า prepare statement สำเร็จหรือไม่
+    if ($stmt === false) {
+        $_SESSION['error'] = 'SQL Error: ' . $conn->error;
+        header("Location: products.php");
+        exit();
+    }
+    
+    // ผูกตัวแปรกับ placeholder ใน SQL
+    // i = integer, s = string, d = double
     $stmt->bind_param("issdis", $category_id, $title, $slug, $price, $stock, $image_url);
 
+    // สั่งให้ statement ทำงาน
     if ($stmt->execute()) {
-        $_SESSION['success'] = "✅ เพิ่มสินค้าเรียบร้อยแล้ว!";
+        $_SESSION['success'] = "เพิ่มสินค้า '" . htmlspecialchars($title) . "' เรียบร้อยแล้ว!";
     } else {
-        $_SESSION['error'] = "❌ เกิดข้อผิดพลาด: " . $stmt->error;
+        $_SESSION['error'] = "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " . $stmt->error;
     }
 
+    // ปิด statement และ connection
     $stmt->close();
     $conn->close();
 
+    //--- 4.4: Redirect กลับไปหน้าแสดงรายการสินค้า ---
+    header("Location: products.php");
+    exit(); // สำคัญมาก: ต้อง exit() ทุกครั้งหลัง header()
+
+} else {
+    // ถ้าไม่ได้เข้ามาผ่านฟอร์ม POST ให้ส่งกลับไปหน้าหลัก
     header("Location: products.php");
     exit();
 }
