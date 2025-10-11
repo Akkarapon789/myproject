@@ -1,48 +1,105 @@
 <?php
-// add_product.php (Upgraded for Image Upload)
 session_start();
-if(!isset($_SESSION['role']) || $_SESSION['role'] != 'admin'){
-    header("Location: ../auth/login.php");
-    exit();
-}
-include '../config/connectdb.php';
+include '../config/connectdb.php'; // ✅ เชื่อมต่อฐานข้อมูล
 
-$title       = $_POST['title'];
-$category_id = $_POST['category_id'];
-$price       = $_POST['price'];
-$stock       = $_POST['stock'];
-$image_name  = ''; // กำหนดค่าเริ่มต้นเป็นค่าว่าง
+// ✅ ตรวจสอบว่ามีการกดปุ่มบันทึกหรือไม่
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $category_id = $_POST['category_id'] ?? '';
+    $title       = $_POST['title'] ?? '';
+    $slug        = strtolower(str_replace(' ', '-', $title)); // สร้าง slug อัตโนมัติ
+    $price       = $_POST['price'] ?? 0;
+    $stock       = $_POST['stock'] ?? 0;
 
-// --- ส่วนจัดการการอัปโหลดรูปภาพ ---
-if(isset($_FILES['image']) && $_FILES['image']['error'] == 0){
-    $upload_dir = '../uploads/';
-    // สร้างชื่อไฟล์ใหม่ที่ไม่ซ้ำกัน โดยใช้ timestamp + ชื่อไฟล์เดิม
-    $file_extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-    $image_name = time() . '_' . uniqid() . '.' . $file_extension;
-    $target_file = $upload_dir . $image_name;
+    // ✅ จัดการอัปโหลดภาพ
+    $image_url = null;
+    if (!empty($_FILES['image']['name'])) {
+        $targetDir = "../uploads/";
+        if (!file_exists($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+        $fileName = time() . "_" . basename($_FILES["image"]["name"]);
+        $targetFilePath = $targetDir . $fileName;
+        $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
 
-    // ย้ายไฟล์ที่อัปโหลดไปยังโฟลเดอร์ uploads
-    if(!move_uploaded_file($_FILES['image']['tmp_name'], $target_file)){
-        // หากย้ายไฟล์ไม่สำเร็จ ให้ใช้ค่าว่างสำหรับ image_name
-        $image_name = '';
-        // (Optional) สามารถตั้งค่า session แจ้งเตือนข้อผิดพลาดได้
-        $_SESSION['error'] = "ขออภัย, เกิดข้อผิดพลาดในการอัปโหลดไฟล์";
+        $allowTypes = ['jpg', 'jpeg', 'png', 'gif'];
+        if (in_array($fileType, $allowTypes)) {
+            if (move_uploaded_file($_FILES["image"]["tmp_name"], $targetFilePath)) {
+                $image_url = "uploads/" . $fileName;
+            }
+        }
+    }
+
+    // ✅ บันทึกข้อมูลสินค้า
+    $sql = "INSERT INTO products (category_id, title, slug, price, stock, image_url)
+            VALUES (?, ?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("issdis", $category_id, $title, $slug, $price, $stock, $image_url);
+
+    if ($stmt->execute()) {
+        $_SESSION['success'] = "เพิ่มสินค้าสำเร็จแล้ว!";
+        header("Location: products.php");
+        exit;
+    } else {
+        $_SESSION['error'] = "เกิดข้อผิดพลาด: " . $conn->error;
     }
 }
 
-// ใช้ Prepared Statement เพื่อบันทึกข้อมูล
-$sql = "INSERT INTO products (title, category_id, price, stock, image_url) VALUES (?, ?, ?, ?, ?)";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("sidis", $title, $category_id, $price, $stock, $image_name);
-
-if($stmt->execute()){
-    $_SESSION['success'] = "เพิ่มสินค้าเรียบร้อยแล้ว!";
-} else {
-    $_SESSION['error'] = "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " . $stmt->error;
-}
-
-$stmt->close();
-$conn->close();
-header("Location: products.php");
-exit();
+// ✅ ดึงข้อมูลหมวดหมู่ทั้งหมดมาแสดงใน dropdown
+$categories = $conn->query("SELECT * FROM categories");
 ?>
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>เพิ่มสินค้าใหม่</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h2 class="mb-4">เพิ่มสินค้าใหม่</h2>
+
+    <?php if (!empty($_SESSION['error'])): ?>
+        <div class="alert alert-danger"><?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
+    <?php endif; ?>
+
+    <form action="" method="POST" enctype="multipart/form-data" class="card p-4 shadow-sm">
+        <div class="mb-3">
+            <label class="form-label">หมวดหมู่สินค้า</label>
+            <select name="category_id" class="form-select" required>
+                <option value="">-- เลือกหมวดหมู่ --</option>
+                <?php while ($cat = $categories->fetch_assoc()): ?>
+                    <option value="<?= $cat['id']; ?>"><?= htmlspecialchars($cat['title']); ?></option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">ชื่อสินค้า</label>
+            <input type="text" name="title" class="form-control" required>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">ราคา</label>
+                <input type="number" step="0.01" name="price" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">จำนวนคงเหลือ (Stock)</label>
+                <input type="number" name="stock" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">เลือกรูปภาพสินค้า</label>
+            <input type="file" name="image" class="form-control" accept="image/*">
+        </div>
+
+        <button type="submit" class="btn btn-primary">บันทึกสินค้า</button>
+        <a href="products.php" class="btn btn-secondary">กลับ</a>
+    </form>
+</div>
+
+</body>
+</html>

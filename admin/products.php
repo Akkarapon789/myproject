@@ -1,149 +1,149 @@
 <?php
-// products.php (Upgraded for Image Upload)
-include 'header.php';
+session_start();
+include '../config/connectdb.php';
 
-$categories = [];
-$res_cat = $conn->query("SELECT * FROM categories ORDER BY title ASC");
-while($row_cat = $res_cat->fetch_assoc()){
-    $categories[] = $row_cat;
+// ✅ ลบสินค้า
+if (isset($_GET['delete'])) {
+    $id = intval($_GET['delete']);
+
+    // ดึงชื่อไฟล์รูปเก่า
+    $stmt = $conn->prepare("SELECT image FROM products WHERE id=?");
+    $stmt->execute([$id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($row && !empty($row['image'])) {
+        $imgPath = "../uploads/" . $row['image'];
+        if (file_exists($imgPath)) unlink($imgPath);
+    }
+
+    // ลบข้อมูลใน DB
+    $del = $conn->prepare("DELETE FROM products WHERE id=?");
+    $del->execute([$id]);
+
+    $_SESSION['success'] = "ลบสินค้าสำเร็จ!";
+    header("Location: products.php");
+    exit();
 }
 
-$products = [];
-$res_prod = $conn->query("SELECT p.*, c.title AS category_title FROM products p LEFT JOIN categories c ON p.category_id=c.id ORDER BY p.id DESC");
-while($row_prod = $res_prod->fetch_assoc()){
-    $products[] = $row_prod;
-}
+// ✅ ดึงข้อมูลสินค้า
+$sql = "SELECT p.*, c.name AS category_name 
+        FROM products p 
+        LEFT JOIN categories c ON p.category_id = c.id 
+        ORDER BY p.id DESC";
+$products = $conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 text-gray-800">จัดการสินค้า</h1>
-    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal">
-        <i class="fas fa-plus fa-sm me-2"></i>เพิ่มสินค้าใหม่
-    </button>
-</div>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>จัดการสินค้า</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-light">
 
+<div class="container py-5">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">📦 จัดการสินค้า</h4>
+            <a href="add_product.php" class="btn btn-light btn-sm">➕ เพิ่มสินค้า</a>
+        </div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">รายการสินค้า</h6>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table id="productTable" class="table table-bordered table-hover" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>รูป</th>
-                        <th>ชื่อสินค้า</th>
-                        <th>หมวดหมู่</th>
-                        <th>ราคา (บาท)</th>
-                        <th>จำนวน</th>
-                        <th>จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($products as $prod): ?>
-                    <tr>
-                        <td><?= $prod['id'] ?></td>
-                        <td>
-                            <img src="../uploads/<?= !empty($prod['image_url']) ? htmlspecialchars($prod['image_url']) : 'no-image.jpg' ?>" 
-                                 alt="<?= htmlspecialchars($prod['title']) ?>" width="60" class="img-thumbnail">
-                        </td>
-                        <td><?= htmlspecialchars($prod['title']) ?></td>
-                        <td><?= htmlspecialchars($prod['category_title']) ?></td>
-                        <td><?= number_format($prod['price'], 2) ?></td>
-                        <td><?= $prod['stock'] ?></td>
-                        <td>
-                            <button class="btn btn-warning btn-sm editBtn" 
-                                    data-id="<?= $prod['id'] ?>" 
-                                    data-title="<?= htmlspecialchars($prod['title']) ?>"
-                                    data-category-id="<?= $prod['category_id'] ?>"
-                                    data-price="<?= $prod['price'] ?>"
-                                    data-stock="<?= $prod['stock'] ?>"
-                                    data-image-url="../uploads/<?= htmlspecialchars($prod['image_url']) ?>"
-                                    data-bs-toggle="modal" data-bs-target="#editProductModal">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <a href="delete_product.php?id=<?= $prod['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?')">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="productTable" class="table table-striped table-bordered align-middle">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>#</th>
+                            <th>รูปภาพ</th>
+                            <th>ชื่อสินค้า</th>
+                            <th>หมวดหมู่</th>
+                            <th>ราคา</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($products as $index => $p): ?>
+                        <tr>
+                            <td><?= $index + 1 ?></td>
+                            <td>
+                                <?php if (!empty($p['image'])): ?>
+                                    <img src="../uploads/<?= htmlspecialchars($p['image']) ?>" alt="img" width="70" class="rounded">
+                                <?php else: ?>
+                                    <span class="text-muted">ไม่มีรูป</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?= htmlspecialchars($p['title']) ?></td>
+                            <td><?= htmlspecialchars($p['category_name'] ?? '-') ?></td>
+                            <td><?= number_format($p['price'], 2) ?> ฿</td>
+                            <td>
+                                <a href="edit_product.php?id=<?= $p['id'] ?>" class="btn btn-sm btn-warning">แก้ไข</a>
+                                <button class="btn btn-sm btn-danger btn-delete" data-id="<?= $p['id'] ?>" data-name="<?= htmlspecialchars($p['title']) ?>">ลบ</button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="addProductModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form action="add_product.php" method="POST" enctype="multipart/form-data">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">เพิ่มสินค้าใหม่</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3"><label class="form-label">ชื่อสินค้า</label><input type="text" name="title" class="form-control" required></div>
-                <div class="mb-3"><label class="form-label">หมวดหมู่</label><select name="category_id" class="form-select" required><option value="">-- เลือกหมวดหมู่ --</option><?php foreach($categories as $cat): ?><option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['title']) ?></option><?php endforeach; ?></select></div>
-                <div class="mb-3"><label class="form-label">ราคา</label><input type="number" name="price" step="0.01" class="form-control" required></div>
-                <div class="mb-3"><label class="form-label">จำนวนในสต็อก</label><input type="number" name="stock" class="form-control" required></div>
-                <div class="mb-3"><label class="form-label">รูปสินค้า</label><input type="file" name="image" class="form-control" accept="image/*"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                <button type="submit" class="btn btn-primary">บันทึก</button>
-            </div>
-        </div>
-    </form>
-  </div>
-</div>
+<!-- ✅ SweetAlert แจ้งเตือนสำเร็จ -->
+<?php if (isset($_SESSION['success'])): ?>
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'สำเร็จ!',
+    text: '<?= addslashes($_SESSION['success']) ?>',
+    showConfirmButton: false,
+    timer: 1800
+});
+</script>
+<?php unset($_SESSION['success']); endif; ?>
 
-<div class="modal fade" id="editProductModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form action="edit_product.php" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="id" id="edit_id">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">แก้ไขสินค้า</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3"><label class="form-label">ชื่อสินค้า</label><input type="text" name="title" id="edit_title" class="form-control" required></div>
-                <div class="mb-3"><label class="form-label">หมวดหมู่</label><select name="category_id" id="edit_category_id" class="form-select" required><?php foreach($categories as $cat): ?><option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['title']) ?></option><?php endforeach; ?></select></div>
-                <div class="mb-3"><label class="form-label">ราคา</label><input type="number" name="price" id="edit_price" step="0.01" class="form-control" required></div>
-                <div class="mb-3"><label class="form-label">จำนวนในสต็อก</label><input type="number" name="stock" id="edit_stock" class="form-control" required></div>
-                <div class="mb-3">
-                    <label class="form-label">รูปภาพปัจจุบัน</label><br>
-                    <img id="edit_image_preview" src="" class="img-thumbnail mb-2" width="120">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">อัปโหลดรูปใหม่ (ถ้าต้องการเปลี่ยน)</label>
-                    <input type="file" name="image" class="form-control" accept="image/*">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
-            </div>
-        </div>
-    </form>
-  </div>
-</div>
-
-<?php include 'footer.php'; ?>
+<!-- ✅ DataTable & SweetAlert Delete Confirm -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
 $(document).ready(function() {
-    $('#productTable').DataTable({"order": [[0, "desc"]]});
-    $('.editBtn').click(function() {
-        $('#edit_id').val($(this).data('id'));
-        $('#edit_title').val($(this).data('title'));
-        $('#edit_category_id').val($(this).data('category-id'));
-        $('#edit_price').val($(this).data('price'));
-        $('#edit_stock').val($(this).data('stock'));
-        $('#edit_image_preview').attr('src', $(this).data('image-url'));
+    // 🧾 DataTable
+    $('#productTable').DataTable({
+        language: {
+            search: "ค้นหา:",
+            lengthMenu: "แสดง _MENU_ รายการ",
+            info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
+            paginate: { previous: "ก่อนหน้า", next: "ถัดไป" }
+        },
+        pageLength: 10
+    });
+
+    // 🗑️ SweetAlert ยืนยันก่อนลบ
+    $('.btn-delete').on('click', function() {
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+
+        Swal.fire({
+            title: `ลบสินค้า: ${name}?`,
+            text: "การลบนี้ไม่สามารถย้อนกลับได้!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ลบเลย',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location = 'products.php?delete=' + id;
+            }
+        });
     });
 });
 </script>
+
+</body>
+</html>
