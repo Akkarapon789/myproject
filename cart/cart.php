@@ -1,10 +1,16 @@
 <?php
 session_start();
 include '../config/connectdb.php';
-include '../includes/navbar.php'; // เรียกใช้ Navbar ของหน้าบ้าน
 
 $cart_items = $_SESSION['cart'] ?? [];
-$total_price = 0;
+$cart_total = 0;
+
+// ⭐️ 1. ดึงโปรโมชั่นที่ "ใช้ได้" ทั้งหมดมาแสดงใน dropdown ⭐️
+// (โปรโมชั่นที่ยังไม่หมดอายุ)
+$today = date('Y-m-d');
+$promo_result = $conn->query("SELECT * FROM promotions WHERE start_date <= '{$today}' AND end_date >= '{$today}'");
+
+include '../includes/navbar.php'; 
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -26,11 +32,9 @@ $total_price = 0;
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <?php foreach ($cart_items as $product_id => $item): ?>
-                    <?php $subtotal = $item['price'] * $item['quantity']; $total_price += $subtotal; ?>
+                    <?php $subtotal = $item['price'] * $item['quantity']; $cart_total += $subtotal; ?>
                     <div class="row mb-4 align-items-center">
-                        <div class="col-md-2">
-                            <img src="../<?= htmlspecialchars($item['image_url'] ?? 'assets/default.jpg') ?>" class="img-fluid rounded">
-                        </div>
+                        <div class="col-md-2"><img src="../<?= htmlspecialchars($item['image_url'] ?? 'assets/default.jpg') ?>" class="img-fluid rounded"></div>
                         <div class="col-md-4">
                             <h5 class="mb-0"><?= htmlspecialchars($item['title']) ?></h5>
                             <small class="text-muted">ราคา: ฿<?= number_format($item['price'], 2) ?></small>
@@ -42,12 +46,8 @@ $total_price = 0;
                                 <input type="number" name="quantity" value="<?= $item['quantity'] ?>" class="form-control form-control-sm me-2" style="width: 70px;" onchange="this.form.submit()">
                             </form>
                         </div>
-                        <div class="col-md-2 text-end">
-                            <strong>฿<?= number_format($subtotal, 2) ?></strong>
-                        </div>
-                        <div class="col-md-1 text-end">
-                            <a href="cart_actions.php?action=remove&product_id=<?= $product_id ?>" class="text-danger"><i class="fas fa-trash"></i></a>
-                        </div>
+                        <div class="col-md-2 text-end"><strong>฿<?= number_format($subtotal, 2) ?></strong></div>
+                        <div class="col-md-1 text-end"><a href="cart_actions.php?action=remove&product_id=<?= $product_id ?>" class="text-danger"><i class="fas fa-trash"></i></a></div>
                     </div>
                     <hr>
                     <?php endforeach; ?>
@@ -58,12 +58,35 @@ $total_price = 0;
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <h4 class="mb-3">สรุปยอดสั่งซื้อ</h4>
-                    <div class="d-flex justify-content-between">
-                        <span>ยอดรวม</span>
-                        <strong>฿<?= number_format($total_price, 2) ?></strong>
+                    
+                    <div class="mb-3">
+                        <label for="promo_select" class="form-label">เลือกโปรโมชั่น</label>
+                        <select id="promo_select" class="form-select">
+                            <option value="0">-- ไม่ใช้โปรโมชั่น --</option>
+                            <?php while($promo = $promo_result->fetch_assoc()): ?>
+                                <option value="<?= $promo['id'] ?>"><?= htmlspecialchars($promo['name']) ?></option>
+                            <?php endwhile; ?>
+                        </select>
                     </div>
                     <hr>
-                    <div class="d-grid">
+
+                    <div class="d-flex justify-content-between">
+                        <span>ยอดรวม</span>
+                        <strong id="cart-total">฿<?= number_format($cart_total, 2) ?></strong>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between text-danger" id="discount-row" style="display: none;">
+                        <span>ส่วนลดโปรโมชั่น</span>
+                        <strong id="discount-amount">- ฿0.00</strong>
+                    </div>
+                    <hr>
+
+                    <div class="d-flex justify-content-between fw-bold fs-5">
+                        <span>ยอดรวมสุทธิ</span>
+                        <strong id="final-total">฿<?= number_format($cart_total, 2) ?></strong>
+                    </div>
+                    
+                    <div class="d-grid mt-3">
                         <a href="checkout.php" class="btn btn-primary btn-lg">ดำเนินการสั่งซื้อ</a>
                     </div>
                 </div>
@@ -71,16 +94,42 @@ $total_price = 0;
         </div>
     </div>
     <?php else: ?>
-    <div class="text-center py-5">
-        <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
-        <h3>ตะกร้าของคุณว่างเปล่า</h3>
-        <p>เลือกซื้อหนังสือดีๆ เพิ่มลงในตะกร้าได้เลย</p>
-        <a href="../pages/all_products.php" class="btn btn-primary mt-3">เลือกซื้อสินค้า</a>
-    </div>
-    <?php endif; ?>
+        <?php endif; ?>
 </div>
 
 <?php include '../includes/footer.php'; ?>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#promo_select').on('change', function() {
+        var promo_id = $(this).val();
+
+        $.ajax({
+            url: 'apply_promo.php',
+            type: 'POST',
+            data: { promo_id: promo_id },
+            dataType: 'json',
+            success: function(response) {
+                // อัปเดตตัวเลขในหน้าเว็บ
+                $('#discount-amount').text(response.discount_formatted);
+                $('#final-total').text(response.final_total_formatted);
+                
+                // แสดง/ซ่อนแถวส่วนลด
+                if (response.discount_value > 0) {
+                    $('#discount-row').show();
+                } else {
+                    $('#discount-row').hide();
+                }
+            },
+            error: function() {
+                alert('เกิดข้อผิดพลาดในการใช้โปรโมชั่น');
+            }
+        });
+    });
+});
+</script>
+
 </body>
 </html>
