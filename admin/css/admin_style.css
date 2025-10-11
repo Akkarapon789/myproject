@@ -1,0 +1,115 @@
+/* --- Base Styles --- */
+body {
+    font-family: 'Prompt', sans-serif;
+    overflow-x: hidden;
+    background-color: #f8f9fa; /* สีพื้นหลังอ่อน */
+}
+
+#wrapper {
+    display: flex; /* กฎสำคัญที่สุด: ทำให้ Sidebar และ Content อยู่ข้างกัน */
+}
+
+/* --- Sidebar Styles --- */
+#sidebar-wrapper {
+    width: 250px;
+    min-height: 100vh;
+    background-color: #1f2937; /* สีพื้นหลัง Sidebar (สีกรมท่าเข้ม) */
+    transition: margin .25s ease-out; /* ทำให้การซ่อน/แสดงเมนูลื่นไหล */
+}
+
+/* เมื่อ #wrapper มีคลาส toggled (ตอนกดปุ่ม) ให้ซ่อน Sidebar ไปทางซ้าย */
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -250px;
+}
+
+.sidebar-heading {
+    padding: 1rem 1.25rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-bottom: 1px solid #4b5563; /* เส้นคั่นใต้หัวข้อ */
+    color: #ffffff; /* สีตัวอักษรหัวข้อ */
+}
+
+.list-group-item {
+    background-color: transparent;
+    color: #d1d5db; /* สีตัวอักษรเมนู (เทาอ่อน) */
+    border: none;
+    padding: 0.9rem 1.25rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.list-group-item.active,
+.list-group-item.active:focus {
+    background-color: #4e73df !important; /* สีพื้นหลังเมนูที่ถูกเลือก */
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.list-group-item:hover:not(.active) {
+    background-color: #374151; /* สีพื้นหลังเมนูเมื่อเอาเมาส์ไปชี้ */
+    color: #ffffff;
+}
+
+.list-group-item i {
+    margin-right: 12px; /* ระยะห่างระหว่างไอคอนกับข้อความ */
+    width: 20px;       /* กำหนดความกว้างไอคอนให้เท่ากัน */
+    text-align: center;
+}
+
+/* --- Page Content & Navbar Styles --- */
+#page-content-wrapper {
+    flex: 1; /* ทำให้ส่วนเนื้อหายืดเต็มพื้นที่ที่เหลือ */
+    min-width: 0;
+}
+
+.navbar {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, .15) !important;
+}
+
+/* --- General Content Styles (Card, Table) --- */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, .15) !important;
+}
+
+.table thead {
+    background-color: #4e73df;
+    color: white;
+}
+
+.table th {
+    font-weight: 600;
+}
+
+/* --- Dashboard Specific Styles --- */
+.border-left-primary {  border-left: 0.25rem solid #4e73df !important; }
+.border-left-success {  border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info {     border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning {  border-left: 0.25rem solid #f6c23e !important; }
+
+.text-xs { font-size: 0.8rem; }
+.text-gray-800 { color: #5a5c69 !important; }
+.font-weight-bold { font-weight: 700 !important; }
+
+.chart-area {
+    position: relative;
+    height: 20rem;
+    width: 100%;
+}
+
+.chart-pie {
+    position: relative;
+    height: 15rem;
+    width: 100%;
+}
+
+/* --- Responsive Toggling --- */
+@media (max-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: -250px;
+    }
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: 0;
+    }
+}
