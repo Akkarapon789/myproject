@@ -1,50 +1,34 @@
 <?php
-// add_user.php
-include 'header.php';
+// admin/add_user.php
+session_start();
+include '../config/connectdb.php';
 
-// ตรวจสอบถ้ามีการส่งข้อมูลฟอร์มมา
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // รับข้อมูลจากฟอร์ม
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $firstname = $_POST['firstname'];
-    $lastname  = $_POST['lastname'];
-    $email     = $_POST['email'];
-    $password  = $_POST['password']; // รหัสผ่านที่ยังไม่เข้ารหัส
-    $phone     = $_POST['phone'];
-    $role      = $_POST['role'];
+    $lastname = $_POST['lastname'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
+    $address = $_POST['address'];
+    $role = $_POST['role'];
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // เข้ารหัสรหัสผ่าน
 
-    // --- ส่วนที่สำคัญที่สุด: การเข้ารหัสรหัสผ่าน ---
-    // เราจะ *ไม่* เก็บรหัสผ่านตรงๆ ลงฐานข้อมูลเด็ดขาด
-    // เราจะใช้ฟังก์ชัน password_hash() เพื่อความปลอดภัยสูงสุด
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    $stmt = $conn->prepare("INSERT INTO `user` (firstname, lastname, email, password, phone, address, role) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssss", $firstname, $lastname, $email, $password, $phone, $address, $role);
 
-    // เตรียม SQL Query โดยใช้ Prepared Statement เพื่อป้องกัน SQL Injection
-    $sql = "INSERT INTO user (firstname, lastname, email, password, phone, role) VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-
-    // "ssssss" หมายถึงตัวแปร 6 ตัวเป็นชนิด String ทั้งหมด
-    $stmt->bind_param("ssssss", $firstname, $lastname, $email, $hashed_password, $phone, $role);
-
-    // Execute a query
     if ($stmt->execute()) {
-        echo "<script>
-                alert('เพิ่มผู้ใช้ใหม่เรียบร้อยแล้ว!');
-                window.location.href = 'users.php';
-              </script>";
+        $_SESSION['success'] = "เพิ่มผู้ใช้ใหม่สำเร็จ!";
+        header("Location: users.php");
+        exit();
     } else {
-        echo "<script>
-                alert('เกิดข้อผิดพลาด: " . htmlspecialchars($stmt->error) . "');
-              </script>";
+        $error = "อีเมลนี้มีในระบบแล้ว หรือเกิดข้อผิดพลาด: " . $stmt->error;
     }
     $stmt->close();
 }
+include 'header.php';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 text-gray-800">เพิ่มผู้ใช้ใหม่</h1>
-    <a href="users.php" class="btn btn-secondary">
-        <i class="fas fa-arrow-left fa-sm me-2"></i>กลับไปหน้าผู้ใช้
-    </a>
-</div>
+<h1 class="h3 mb-4 text-gray-800">➕ เพิ่มผู้ใช้ใหม่</h1>
+<?php if (isset($error)): ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
 
 <div class="card shadow-sm">
     <div class="card-body">
@@ -67,21 +51,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label for="password" class="form-label">รหัสผ่าน</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
-            <div class="mb-3">
+             <div class="mb-3">
                 <label for="phone" class="form-label">เบอร์โทรศัพท์</label>
-                <input type="text" class="form-control" id="phone" name="phone">
+                <input type="tel" class="form-control" id="phone" name="phone">
+            </div>
+            <div class="mb-3">
+                <label for="address" class="form-label">ที่อยู่</label>
+                <textarea class="form-control" id="address" name="address" rows="3"></textarea>
             </div>
             <div class="mb-3">
                 <label for="role" class="form-label">สิทธิ์การใช้งาน</label>
                 <select class="form-select" id="role" name="role">
-                    <option value="user" selected>User (ผู้ใช้ทั่วไป)</option>
-                    <option value="admin">Admin (ผู้ดูแลระบบ)</option>
+                    <option value="user" selected>User</option>
+                    <option value="admin">Admin</option>
                 </select>
             </div>
-
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save me-2"></i>บันทึกข้อมูล
-            </button>
+            <div class="d-flex justify-content-end gap-2">
+                <a href="users.php" class="btn btn-secondary">ยกเลิก</a>
+                <button type="submit" class="btn btn-primary">บันทึก</button>
+            </div>
         </form>
     </div>
 </div>
