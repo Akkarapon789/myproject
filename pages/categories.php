@@ -1,35 +1,26 @@
 <?php
-// categories.php
-// รับ Object การเชื่อมต่อ MySQLi เป็นอาร์กิวเมนต์
+// pages/categories.php
 
+// ฟังก์ชันนี้จะรับการเชื่อมต่อฐานข้อมูล ($conn)
+// และคืนค่าเป็น array ของหมวดหมู่ทั้งหมด
 function getAllCategories($conn): array
 {
-    // ตรวจสอบว่ามีการเชื่อมต่อหรือไม่
+    // ตรวจสอบว่าการเชื่อมต่อถูกต้องหรือไม่
     if (!$conn) {
-        error_log("MySQLi Connection Error: Connection object is invalid.");
         return [];
     }
 
-    try {
-        // ใช้ mysqli_query สำหรับการดึงข้อมูล
-        $result = mysqli_query($conn, 'SELECT id, title, slug FROM categories ORDER BY title ASC');
-        
-        $categories = [];
-        if ($result) {
-            // วนลูปเพื่อดึงข้อมูลทีละแถว
-            while ($row = mysqli_fetch_assoc($result)) {
-                $categories[] = $row;
-            }
-            // ปล่อยหน่วยความจำสำหรับชุดผลลัพธ์
-            mysqli_free_result($result);
-        } else {
-            // จัดการข้อผิดพลาดถ้า query ไม่สำเร็จ
-            error_log("Category Query Error: " . mysqli_error($conn));
+    // ดึงข้อมูลรูปภาพมาด้วย
+    $sql = "SELECT id, title, slug, image_url FROM categories ORDER BY title ASC";
+    $result = mysqli_query($conn, $sql);
+    
+    $categories = [];
+    if ($result) {
+        // ดึงข้อมูลทีละแถวมาเก็บใน array
+        while ($row = mysqli_fetch_assoc($result)) {
+            $categories[] = $row;
         }
-        
-        return $categories;
-    } catch (\Throwable $e) {
-        error_log("Category Fetch Error: " . $e->getMessage());
-        return [];
     }
+    
+    return $categories;
 }
