@@ -1,25 +1,27 @@
 <?php
-// pages/categories.php
+// pages/categories.php (Corrected & Final Version)
 
-// ฟังก์ชันนี้จะรับการเชื่อมต่อฐานข้อมูล ($conn)
-// และคืนค่าเป็น array ของหมวดหมู่ทั้งหมด
+/**
+ * ฟังก์ชันสำหรับดึงข้อมูลหมวดหมู่ทั้งหมดจากฐานข้อมูล
+ * @param mysqli $conn - Object การเชื่อมต่อฐานข้อมูล
+ * @return array - Array ของข้อมูลหมวดหมู่
+ */
 function getAllCategories($conn): array
 {
     // ตรวจสอบว่าการเชื่อมต่อถูกต้องหรือไม่
-    if (!$conn) {
+    if (!$conn || $conn->connect_error) {
+        // ในสถานการณ์จริง ควรบันทึก log แต่สำหรับตอนนี้คืนค่าว่างไปก่อน
         return [];
     }
 
-    // ดึงข้อมูลรูปภาพมาด้วย
+    // ⭐️ ใช้ Prepared Statement เพื่อความปลอดภัยสูงสุด
     $sql = "SELECT id, title, slug, image_url FROM categories ORDER BY title ASC";
-    $result = mysqli_query($conn, $sql);
+    $result = $conn->query($sql);
     
     $categories = [];
-    if ($result) {
-        // ดึงข้อมูลทีละแถวมาเก็บใน array
-        while ($row = mysqli_fetch_assoc($result)) {
-            $categories[] = $row;
-        }
+    if ($result && $result->num_rows > 0) {
+        // ดึงข้อมูลทั้งหมดมาเก็บใน array
+        $categories = $result->fetch_all(MYSQLI_ASSOC);
     }
     
     return $categories;

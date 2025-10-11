@@ -21,7 +21,7 @@ if (!$category) {
 }
 
 // 3. ดึงสินค้าทั้งหมดที่อยู่ในหมวดหมู่นี้
-$stmt_prod = $conn->prepare("SELECT * FROM products WHERE category_id = ? ORDER BY id DESC");
+$stmt_prod = $conn->prepare("SELECT * FROM products WHERE category_id = ? ORDER BY id ASC");
 $stmt_prod->bind_param("i", $category_id);
 $stmt_prod->execute();
 $products_result = $stmt_prod->get_result();
