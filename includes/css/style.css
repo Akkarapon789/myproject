@@ -1,6 +1,5 @@
-/* includes/css/style.css (Updated) */
+/* includes/css/style.css (Updated with Promo Card styles) */
 
-/* --- 1. Import Font & CSS Variables --- */
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
 
 :root {
@@ -13,7 +12,6 @@
     --border-color: #dee2e6;
 }
 
-/* --- 2. Global Styles --- */
 body {
     font-family: 'Prompt', sans-serif;
     background-color: var(--bg-light);
@@ -24,138 +22,73 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
 }
 
-/* --- 3. Navbar Styles --- */
-.navbar-main {
+/* ... (โค้ด Navbar, Hero, Category, Product Card เหมือนเดิม) ... */
+.navbar-main { background-color: #fff; border-bottom: 1px solid var(--border-color); padding: 1rem 0; transition: all 0.3s ease; }
+.navbar-brand span { color: var(--primary-color); }
+#searchInput { border-radius: 50px; border: 1px solid var(--border-color); }
+#searchInput:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.25rem rgba(33, 85, 205, 0.25); }
+.hero-section { background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1974&auto=format&fit=crop') center center/cover no-repeat; color: #fff; padding: 6rem 0; text-align: center; }
+.hero-section .display-4 { font-weight: 700; }
+.hero-section .lead { max-width: 600px; margin: 1rem auto; }
+.category-icon-link .icon-circle { width: 90px; height: 90px; border-radius: 50%; background-color: #e9ecef; display: flex; justify-content: center; align-items: center; color: var(--primary-color); transition: all 0.3s ease; }
+.category-icon-link:hover .icon-circle { background-color: var(--primary-color); color: #fff; transform: scale(1.1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+.category-item small { font-weight: 500; color: var(--text-dark); }
+.category-item { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.product-card { border: none; border-radius: 12px; overflow: hidden; transition: all 0.3s ease; }
+.product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); }
+.product-card .card-img-top { aspect-ratio: 3 / 4; object-fit: cover; }
+.product-card .card-title { font-size: 1rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.product-card .product-price-new { color: var(--primary-color); font-size: 1.2rem; font-weight: 700; }
+.product-card .product-price-old { color: var(--text-light); text-decoration: line-through; }
+.product-card .btn { border-radius: 50px; font-weight: 500; }
+
+/* ... (โค้ด Footer และ Category Grid เหมือนเดิม) ... */
+.footer-main { background-color: #212529; color: #fff; }
+.footer-main a { color: #adb5bd; text-decoration: none; transition: color 0.2s; }
+.footer-main a:hover { color: #fff; }
+.footer-social-icon { font-size: 1.5rem; }
+.category-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; text-align: center; }
+@media (max-width: 992px) { .category-grid { grid-template-columns: repeat(3, 1fr); gap: 2rem; } }
+@media (max-width: 576px) { .category-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ⭐️⭐️⭐️ เพิ่มโค้ดส่วนนี้เข้าไป ⭐️⭐️⭐️ */
+/* --- 9. Promotion Card Styles --- */
+.promo-card {
     background-color: #fff;
-    border-bottom: 1px solid var(--border-color);
-    padding: 1rem 0;
-    transition: all 0.3s ease;
-}
-.navbar-brand span {
-    color: var(--primary-color);
-}
-#searchInput {
-    border-radius: 50px;
+    border-radius: 15px;
     border: 1px solid var(--border-color);
-}
-#searchInput:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.25rem rgba(33, 85, 205, 0.25);
-}
-
-/* --- 4. Hero Section --- */
-.hero-section {
-    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1974&auto=format&fit=crop') center center/cover no-repeat;
-    color: #fff;
-    padding: 6rem 0;
-    text-align: center;
-}
-.hero-section .display-4 {
-    font-weight: 700;
-}
-.hero-section .lead {
-    max-width: 600px;
-    margin: 1rem auto;
-}
-
-/* --- 5. Category Section --- */
-.category-icon-link .icon-circle {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background-color: #e9ecef;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    overflow: hidden; /* ซ่อนส่วนที่เกินขอบ */
     display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--primary-color);
-    transition: all 0.3s ease;
+    flex-direction: column;
 }
-.category-icon-link:hover .icon-circle {
-    background-color: var(--primary-color);
-    color: #fff;
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-.category-item small {
-    font-weight: 500;
-    color: var(--text-dark);
-}
-.category-item {
-    display: flex;           /* ใช้ Flexbox */
-    flex-direction: column;  /* จัดเรียงแนวตั้ง */
-    align-items: center;     /* จัดให้อยู่ตรงกลางแนวนอน (สำคัญที่สุด) */
-    justify-content: center; /* จัดให้อยู่ตรงกลางแนวตั้ง */
-}
-
-
-/* --- 6. Product Card Styles --- */
-.product-card {
-    border: none;
-    border-radius: 12px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-.product-card:hover {
+.promo-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
-.product-card .card-img-top {
-    aspect-ratio: 3 / 4;
-    object-fit: cover;
-}
-.product-card .card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.product-card .product-price-new {
-    color: var(--primary-color);
+.promo-card-header {
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 1rem;
     font-size: 1.2rem;
+    font-weight: 600;
+}
+.promo-card-body {
+    padding: 1.5rem;
+    flex-grow: 1; /* ทำให้ส่วน body ยืดเต็มพื้นที่ที่เหลือ */
+}
+.promo-discount {
+    font-size: 2.5rem;
     font-weight: 700;
+    color: var(--accent-color);
+    line-height: 1;
 }
-.product-card .product-price-old {
-    color: var(--text-light);
-    text-decoration: line-through;
+.promo-card .badge {
+    font-size: 0.9rem;
 }
-.product-card .btn {
-    border-radius: 50px;
-    font-weight: 500;
-}
-
-/* --- 7. Footer Styles  --- */
-.footer-main {
-    background-color: #212529;
-    color: #fff;
-}
-.footer-main a {
-    color: #adb5bd;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-.footer-main a:hover {
-    color: #fff;
-}
-.footer-social-icon {
-    font-size: 1.5rem;
-}
-
-/* --- 8. Category Grid Layout  --- */
-.category-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 1rem;
-    text-align: center;
-}
-@media (max-width: 992px) {
-    .category-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 2rem;
-    }
-}
-@media (max-width: 576px) {
-    .category-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.promo-card-footer {
+    background-color: var(--bg-light);
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
 }
