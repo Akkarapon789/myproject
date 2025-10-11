@@ -1,27 +1,14 @@
 <?php
-// เปิด Error Reporting เพื่อหาปัญหา
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
+// admin/index.php (Upgraded with Animations & Charts)
 session_start();
 include '../config/connectdb.php';
-include 'header.php'; // 1. เรียกใช้ส่วนหัว
+include 'header.php';
 
-// ตรวจสอบการเชื่อมต่อฐานข้อมูลก่อน
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-
-// --- ฟังก์ชันช่วยดึงข้อมูลตัวเลขเดียว เพื่อลดการเขียนโค้ดซ้ำ ---
+// --- ฟังก์ชันช่วยดึงข้อมูลตัวเลขเดียว ---
 function getSingleValue($conn, $sql) {
     $result = $conn->query($sql);
-    if ($result && $result->num_rows > 0) {
-        $value = $result->fetch_array()[0];
-        return $value ?? 0; // คืนค่าที่ได้ หรือ 0 ถ้าเป็น null
-    }
-    return 0; // คืนค่า 0 ถ้า query ไม่สำเร็จ
+    $value = ($result && $result->num_rows > 0) ? $result->fetch_array()[0] : 0;
+    return $value ?? 0;
 }
 
 // === 1. ดึงข้อมูลสำหรับ Stat Cards ===
@@ -30,20 +17,21 @@ $total_orders   = getSingleValue($conn, "SELECT COUNT(id) FROM orders");
 $total_products = getSingleValue($conn, "SELECT COUNT(id) FROM products");
 $total_users    = getSingleValue($conn, "SELECT COUNT(user_id) FROM `user`");
 
-
 // === 2. ดึงข้อมูลสำหรับกราฟ ===
-// กราฟยอดขายรายเดือน (12 เดือนล่าสุด)
+// กราฟยอดขาย 12 เดือนล่าสุด
 $sales_by_month_labels = [];
 $sales_by_month_data = [];
-$sql_sales = "SELECT DATE_FORMAT(created_at, '%b %Y') AS month, SUM(total) AS monthly_sales 
+$sql_sales = "SELECT DATE_FORMAT(created_at, '%b %y') AS month, SUM(total) AS monthly_sales 
               FROM orders 
               WHERE status = 'completed' AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
               GROUP BY DATE_FORMAT(created_at, '%Y-%m') 
               ORDER BY DATE_FORMAT(created_at, '%Y-%m') ASC";
 $result_sales = $conn->query($sql_sales);
-while($row = $result_sales->fetch_assoc()) {
-    $sales_by_month_labels[] = $row['month'];
-    $sales_by_month_data[] = $row['monthly_sales'];
+if ($result_sales) {
+    while($row = $result_sales->fetch_assoc()) {
+        $sales_by_month_labels[] = $row['month'];
+        $sales_by_month_data[] = $row['monthly_sales'];
+    }
 }
 
 // กราฟ 5 หมวดหมู่ขายดี
@@ -53,30 +41,23 @@ $sql_cats = "SELECT c.title, SUM(oi.quantity) AS total_quantity
              FROM order_items oi
              JOIN products p ON oi.product_id = p.id
              JOIN categories c ON p.category_id = c.id
-             GROUP BY c.title
+             GROUP BY c.id, c.title
              ORDER BY total_quantity DESC LIMIT 5";
 $result_cats = $conn->query($sql_cats);
-while($row = $result_cats->fetch_assoc()){
-    $category_labels[] = $row['title'];
-    $category_data[] = $row['total_quantity'];
+if ($result_cats) {
+    while($row = $result_cats->fetch_assoc()){
+        $category_labels[] = $row['title'];
+        $category_data[] = $row['total_quantity'];
+    }
 }
 
+// === 3. ดึงข้อมูล 5 ออเดอร์ล่าสุด ===
+$recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders ORDER BY created_at DESC LIMIT 5");
 
-// === 3. ดึงข้อมูลออเดอร์ล่าสุด ===
-$recent_orders = [];
-$sql_recent = "SELECT o.id, o.fullname, o.total, o.status, u.firstname, u.lastname
-               FROM orders o
-               LEFT JOIN `user` u ON o.user_id = u.user_id
-               ORDER BY o.created_at DESC LIMIT 5";
-$result_recent = $conn->query($sql_recent);
-while($row = $result_recent->fetch_assoc()){
-    $recent_orders[] = $row;
-}
 ?>
-
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">แดชบอร์ด</h1>
-    <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> สร้างรายงาน</a>
+    <span class="d-none d-sm-inline-block text-muted" id="live-clock"></span>
 </div>
 
 <div class="row">
@@ -86,7 +67,7 @@ while($row = $result_recent->fetch_assoc()){
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">ยอดขายทั้งหมด</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">฿<?= number_format($total_sales, 2) ?></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" data-count="<?= $total_sales ?>">฿0.00</div>
                     </div>
                     <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-body-tertiary"></i></div>
                 </div>
@@ -99,7 +80,7 @@ while($row = $result_recent->fetch_assoc()){
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">คำสั่งซื้อทั้งหมด</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= number_format($total_orders) ?></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" data-count="<?= $total_orders ?>">0</div>
                     </div>
                     <div class="col-auto"><i class="fas fa-shopping-cart fa-2x text-body-tertiary"></i></div>
                 </div>
@@ -112,7 +93,7 @@ while($row = $result_recent->fetch_assoc()){
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">สินค้าทั้งหมด</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= number_format($total_products) ?></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" data-count="<?= $total_products ?>">0</div>
                     </div>
                     <div class="col-auto"><i class="fas fa-box fa-2x text-body-tertiary"></i></div>
                 </div>
@@ -125,7 +106,7 @@ while($row = $result_recent->fetch_assoc()){
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">ผู้ใช้งานทั้งหมด</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?= number_format($total_users) ?></div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" data-count="<?= $total_users ?>">0</div>
                     </div>
                     <div class="col-auto"><i class="fas fa-users fa-2x text-body-tertiary"></i></div>
                 </div>
@@ -153,32 +134,62 @@ while($row = $result_recent->fetch_assoc()){
     <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">5 คำสั่งซื้อล่าสุด</h6></div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover align-middle">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>ชื่อลูกค้า</th>
-                        <th>ยอดรวม</th>
-                        <th>สถานะ</th>
+                        <th class="text-end">ยอดรวม</th>
+                        <th class="text-center">สถานะ</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach($recent_orders as $order): ?>
+                    <?php while($order = $recent_orders->fetch_assoc()): ?>
                     <tr>
-                        <td>#<?= $order['id'] ?></td>
-                        <td><?= htmlspecialchars((!empty($order['firstname'])) ? $order['firstname'].' '.$order['lastname'] : $order['fullname']) ?></td>
-                        <td>฿<?= number_format($order['total'], 2) ?></td>
-                        <td><span class="badge bg-<?= ($order['status'] == 'completed' ? 'success' : 'warning text-dark') ?>"><?= htmlspecialchars(ucfirst($order['status'])) ?></span></td>
+                        <td><a href="order_details.php?id=<?= $order['id'] ?>">#<?= $order['id'] ?></a></td>
+                        <td><?= htmlspecialchars($order['fullname']) ?></td>
+                        <td class="text-end">฿<?= number_format($order['total'], 2) ?></td>
+                        <td class="text-center"><span class="badge bg-<?= ($order['status'] == 'completed' ? 'success' : 'warning text-dark') ?>"><?= htmlspecialchars(ucfirst($order['status'])) ?></span></td>
                     </tr>
-                    <?php endforeach; ?>
+                    <?php endwhile; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<?php include 'footer.php'; ?>
+
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Sales Chart (Line)
+$(document).ready(function() {
+    // --- 🚀 ลูกเล่นที่ 1: Animated Counters ---
+    $('[data-count]').each(function () {
+        $(this).prop('Counter', 0).animate({
+            Counter: $(this).data('count')
+        }, {
+            duration: 1500,
+            easing: 'swing',
+            step: function (now) {
+                if ($(this).data('count').toString().includes('.')) { // ถ้าเป็นเลขทศนิยม (ยอดขาย)
+                    $(this).text('฿' + parseFloat(now).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+                } else { // ถ้าเป็นเลขจำนวนเต็ม
+                    $(this).text(Math.ceil(now).toLocaleString('en-US'));
+                }
+            }
+        });
+    });
+
+    // --- ⏰ ลูกเล่นที่ 2: Live Clock ---
+    function updateClock() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        $('#live-clock').text(now.toLocaleDateString('th-TH', options));
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // --- 📊 แก้ไขกราฟให้ทำงาน ---
+    // กราฟเส้น (ยอดขาย)
     new Chart(document.getElementById("salesChart"), {
         type: 'line',
         data: {
@@ -188,9 +199,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 lineTension: 0.3,
                 backgroundColor: "rgba(78, 115, 223, 0.05)",
                 borderColor: "rgba(78, 115, 223, 1)",
-                pointRadius: 3,
-                pointBackgroundColor: "rgba(78, 115, 223, 1)",
-                pointBorderColor: "rgba(78, 115, 223, 1)",
                 data: <?= json_encode($sales_by_month_data) ?>,
             }],
         },
@@ -201,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // Category Chart (Doughnut)
+    // กราฟวงกลม (หมวดหมู่)
     new Chart(document.getElementById("categoryChart"), {
         type: 'doughnut',
         data: {
@@ -215,7 +223,3 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
-
-<?php 
-include 'footer.php'; // 2. เรียกใช้ส่วนท้าย
-?>
