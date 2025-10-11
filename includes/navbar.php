@@ -3,7 +3,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// คำนวณจำนวนสินค้าในตะกร้า
+// คำนวณจำนวนสินค้าในตะกร้าให้ถูกต้อง
 $cartCount = 0;
 if (!empty($_SESSION['cart'])) {
     foreach ($_SESSION['cart'] as $item) {
@@ -68,5 +68,26 @@ if (!empty($_SESSION['cart'])) {
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$(document).ready(function(){ /* ... โค้ด search ... */ });
+$(document).ready(function(){
+    $('#searchInput').on('keyup', function(){
+        let query = $(this).val().trim();
+        if(query.length < 2){
+            $('#searchResults').hide();
+            return;
+        }
+        $.ajax({
+            url: '../search/search_ajax.php',
+            method: 'POST',
+            data: {query: query},
+            success: function(data){
+                $('#searchResults').html(data).show();
+            }
+        });
+    });
+    $(document).click(function(e){
+        if (!$(e.target).closest('#searchInput, #searchResults').length) {
+            $('#searchResults').hide();
+        }
+    });
+});
 </script>
