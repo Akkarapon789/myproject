@@ -3,6 +3,7 @@ session_start();
 include '../config/connectdb.php';
 include 'header.php';
 
+
 // ✅ ลบสินค้า (เมื่อยืนยันแล้ว)
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
@@ -97,7 +98,7 @@ $result = $conn->query($sql);
         </div>
     </div>
 </div>
-<?php include 'footer.php'; ?>
+
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
