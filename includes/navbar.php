@@ -41,10 +41,12 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart']
                             <img src="https://i.pravatar.cc/40" alt="avatar" width="32" height="32" class="rounded-circle">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="#">โปรไฟล์ของฉัน</a>
-                                <a class="dropdown-item" href="../pages/order_history.php">ประวัติการสั่งซื้อ</a>
-                            </li>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="../pages/profile.php">โปรไฟล์ของฉัน</a></li>
+                                <li><a class="dropdown-item" href="../pages/order_history.php">ประวัติการสั่งซื้อ</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="../auth/logout.php">ออกจากระบบ</a></li>
+                            </ul>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="../auth/logout.php">ออกจากระบบ</a></li>
                         </ul>
