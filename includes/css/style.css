@@ -59,24 +59,34 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* --- 5. Category Section --- */
-/* ⭐️⭐️⭐️ นี่คือส่วนที่แก้ไข ⭐️⭐️⭐️ */
-.category-item img {
+.category-icon-link .icon-circle {
     width: 90px;
     height: 90px;
-    border-radius: 50%; /* <--- ทำให้เป็นวงกลม */
-    object-fit: cover; /* ทำให้รูปภาพเต็มวงกลมโดยไม่เสียสัดส่วน */
-    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    background-color: #e9ecef;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--primary-color);
     transition: all 0.3s ease;
 }
-.category-item a:hover img {
+.category-icon-link:hover .icon-circle {
+    background-color: var(--primary-color);
+    color: #fff;
     transform: scale(1.1);
-    border-color: var(--primary-color);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 .category-item small {
     font-weight: 500;
     color: var(--text-dark);
 }
+.category-item {
+    display: flex;           /* ใช้ Flexbox */
+    flex-direction: column;  /* จัดเรียงแนวตั้ง */
+    align-items: center;     /* จัดให้อยู่ตรงกลางแนวนอน (สำคัญที่สุด) */
+    justify-content: center; /* จัดให้อยู่ตรงกลางแนวตั้ง */
+}
+
 
 /* --- 6. Product Card Styles --- */
 .product-card {
@@ -114,7 +124,7 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 500;
 }
 
-/* --- 7. Footer Styles --- */
+/* --- 7. Footer Styles  --- */
 .footer-main {
     background-color: #212529;
     color: #fff;
@@ -130,42 +140,22 @@ h1, h2, h3, h4, h5, h6 {
 .footer-social-icon {
     font-size: 1.5rem;
 }
-/* Add this to your style.css file */
-.category-icon-link .icon-circle {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background-color: #e9ecef; /* สีพื้นหลังวงกลม */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--primary-color); /* สีไอคอน */
-    transition: all 0.3s ease;
-}
-.category-icon-link:hover .icon-circle {
-    background-color: var(--primary-color);
-    color: #fff;
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
+
+/* --- 8. Category Grid Layout  --- */
 .category-grid {
     display: grid;
-    /* สร้าง 6 คอลัมน์ โดยแต่ละคอลัมน์มีความกว้างเท่ากัน (1fr) */
     grid-template-columns: repeat(6, 1fr);
-    gap: 1rem; /* ระยะห่างระหว่างไอเท็ม */
+    gap: 1rem;
     text-align: center;
 }
 @media (max-width: 992px) {
     .category-grid {
-        /* เมื่อจอเล็กลง ให้เปลี่ยนเป็น 3 คอลัมน์ */
         grid-template-columns: repeat(3, 1fr);
-        gap: 2rem; /* เพิ่มระยะห่างให้กดง่ายขึ้น */
+        gap: 2rem;
     }
 }
-
 @media (max-width: 576px) {
     .category-grid {
-        /* เมื่อจอเล็กมาก ให้เปลี่ยนเป็น 2 คอลัมน์ */
         grid-template-columns: repeat(2, 1fr);
     }
 }
