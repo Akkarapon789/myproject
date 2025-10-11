@@ -1,12 +1,16 @@
 <?php
+// cart/apply_promo.php (Corrected & Final Version)
+
+// ⭐️ เพิ่ม 3 บรรทัดนี้ไว้บนสุดเพื่อช่วยหา Error ในอนาคต ⭐️
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-// cart/apply_promo.php
+
 session_start();
 include '../config/connectdb.php';
 
-header('Content-Type: application/json'); // บอกให้ browser รู้ว่าเราจะส่งข้อมูลแบบ JSON
+// บอกให้ browser รู้ว่าเราจะส่งข้อมูลกลับไปเป็น JSON
+header('Content-Type: application/json'); 
 
 // 1. คำนวณราคารวมของสินค้าในตะกร้าก่อน
 $cart_total = 0;
@@ -16,44 +20,49 @@ if (!empty($_SESSION['cart'])) {
     }
 }
 
+// 2. รับค่า promo_id ที่ส่งมาจาก JavaScript
 $promo_id = isset($_POST['promo_id']) ? intval($_POST['promo_id']) : 0;
 $discount = 0;
 $final_total = $cart_total;
 
-// 2. ถ้ามีการเลือกโปรโมชั่น (ID ไม่ใช่ 0)
+// 3. ถ้ามีการเลือกโปรโมชั่น (ID ไม่ใช่ 0)
 if ($promo_id > 0) {
-    // ดึงข้อมูลโปรโมชั่นจาก DB
+    // ดึงข้อมูลโปรโมชั่นจาก DB อย่างปลอดภัย
     $stmt = $conn->prepare("SELECT * FROM promotions WHERE id = ?");
     $stmt->bind_param("i", $promo_id);
     $stmt->execute();
-    $promo = $stmt->get_result()->fetch_assoc();
+    $promo_result = $stmt->get_result();
+    $promo = $promo_result->fetch_assoc();
     $stmt->close();
 
     if ($promo) {
-        // 3. คำนวณส่วนลดตามประเภท
+        // 4. คำนวณส่วนลดตามประเภท
         if ($promo['discount_type'] == 'percentage') {
             $discount = ($cart_total * $promo['discount_value']) / 100;
         } elseif ($promo['discount_type'] == 'fixed') {
             $discount = $promo['discount_value'];
         }
 
-        // คำนวณยอดสุทธิ (ป้องกันไม่ให้ส่วนลดมากกว่าราคาสินค้า)
+        // 5. คำนวณยอดสุทธิ (ป้องกันไม่ให้ส่วนลดมากกว่าราคาสินค้า)
         $final_total = $cart_total - $discount;
         if ($final_total < 0) {
             $final_total = 0;
+            $discount = $cart_total; // ถ้าส่วนลดเกิน ให้ส่วนลดเท่ากับราคาสินค้า
         }
     }
 }
 
-// 4. บันทึกผลลัพธ์ลง Session เพื่อใช้ในหน้า Checkout ต่อไป
+// 6. บันทึกผลลัพธ์ลง Session เพื่อใช้ในหน้า Checkout
 $_SESSION['promo_id'] = $promo_id;
 $_SESSION['promo_discount'] = $discount;
 $_SESSION['final_total'] = $final_total;
 
-// 5. ส่งข้อมูลกลับไปให้ JavaScript ในรูปแบบ JSON
+// 7. ส่งข้อมูลที่คำนวณได้กลับไปให้ JavaScript ในรูปแบบ JSON
 echo json_encode([
     'cart_total_formatted'    => '฿' . number_format($cart_total, 2),
     'discount_formatted'      => '- ฿' . number_format($discount, 2),
     'final_total_formatted'   => '฿' . number_format($final_total, 2),
-    'discount_value'          => $discount // ส่งค่าตัวเลขเปล่าๆ ไปด้วย
+    'discount_value'          => $discount 
 ]);
+
+exit(); // จบการทำงานของสคริปต์
