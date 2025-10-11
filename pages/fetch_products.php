@@ -1,5 +1,5 @@
 <?php
-// pages/fetch_products.php (Corrected & Final Version)
+// pages/fetch_products.php (Updated with Quick View)
 session_start();
 include '../config/connectdb.php';
 
@@ -18,28 +18,27 @@ switch ($sort) {
     default:           $order_sql = "ORDER BY id DESC"; break;
 }
 
-// ⭐️ แก้ไข 1: ดึงคอลัมน์ image_url มาด้วย
 $query = "SELECT id, title, price, image_url FROM products $order_sql LIMIT $limit OFFSET $offset";
 $result = mysqli_query($conn, $query);
 $products = mysqli_fetch_all($result, MYSQLI_ASSOC);
 ?>
 
-<?php if (!empty($products)): ?>
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
     <?php foreach ($products as $product): ?>
     <div class="col">
         <div class="card product-card h-100">
             <a href="product_detail.php?id=<?= $product['id'] ?>" class="text-decoration-none">
-                <img src="../<?= htmlspecialchars($product['image_url'] ?? 'assets/default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($product['title']) ?>">
+                <img src="../<?= htmlspecialchars($product['image_url'] ?? 'assets/default-product.png') ?>" class="card-img-top" alt="<?= htmlspecialchars($product['title']) ?>">
+                <div class="quick-view-overlay">
+                    <span class="quick-view-btn">Quick View</span>
+                </div>
             </a>
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">
                     <a href="product_detail.php?id=<?= $product['id'] ?>" class="text-decoration-none text-dark"><?= htmlspecialchars($product['title']) ?></a>
                 </h5>
                 <div class="mt-auto">
-                    <div class="mb-2">
-                        <span class="product-price-new">฿<?= number_format($product['price'], 2) ?></span>
-                    </div>
+                    <div class="mb-2"><span class="product-price-new">฿<?= number_format($product['price'], 2) ?></span></div>
                     <?php if ($is_logged_in): ?>
                         <form action="../cart/cart_actions.php" method="POST" class="d-grid">
                             <input type="hidden" name="action" value="add">
@@ -55,23 +54,3 @@ $products = mysqli_fetch_all($result, MYSQLI_ASSOC);
     </div>
     <?php endforeach; ?>
 </div>
-
-<nav class="mt-5 d-flex justify-content-center">
-    <?php
-    $count_query = "SELECT COUNT(*) AS total FROM products";
-    $count_result = mysqli_query($conn, $count_query);
-    $total_rows = mysqli_fetch_assoc($count_result)['total'];
-    $total_pages = ceil($total_rows / $limit);
-    ?>
-    <ul class="pagination">
-        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-        <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-            <a class="page-link" href="fetch_products.php?page=<?= $i ?>&sort=<?= $sort ?>"><?= $i ?></a>
-        </li>
-        <?php endfor; ?>
-    </ul>
-</nav>
-
-<?php else: ?>
-<p class="text-center text-muted mt-5">ไม่พบสินค้าในระบบ</p>
-<?php endif; ?>
