@@ -41,9 +41,20 @@ $products = getAllProducts($conn, 8);
             <?php if (!empty($categories)): ?>
                 <?php foreach ($categories as $cat): ?>
                     <div class="category-item">
-                        <a href="category.php?id=<?= $cat['id'] ?>" class="text-decoration-none">
-                            <img src="../<?= htmlspecialchars($cat['image_url'] ?? 'assets/default-category.png') ?>" alt="<?= htmlspecialchars($cat['title']) ?>" style="width: 90px; height: 90px; object-fit: cover;">
-                            <small class="d-block mt-2"><?= htmlspecialchars($cat['title']) ?></small>
+                        <a href="category.php?id=<?= $cat['id'] ?>" class="text-decoration-none category-icon-link">
+                            <div class="icon-circle">
+                                <?php
+                                    $icon = 'fa-book'; // ไอคอนเริ่มต้น
+                                    if ($cat['id'] == 1) $icon = 'fa-feather-alt';      // วรรณกรรม
+                                    if ($cat['id'] == 2) $icon = 'fa-atlas';            // สารคดี
+                                    if ($cat['id'] == 3) $icon = 'fa-brain';            // จิตวิทยา
+                                    if ($cat['id'] == 4) $icon = 'fa-palette';          // ศิลปะ
+                                    if ($cat['id'] == 5) $icon = 'fa-briefcase';        // ธุรกิจ
+                                    if ($cat['id'] == 6) $icon = 'fa-ellipsis-h';       // อื่นๆ
+                                ?>
+                                <i class="fas <?= $icon ?> fa-2x"></i>
+                            </div>
+                        <small class="d-block mt-2"><?= htmlspecialchars($cat['title']) ?></small>
                         </a>
                     </div>
                 <?php endforeach; ?>

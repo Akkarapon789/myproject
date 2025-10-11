@@ -130,3 +130,21 @@ h1, h2, h3, h4, h5, h6 {
 .footer-social-icon {
     font-size: 1.5rem;
 }
+/* Add this to your style.css file */
+.category-icon-link .icon-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background-color: #e9ecef; /* สีพื้นหลังวงกลม */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--primary-color); /* สีไอคอน */
+    transition: all 0.3s ease;
+}
+.category-icon-link:hover .icon-circle {
+    background-color: var(--primary-color);
+    color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
