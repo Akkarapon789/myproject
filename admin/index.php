@@ -1,4 +1,5 @@
 <?php
+// เปิด Error Reporting เพื่อหาปัญหา
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -6,6 +7,12 @@ error_reporting(E_ALL);
 session_start();
 include '../config/connectdb.php';
 include 'header.php'; // 1. เรียกใช้ส่วนหัว
+
+// ตรวจสอบการเชื่อมต่อฐานข้อมูลก่อน
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
 
 // --- ฟังก์ชันช่วยดึงข้อมูลตัวเลขเดียว เพื่อลดการเขียนโค้ดซ้ำ ---
 function getSingleValue($conn, $sql) {
