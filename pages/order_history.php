@@ -1,18 +1,16 @@
 <?php
-// pages/order_history.php
+// pages/order_history.php (Updated Link)
 session_start();
 include '../config/connectdb.php';
 
-// 1. ตรวจสอบว่าผู้ใช้ล็อกอินหรือยัง ถ้ายังไม่ล็อกอิน ให้ส่งไปหน้า login
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../auth/login.php?redirect=pages/order_history.php');
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
-$is_logged_in = true; // ตั้งค่าตัวแปรสำหรับ navbar
+$is_logged_in = true;
 
-// 2. ดึงข้อมูลประวัติการสั่งซื้อทั้งหมดของผู้ใช้คนนี้จากฐานข้อมูล
 $stmt = $conn->prepare("SELECT id, created_at, total, status FROM orders WHERE user_id = ? ORDER BY created_at DESC");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -25,14 +23,14 @@ $orders_result = $stmt->get_result();
     <title>ประวัติการสั่งซื้อ - The Bookmark Society</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="../includes/css/style.css"> </head>
+    <link rel="stylesheet" href="../includes/css/style.css">
+</head>
 <body>
 
 <?php include '../includes/navbar.php'; ?>
 
 <div class="container my-5">
     <h1 class="mb-4">ประวัติการสั่งซื้อ</h1>
-
     <div class="card shadow-sm border-0">
         <div class="card-body">
             <div class="table-responsive">
@@ -55,21 +53,18 @@ $orders_result = $stmt->get_result();
                                     <td class="text-end">฿<?= number_format($order['total'], 2) ?></td>
                                     <td class="text-center">
                                         <?php
-                                            // Logic การแสดงสีของสถานะ (เหมือนในหน้า Admin)
                                             $status = $order['status'] ?? 'pending';
-                                            $badge_class = 'bg-secondary'; // Default
+                                            $badge_class = 'bg-secondary';
                                             if ($status == 'completed') $badge_class = 'bg-success';
                                             if ($status == 'pending') $badge_class = 'bg-warning text-dark';
                                             if ($status == 'processing') $badge_class = 'bg-info text-dark';
                                             if ($status == 'shipped') $badge_class = 'bg-primary';
                                             if ($status == 'cancelled') $badge_class = 'bg-danger';
                                         ?>
-                                        <span class="badge rounded-pill <?= $badge_class ?>">
-                                            <?= ucfirst($status) ?>
-                                        </span>
+                                        <span class="badge rounded-pill <?= $badge_class ?>"><?= ucfirst($status) ?></span>
                                     </td>
                                     <td class="text-center">
-                                        <a href="../admin/order_details.php?id=<?= $order['id'] ?>" class="btn btn-outline-primary btn-sm">ดูรายละเอียด</a>
+                                        <a href="order_detail.php?id=<?= $order['id'] ?>" class="btn btn-outline-primary btn-sm">ดูรายละเอียด</a>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
