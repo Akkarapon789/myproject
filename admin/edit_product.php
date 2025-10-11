@@ -1,69 +1,88 @@
 <?php
 session_start();
-include '../config/connectdb.php';
+include '../config/connectdb.php'; // 1. เชื่อมต่อฐานข้อมูล
 
-// ✅ ตรวจสอบว่ามีการส่ง id มาหรือไม่
-if (!isset($_GET['id'])) {
+// ตรวจสอบว่ามีการส่ง id มาหรือไม่
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    $_SESSION['error'] = "ไม่ได้ระบุ ID ของสินค้า";
     header("Location: products.php");
     exit();
 }
 
-$id = intval($_GET['id']);
+$id = intval($_GET['id']); // แปลง id เป็นตัวเลขเพื่อความปลอดภัย
 
-// ✅ ดึงข้อมูลสินค้าปัจจุบัน
+// 2. ดึงข้อมูลสินค้าเดิมเพื่อมาแสดงในฟอร์ม
 $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
-$stmt->execute([$id]);
-$product = $stmt->fetch(PDO::FETCH_ASSOC);
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+$product = $result->fetch_assoc();
+$stmt->close();
 
+// หากไม่พบสินค้า ให้กลับไปหน้าหลัก
 if (!$product) {
-    echo "<p>ไม่พบข้อมูลสินค้า</p>";
+    $_SESSION['error'] = "ไม่พบสินค้า ID: {$id}";
+    header("Location: products.php");
     exit();
 }
 
-// ✅ เมื่อมีการส่งข้อมูลจากฟอร์ม
+// 3. ส่วนของการอัปเดตข้อมูลเมื่อกดบันทึก
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title       = $_POST['title'] ?? '';
-    $price       = $_POST['price'] ?? '';
-    $category_id = $_POST['category_id'] ?? '';
-    $description = $_POST['description'] ?? '';
 
-    $imageName = $product['image']; // ใช้รูปเดิมก่อน
+    // รับค่าจากฟอร์ม
+    $category_id = $_POST['category_id'] ?? $product['category_id'];
+    $title       = $_POST['title']       ?? $product['title'];
+    $price       = $_POST['price']       ?? $product['price'];
+    $stock       = $_POST['stock']       ?? $product['stock'];
 
-    // ✅ ตรวจสอบว่ามีการอัปโหลดรูปใหม่ไหม
-    if (!empty($_FILES['image']['name'])) {
-        $targetDir = "../uploads/";
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0777, true);
+    // สร้าง Slug ใหม่อีกครั้ง เผื่อมีการเปลี่ยนชื่อสินค้า
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
+
+    // ใช้ URL รูปภาพเดิมเป็นค่าเริ่มต้น
+    $image_url = $product['image_url'];
+
+    // 4. จัดการการอัปโหลดรูปภาพใหม่ (ถ้ามี)
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+
+        // ลบรูปภาพเก่าออกจาก Server ก่อน (ถ้ามี)
+        // **จุดสำคัญ:** เราใช้ Path จาก DB โดยตรงในการหาไฟล์เพื่อลบ
+        if (!empty($product['image_url']) && file_exists('../' . $product['image_url'])) {
+            unlink('../' . $product['image_url']);
         }
 
-        $imageTmp  = $_FILES['image']['tmp_name'];
-        $imageName = time() . "_" . basename($_FILES['image']['name']);
-        $targetFile = $targetDir . $imageName;
+        // เริ่มกระบวนการอัปโหลดรูปใหม่
+        $targetDir    = "../uploads/";
+        $fileName     = time() . "_" . basename($_FILES["image"]["name"]);
+        $targetFilePath = $targetDir . $fileName;
 
-        // ✅ ลบรูปเดิม (ถ้ามี)
-        if (!empty($product['image']) && file_exists($targetDir . $product['image'])) {
-            unlink($targetDir . $product['image']);
+        // **จุดสำคัญ:** บันทึก Path แบบเต็ม `uploads/filename.jpg` ลง DB เหมือนตอน Add
+        if (move_uploaded_file($_FILES["image"]["tmp_name"], $targetFilePath)) {
+            $image_url = "uploads/" . $fileName;
         }
-
-        // ✅ บันทึกรูปใหม่
-        move_uploaded_file($imageTmp, $targetFile);
     }
 
-    // ✅ อัปเดตข้อมูลในฐานข้อมูล
-    $update = $conn->prepare("UPDATE products 
-                              SET title=?, price=?, category_id=?, description=?, image=? 
-                              WHERE id=?");
-    $update->execute([$title, $price, $category_id, $description, $imageName, $id]);
+    // 5. อัปเดตข้อมูลลงฐานข้อมูล
+    // **หมายเหตุ:** ผมตัดฟิลด์ description ออกไปเพราะไม่มีในตาราง `products` ของคุณ
+    // แต่เพิ่ม slug กับ stock เข้ามาให้ครบถ้วน
+    $update_stmt = $conn->prepare("UPDATE products SET category_id=?, title=?, slug=?, price=?, stock=?, image_url=? WHERE id=?");
+    $update_stmt->bind_param("issdisi", $category_id, $title, $slug, $price, $stock, $image_url, $id);
 
-    $_SESSION['success'] = "อัปเดตสินค้าสำเร็จ!";
+    if ($update_stmt->execute()) {
+        $_SESSION['success'] = "อัปเดตข้อมูลสินค้า '$title' สำเร็จ!";
+    } else {
+        $_SESSION['error'] = "เกิดข้อผิดพลาดในการอัปเดต: " . $update_stmt->error;
+    }
+    $update_stmt->close();
+
     header("Location: products.php");
     exit();
 }
 
-// ✅ ดึงข้อมูลหมวดหมู่สำหรับ dropdown
-$categories = $conn->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
-?>
+// 6. ดึงข้อมูลหมวดหมู่ทั้งหมดสำหรับ Dropdown
+// **จุดสำคัญ:** แก้ไขชื่อคอลัมน์จาก name เป็น title ให้ตรงกับ DB
+$categories_result = $conn->query("SELECT * FROM categories ORDER BY title ASC");
 
+?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -74,56 +93,57 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name ASC")->fetchA
 <body class="bg-light">
 
 <div class="container py-5">
-    <div class="card shadow-lg border-0">
+    <div class="card shadow-lg border-0 mx-auto" style="max-width: 800px;">
         <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">🛠️ แก้ไขสินค้า</h4>
+            <h4 class="mb-0">🛠️ แก้ไขสินค้า: <?= htmlspecialchars($product['title']) ?></h4>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <form method="POST" enctype="multipart/form-data">
 
                 <div class="mb-3">
-                    <label class="form-label">ชื่อสินค้า</label>
-                    <input type="text" name="title" class="form-control" value="<?= htmlspecialchars($product['title']) ?>" required>
+                    <label for="title" class="form-label">ชื่อสินค้า</label>
+                    <input type="text" id="title" name="title" class="form-control" value="<?= htmlspecialchars($product['title']) ?>" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="price" class="form-label">ราคา</label>
+                        <input type="number" step="0.01" id="price" name="price" class="form-control" value="<?= htmlspecialchars($product['price']) ?>" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="stock" class="form-label">จำนวนคงเหลือ (Stock)</label>
+                        <input type="number" id="stock" name="stock" class="form-control" value="<?= htmlspecialchars($product['stock']) ?>" required>
+                    </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">ราคา</label>
-                    <input type="number" name="price" class="form-control" value="<?= htmlspecialchars($product['price']) ?>" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">หมวดหมู่</label>
-                    <select name="category_id" class="form-select" required>
+                    <label for="category_id" class="form-label">หมวดหมู่</label>
+                    <select id="category_id" name="category_id" class="form-select" required>
                         <option value="">-- เลือกหมวดหมู่ --</option>
-                        <?php foreach ($categories as $cat): ?>
+                        <?php while ($cat = $categories_result->fetch_assoc()): ?>
                             <option value="<?= $cat['id'] ?>" <?= $cat['id'] == $product['category_id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($cat['name']) ?>
+                                <?= htmlspecialchars($cat['title']) ?>
                             </option>
-                        <?php endforeach; ?>
+                        <?php endwhile; ?>
                     </select>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">รายละเอียดสินค้า</label>
-                    <textarea name="description" class="form-control" rows="4"><?= htmlspecialchars($product['description']) ?></textarea>
-                </div>
-
-                <div class="mb-3">
                     <label class="form-label">รูปภาพปัจจุบัน</label><br>
-                    <?php if (!empty($product['image'])): ?>
-                        <img src="../uploads/<?= htmlspecialchars($product['image']) ?>" alt="product" width="150" class="rounded mb-2 border">
+                    <?php if (!empty($product['image_url'])): ?>
+                        <img src="../<?= htmlspecialchars($product['image_url']) ?>" alt="product" width="150" class="rounded mb-2 border">
                     <?php else: ?>
                         <p class="text-muted">ไม่มีรูปภาพ</p>
                     <?php endif; ?>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">อัปโหลดรูปใหม่ (ถ้ามี)</label>
-                    <input type="file" name="image" class="form-control">
+                    <label for="image" class="form-label">อัปโหลดรูปใหม่ (หากต้องการเปลี่ยน)</label>
+                    <input type="file" id="image" name="image" class="form-control" accept="image/*">
                 </div>
 
-                <div class="text-end">
-                    <a href="products.php" class="btn btn-secondary">กลับ</a>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="products.php" class="btn btn-secondary">ยกเลิก</a>
                     <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
                 </div>
 
