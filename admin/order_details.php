@@ -1,8 +1,16 @@
 <?php
-// order_details.php (Corrected)
+// order_details.php (Corrected & Improved)
+session_start();
+include '../config/connectdb.php';
 include 'header.php';
 
-$order_id = $_GET['id'] ?? 0;
+$order_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if ($order_id === 0) {
+    echo "ไม่ได้ระบุ ID ของคำสั่งซื้อ";
+    include 'footer.php';
+    exit;
+}
 
 // --- ส่วนจัดการอัปเดตสถานะ ---
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
@@ -10,38 +18,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
     $stmt_update = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
     $stmt_update->bind_param("si", $new_status, $order_id);
     if ($stmt_update->execute()) {
-        // [แก้ไข] เปลี่ยนเป็น JavaScript Redirect
+        // [แก้ไข] เปลี่ยนเป็น JavaScript Redirect ที่ถูกต้อง
         echo "<script>
                 alert('อัปเดตสถานะเรียบร้อยแล้ว!');
-                a href = 'orders.php';
+                window.location.href = 'order_details.php?id=" . $order_id . "';
               </script>";
-        exit(); // exit() ยังคงสำคัญ เพื่อให้แน่ใจว่าสคริปต์หยุดทำงาน
     } else {
         echo "<script>alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');</script>";
     }
     $stmt_update->close();
+    exit();
 }
 
-// --- ดึงข้อมูลหลักของ Order (ข้อมูลลูกค้า, ที่อยู่) ---
-// [แก้ไข] เพิ่ม ` ` ครอบ `user`
+// --- ดึงข้อมูลหลักของ Order ---
 $stmt_order = $conn->prepare("SELECT * FROM orders WHERE id = ?");
 $stmt_order->bind_param("i", $order_id);
 $stmt_order->execute();
-$order = $stmt_order->get_result()->fetch_assoc();
+$order_result = $stmt_order->get_result();
+$order = $order_result->fetch_assoc();
 $stmt_order->close();
 
 if (!$order) {
     echo "ไม่พบคำสั่งซื้อนี้";
+    include 'footer.php';
     exit;
 }
 
 // --- ดึงข้อมูลสินค้าทั้งหมดใน Order นี้ ---
-$stmt_items = $conn->prepare("SELECT oi.*, p.title as product_title, p.image_url FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?");
+$stmt_items = $conn->prepare("
+    SELECT oi.*, p.title as product_title, p.image_url 
+    FROM order_items oi 
+    JOIN products p ON oi.product_id = p.id 
+    WHERE oi.order_id = ?");
 $stmt_items->bind_param("i", $order_id);
 $stmt_items->execute();
 $order_items_result = $stmt_items->get_result();
 $stmt_items->close();
-
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -61,47 +73,34 @@ $stmt_items->close();
                                 <th>สินค้า</th>
                                 <th class="text-center">จำนวน</th>
                                 <th class="text-end">ราคารวม</th>
-                                <th class="text-center">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while($item = $order_items_result->fetch_assoc()): ?>
-                            <tr>
-                                <td>
-                                    <img src="../uploads/<?= htmlspecialchars($item['image_url'] ?? 'no-image.jpg') ?>" width="60" class="img-thumbnail me-3 float-start">
-                                    <?= htmlspecialchars($item['product_title']) ?><br>
-                                    <small class="text-muted">ราคา: ฿<?= number_format($item['price'], 2) ?> / ชิ้น</small>
-                                </td>
-                                <form action="order_actions.php" method="POST">
-                                    <input type="hidden" name="action" value="update_item">
-                                    <input type="hidden" name="order_id" value="<?= $order_id ?>">
-                                    <input type="hidden" name="order_item_id" value="<?= $item['id'] ?>">
-                                    <input type="hidden" name="product_id" value="<?= $item['product_id'] ?>">
-                                    <input type="hidden" name="old_quantity" value="<?= $item['quantity'] ?>">
-                                    
-                                    <td class="text-center align-middle">
-                                        <input type="number" name="new_quantity" class="form-control form-control-sm text-center" value="<?= $item['quantity'] ?>" min="0" style="width: 80px; margin: auto;">
+                            <?php if ($order_items_result->num_rows > 0): ?>
+                                <?php while($item = $order_items_result->fetch_assoc()): ?>
+                                <tr>
+                                    <td>
+                                        <img src="../<?= htmlspecialchars($item['image_url'] ?? 'default.jpg') ?>" width="60" class="img-thumbnail me-3 float-start">
+                                        <?= htmlspecialchars($item['product_title']) ?><br>
+                                        <small class="text-muted">ราคา: ฿<?= number_format($item['price'], 2) ?> / ชิ้น</small>
                                     </td>
+                                    <td class="text-center align-middle"><?= $item['quantity'] ?></td>
                                     <td class="text-end align-middle">฿<?= number_format($item['price'] * $item['quantity'], 2) ?></td>
-                                    <td class="text-center align-middle">
-                                        <button type="submit" class="btn btn-primary btn-sm" title="อัปเดตจำนวน">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
-                                    </td>
-                                </form>
-                            </tr>
-                            <?php endwhile; ?>
+                                </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">ไม่พบรายการสินค้าในคำสั่งซื้อนี้</td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                         <tfoot>
                             <tr class="fw-bold">
-                                <td colspan="3" class="text-end">ยอดรวมสุทธิ:</td>
+                                <td colspan="2" class="text-end">ยอดรวมสุทธิ:</td>
                                 <td class="text-end fs-5">฿<?= number_format($order['total'], 2) ?></td>
                             </tr>
                         </tfoot>
                     </table>
-                </div>
-                 <div class="alert alert-info mt-3">
-                    <strong>คำแนะนำ:</strong> หากต้องการ **ลบ** สินค้ารายการใด ให้เปลี่ยนจำนวนเป็น **0** แล้วกดปุ่มอัปเดต
                 </div>
             </div>
         </div>
@@ -113,7 +112,7 @@ $stmt_items->close();
                 <strong>ลูกค้า:</strong>
                 <p><?= htmlspecialchars($order['fullname']) ?></p>
                 <strong>ที่อยู่จัดส่ง:</strong>
-                <p><?= nl2br(htmlspecialchars($order['address'])) ?></p>
+                <p><?= nl2br(htmlspecialchars($order['address'])) // nl2br เพื่อให้แสดงผลขึ้นบรรทัดใหม่ได้ ?></p>
                 <strong>เบอร์โทรศัพท์:</strong>
                 <p><?= htmlspecialchars($order['phone']) ?></p>
                 <hr>
@@ -128,7 +127,7 @@ $stmt_items->close();
                             <option value="cancelled" <?= $order['status'] == 'cancelled' ? 'selected' : '' ?>>Cancelled (ยกเลิก)</option>
                         </select>
                     </div>
-                    <a href="orders.php" type="submit" name="update_status" class="btn btn-primary w-100" ><i class="fas fa-sync-alt me-2"></i>อัปเดตสถานะ</a>
+                    <button type="submit" name="update_status" class="btn btn-primary w-100"><i class="fas fa-sync-alt me-2"></i>อัปเดตสถานะ</button>
                 </form>
             </div>
         </div>
