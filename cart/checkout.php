@@ -1,8 +1,11 @@
 <?php
-// cart/checkout.php (Updated with Payment Options)
-session_start();
+// cart/checkout.php (Corrected & Final Version)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 include '../config/connectdb.php';
 
+// ตรวจสอบว่าล็อกอินหรือยัง และมีของในตะกร้าไหม
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../auth/login.php?redirect=cart/checkout.php');
     exit();
@@ -12,12 +15,12 @@ if (empty($_SESSION['cart'])) {
     exit();
 }
 
-$cart_items = $_SESSION['cart'];
 // ใช้ยอดรวมสุทธิจาก Session (ถ้ามี) หรือคำนวณใหม่
 $final_total = $_SESSION['final_total'] ?? array_sum(array_map(function($item) {
     return $item['price'] * $item['quantity'];
-}, $cart_items));
+}, $_SESSION['cart']));
 
+// ดึงข้อมูลผู้ใช้ปัจจุบันมาใส่ในฟอร์ม
 $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT * FROM `user` WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
@@ -49,7 +52,23 @@ include '../includes/navbar.php';
                     <form action="checkout_process.php" method="POST">
                         <h4 class="mb-3">ข้อมูลสำหรับจัดส่ง</h4>
                         <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="fullname" class="form-label">ชื่อ-นามสกุล ผู้รับ</label>
+                                <input type="text" class="form-control" id="fullname" name="fullname" value="<?= htmlspecialchars($user_data['firstname'] . ' ' . $user_data['lastname']) ?>" required>
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">อีเมล</label>
+                                <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($user_data['email']) ?>" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">เบอร์โทรศัพท์</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" value="<?= htmlspecialchars($user_data['phone']) ?>" required>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="address" class="form-label">ที่อยู่สำหรับจัดส่ง</label>
+                                <textarea class="form-control" id="address" name="address" rows="4" required><?= htmlspecialchars($user_data['address']) ?></textarea>
+                            </div>
+                        </div>
 
                         <hr class="my-4">
                         <h4 class="mb-3">วิธีการชำระเงิน</h4>
@@ -65,7 +84,6 @@ include '../includes/navbar.php';
                         </div>
                         
                         <hr class="my-4">
-                        <input type="hidden" name="total_price" value="<?= $final_total ?>">
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg">ยืนยันการสั่งซื้อ</button>
                         </div>
@@ -73,8 +91,28 @@ include '../includes/navbar.php';
                 </div>
             </div>
         </div>
+
         <div class="col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h4 class="mb-3">รายการสินค้า</h4>
+                    <?php 
+                        $cart_items = $_SESSION['cart'] ?? [];
+                        foreach ($cart_items as $item): 
+                    ?>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span><?= htmlspecialchars($item['title']) ?> (x<?= $item['quantity'] ?>)</span>
+                        <span>฿<?= number_format($item['price'] * $item['quantity'], 2) ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold fs-5">
+                        <span>ยอดรวมสุทธิ</span>
+                        <span>฿<?= number_format($final_total, 2) ?></span>
+                    </div>
+                </div>
             </div>
+        </div>
     </div>
 </div>
 
