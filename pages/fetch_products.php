@@ -1,10 +1,10 @@
 <?php
-// fetch_products.php (Updated)
+// pages/fetch_products.php (Corrected & Final Version)
 session_start();
 include '../config/connectdb.php';
 
 $is_logged_in = isset($_SESSION['role']);
-$limit = 12; // แสดงผล 12 ชิ้นต่อหน้า
+$limit = 12; 
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 $sort = $_GET['sort'] ?? 'newest';
@@ -18,13 +18,10 @@ switch ($sort) {
     default:           $order_sql = "ORDER BY id DESC"; break;
 }
 
-$query = "SELECT * FROM products $order_sql LIMIT $limit OFFSET $offset";
+// ⭐️ แก้ไข 1: ดึงคอลัมน์ image_url มาด้วย
+$query = "SELECT id, title, price, image_url FROM products $order_sql LIMIT $limit OFFSET $offset";
 $result = mysqli_query($conn, $query);
 $products = mysqli_fetch_all($result, MYSQLI_ASSOC);
-
-function getProductImageUrl(string $title): string {
-    return "https://picsum.photos/300/400?random=" . crc32($title);
-}
 ?>
 
 <?php if (!empty($products)): ?>
@@ -33,7 +30,7 @@ function getProductImageUrl(string $title): string {
     <div class="col">
         <div class="card product-card h-100">
             <a href="product_detail.php?id=<?= $product['id'] ?>" class="text-decoration-none">
-                <img src="<?= getProductImageUrl($product['title']) ?>" class="card-img-top" alt="<?= htmlspecialchars($product['title']) ?>">
+                <img src="../<?= htmlspecialchars($product['image_url'] ?? 'assets/default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($product['title']) ?>">
             </a>
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">
@@ -41,11 +38,11 @@ function getProductImageUrl(string $title): string {
                 </h5>
                 <div class="mt-auto">
                     <div class="mb-2">
-                        <span class="product-price-new">฿<?= number_format($product['price'] * 0.8, 2) ?></span>
-                        <span class="product-price-old">฿<?= number_format($product['price'], 2) ?></span>
+                        <span class="product-price-new">฿<?= number_format($product['price'], 2) ?></span>
                     </div>
                     <?php if ($is_logged_in): ?>
-                        <form action="../cart/add.php" method="POST" class="d-grid">
+                        <form action="../cart/cart_actions.php" method="POST" class="d-grid">
+                            <input type="hidden" name="action" value="add">
                             <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
                             <button type="submit" class="btn btn-primary"><i class="fas fa-cart-plus"></i> เพิ่มลงตะกร้า</button>
                         </form>
@@ -76,5 +73,5 @@ function getProductImageUrl(string $title): string {
 </nav>
 
 <?php else: ?>
-<p class="text-center">ไม่พบสินค้าในระบบ</p>
+<p class="text-center text-muted mt-5">ไม่พบสินค้าในระบบ</p>
 <?php endif; ?>
