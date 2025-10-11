@@ -18,9 +18,11 @@ function getAllProducts($conn, $limit = null): array
     if (is_int($limit) && $limit > 0) {
         $sql .= " LIMIT ?";
         $stmt = $conn->prepare($sql);
+        if (!$stmt) return []; // ป้องกัน SQL error
         $stmt->bind_param("i", $limit);
     } else {
         $stmt = $conn->prepare($sql);
+        if (!$stmt) return []; // ป้องกัน SQL error
     }
 
     $stmt->execute();
@@ -49,6 +51,7 @@ function getProductsByCategory($conn, int $categoryId): array
     
     $sql = "SELECT id, title, price, image_url FROM products WHERE category_id = ? ORDER BY created_at DESC";
     $stmt = $conn->prepare($sql);
+    if (!$stmt) return []; // ป้องกัน SQL error
     $stmt->bind_param("i", $categoryId);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -62,4 +65,4 @@ function getProductsByCategory($conn, int $categoryId): array
     return $products;
 }
 
-// ⭐️ สังเกตว่าปีกกาปิด `}` ที่เกินมาตรงนี้ได้ถูกลบออกไปแล้ว ⭐️
+// ⭐️ สำคัญ: ต้องไม่มีปีกกาปิด `}` เกินมาตรงนี้ ⭐️
