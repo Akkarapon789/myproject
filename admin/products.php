@@ -1,13 +1,15 @@
 <?php
 session_start();
-include '../config/connectdb.php';
+include '../config/connectdb.php'; // ✅ ตรวจสอบให้แน่ใจว่า path ถูกต้อง เช่น ../config/connectdb.php
 
-// ✅ ลบสินค้า
+// เปิด error (ชั่วคราวตอนดีบั๊ก)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// ✅ ตรวจสอบการลบสินค้า
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
-
-    // ดึงชื่อไฟล์รูปเก่า
-    $stmt = $conn->prepare("SELECT image FROM products WHERE id=?");
+    $stmt = $conn->prepare("SELECT image FROM products WHERE id = ?");
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -16,8 +18,7 @@ if (isset($_GET['delete'])) {
         if (file_exists($imgPath)) unlink($imgPath);
     }
 
-    // ลบข้อมูลใน DB
-    $del = $conn->prepare("DELETE FROM products WHERE id=?");
+    $del = $conn->prepare("DELETE FROM products WHERE id = ?");
     $del->execute([$id]);
 
     $_SESSION['success'] = "ลบสินค้าสำเร็จ!";
@@ -30,7 +31,9 @@ $sql = "SELECT p.*, c.name AS category_name
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.id 
         ORDER BY p.id DESC";
-$products = $conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $conn->prepare($sql);
+$stmt->execute();
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -52,6 +55,7 @@ $products = $conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
         </div>
 
         <div class="card-body">
+            <?php if (count($products) > 0): ?>
             <div class="table-responsive">
                 <table id="productTable" class="table table-striped table-bordered align-middle">
                     <thead class="table-primary">
@@ -70,7 +74,7 @@ $products = $conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
                             <td><?= $index + 1 ?></td>
                             <td>
                                 <?php if (!empty($p['image'])): ?>
-                                    <img src="../uploads/<?= htmlspecialchars($p['image']) ?>" alt="img" width="70" class="rounded">
+                                    <img src="../uploads/<?= htmlspecialchars($p['image']) ?>" width="70" class="rounded">
                                 <?php else: ?>
                                     <span class="text-muted">ไม่มีรูป</span>
                                 <?php endif; ?>
@@ -80,13 +84,20 @@ $products = $conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
                             <td><?= number_format($p['price'], 2) ?> ฿</td>
                             <td>
                                 <a href="edit_product.php?id=<?= $p['id'] ?>" class="btn btn-sm btn-warning">แก้ไข</a>
-                                <button class="btn btn-sm btn-danger btn-delete" data-id="<?= $p['id'] ?>" data-name="<?= htmlspecialchars($p['title']) ?>">ลบ</button>
+                                <button class="btn btn-sm btn-danger btn-delete" 
+                                        data-id="<?= $p['id'] ?>" 
+                                        data-name="<?= htmlspecialchars($p['title']) ?>">ลบ</button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+            <?php else: ?>
+                <div class="alert alert-warning text-center">
+                    ยังไม่มีข้อมูลสินค้าในระบบ
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -104,14 +115,12 @@ Swal.fire({
 </script>
 <?php unset($_SESSION['success']); endif; ?>
 
-<!-- ✅ DataTable & SweetAlert Delete Confirm -->
+<!-- ✅ DataTable & SweetAlert Delete -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-
 <script>
 $(document).ready(function() {
-    // 🧾 DataTable
     $('#productTable').DataTable({
         language: {
             search: "ค้นหา:",
@@ -122,7 +131,6 @@ $(document).ready(function() {
         pageLength: 10
     });
 
-    // 🗑️ SweetAlert ยืนยันก่อนลบ
     $('.btn-delete').on('click', function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
@@ -144,6 +152,5 @@ $(document).ready(function() {
     });
 });
 </script>
-
 </body>
 </html>
