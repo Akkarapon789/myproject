@@ -42,11 +42,11 @@ $cartCount = isset($_SESSION['cart']) ? array_sum(array_column($_SESSION['cart']
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="../pages/profile.php">โปรไฟล์ของฉัน</a></li>
-                                <li><a class="dropdown-item" href="../pages/order_history.php">ประวัติการสั่งซื้อ</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="../auth/logout.php">ออกจากระบบ</a></li>
-                            </ul>
+                            <li><a class="dropdown-item" href="../pages/profile.php">โปรไฟล์ของฉัน</a></li>
+                            <li><a class="dropdown-item" href="../pages/order_history.php">ประวัติการสั่งซื้อ</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="../auth/logout.php">ออกจากระบบ</a></li>
+                        </ul>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="../auth/logout.php">ออกจากระบบ</a></li>
                         </ul>
