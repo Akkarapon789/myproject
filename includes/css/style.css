@@ -1,4 +1,4 @@
-/* includes/css/style.css */
+/* includes/css/style.css (Updated) */
 
 /* --- 1. Import Font & CSS Variables --- */
 @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
@@ -59,11 +59,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* --- 5. Category Section --- */
+/* ⭐️⭐️⭐️ นี่คือส่วนที่แก้ไข ⭐️⭐️⭐️ */
 .category-item img {
     width: 90px;
     height: 90px;
-    border-radius: 50%;
-    object-fit: cover;
+    border-radius: 50%; /* <--- ทำให้เป็นวงกลม */
+    object-fit: cover; /* ทำให้รูปภาพเต็มวงกลมโดยไม่เสียสัดส่วน */
     border: 2px solid var(--border-color);
     transition: all 0.3s ease;
 }
@@ -89,7 +90,7 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 .product-card .card-img-top {
-    aspect-ratio: 3 / 4; /* สัดส่วนภาพหนังสือที่สวยงาม */
+    aspect-ratio: 3 / 4;
     object-fit: cover;
 }
 .product-card .card-title {
@@ -97,7 +98,7 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* แสดง ... เมื่อชื่อยาวไป */
+    text-overflow: ellipsis;
 }
 .product-card .product-price-new {
     color: var(--primary-color);
