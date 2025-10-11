@@ -13,7 +13,8 @@ function getAllProducts($conn, $limit = null): array
         return [];
     }
     
-    $sql = "SELECT id, title, price, image_url, description, category_id FROM products ORDER BY RAND()";
+    // ⭐️⭐️⭐️ แก้ไขตรงนี้: ลบ `description` ออกจาก SELECT ⭐️⭐️⭐️
+    $sql = "SELECT id, title, price, image_url, category_id FROM products ORDER BY RAND()";
     
     if (is_int($limit) && $limit > 0) {
         $sql .= " LIMIT ?";
@@ -64,5 +65,3 @@ function getProductsByCategory($conn, int $categoryId): array
     $stmt->close();
     return $products;
 }
-
-// ⭐️ สำคัญ: ต้องไม่มีปีกกาปิด `}` เกินมาตรงนี้ ⭐️
