@@ -146,6 +146,5 @@ $categories_result = $conn->query("SELECT * FROM categories ORDER BY title ASC")
         </form>
     </div>
 </div>
-
 </body>
 </html>
