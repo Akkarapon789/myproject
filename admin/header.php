@@ -10,20 +10,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin_style.css">
+    
+    <link rel="stylesheet" href="css/admin_style.css">
 </head>
 <body>
 
 <div class="d-flex" id="wrapper">
-    <div class="bg-dark border-right" id="sidebar-wrapper">
-        <div class="sidebar-heading text-white">Admin Panel</div>
+    <div id="sidebar-wrapper">
+        <div class="sidebar-heading">Admin Panel</div>
         <div class="list-group list-group-flush">
-            <a href="index.php" class="list-group-item list-group-item-action text-white"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-            <a href="products.php" class="list-group-item list-group-item-action text-white"><i class="fas fa-box"></i> จัดการสินค้า</a>
-            <a href="categories.php" class="list-group-item list-group-item-action text-white"><i class="fas fa-tags"></i> จัดการหมวดหมู่</a>
-            <a href="orders.php" class="list-group-item list-group-item-action text-white"><i class="fas fa-shopping-cart"></i> จัดการออเดอร์</a>
-            <a href="users.php" class="list-group-item list-group-item-action text-white"><i class="fas fa-users"></i> จัดการผู้ใช้</a>
-            <a href="../" class="list-group-item list-group-item-action text-white bg-secondary mt-auto"><i class="fas fa-sign-out-alt"></i> กลับไปหน้าเว็บ</a>
+            <a href="index.php" class="list-group-item list-group-item-action"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="products.php" class="list-group-item list-group-item-action"><i class="fas fa-box"></i> จัดการสินค้า</a>
+            <a href="categories.php" class="list-group-item list-group-item-action"><i class="fas fa-tags"></i> จัดการหมวดหมู่</a>
+            <a href="orders.php" class="list-group-item list-group-item-action"><i class="fas fa-shopping-cart"></i> จัดการออเดอร์</a>
+            <a href="users.php" class="list-group-item list-group-item-action"><i class="fas fa-users"></i> จัดการผู้ใช้</a>
+            <a href="../" class="list-group-item list-group-item-action bg-secondary mt-auto"><i class="fas fa-sign-out-alt"></i> กลับไปหน้าเว็บ</a>
         </div>
     </div>
     <div id="page-content-wrapper">
@@ -49,22 +50,3 @@
         </nav>
 
         <div class="container-fluid p-4"> ```
-
-#### `footer.php` (ส่วนท้ายและสคริปต์)
-สร้างไฟล์ใหม่ชื่อ `footer.php` ในโฟลเดอร์ `admin` แล้วใส่โค้ดนี้เข้าไป:
-
-```php
-</div> </div>
-    </div>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-    $("#menu-toggle").click(function(e) {
-        e.preventDefault();
-        $("#wrapper").toggleClass("toggled");
-    });
-</script>
-
-</body>
-</html>

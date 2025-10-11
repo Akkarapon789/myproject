@@ -1,9 +1,15 @@
 <?php
-// orders.php (Corrected)
+session_start();
+include '../config/connectdb.php';
 include 'header.php';
 
-// [แก้ไข] เพิ่ม ` ` ครอบ `user`
-$result = $conn->query("SELECT * FROM `orders` ORDER BY user_id ASC");
+// ดึงข้อมูล orders ทั้งหมด พร้อม JOIN ตาราง user เพื่อเอาชื่อมาด้วย
+// [แก้ไข] เพิ่มการ JOIN กับตาราง user และใช้ Backticks (`) ครอบชื่อตาราง
+$sql = "SELECT o.*, u.firstname, u.lastname 
+        FROM `orders` o
+        LEFT JOIN `user` u ON o.user_id = u.user_id
+        ORDER BY o.created_at DESC";
+$result = $conn->query($sql);
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -19,10 +25,10 @@ $result = $conn->query("SELECT * FROM `orders` ORDER BY user_id ASC");
             <table id="ordersTable" class="table table-bordered table-hover" width="100%" cellspacing="0">
                 <thead>
                     <tr>
-                        <th>ID คำสั่งซื้อ</th>
+                        <th>ID</th>
                         <th>ชื่อลูกค้า</th>
                         <th>วันที่สั่งซื้อ</th>
-                        <th>ยอดรวม (บาท)</th>
+                        <th>ยอดรวม</th>
                         <th>สถานะ</th>
                         <th>จัดการ</th>
                     </tr>
@@ -40,10 +46,10 @@ $result = $conn->query("SELECT * FROM `orders` ORDER BY user_id ASC");
                             ?>
                         </td>
                         <td><?= date('d M Y, H:i', strtotime($row['created_at'])) ?></td>
-                        <td><?= number_format($row['total'], 2) ?></td>
-                        <td>
+                        <td class="text-end"><?= number_format($row['total'], 2) ?> ฿</td>
+                        <td class="text-center">
                             <?php
-                                $status = $row['status'];
+                                $status = $row['status'] ?? 'pending'; // กำหนดค่า default
                                 $badge_class = 'bg-secondary'; // Default
                                 if ($status == 'completed') $badge_class = 'bg-success';
                                 if ($status == 'pending') $badge_class = 'bg-warning text-dark';
@@ -55,7 +61,7 @@ $result = $conn->query("SELECT * FROM `orders` ORDER BY user_id ASC");
                                 <?= ucfirst($status) ?>
                             </span>
                         </td>
-                        <td>
+                        <td class="text-center">
                             <a href="order_details.php?id=<?= $row['id'] ?>" class="btn btn-info btn-sm">
                                 <i class="fas fa-eye"></i> ดูรายละเอียด
                             </a>
@@ -67,13 +73,17 @@ $result = $conn->query("SELECT * FROM `orders` ORDER BY user_id ASC");
         </div>
     </div>
 </div>
-
-
-
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
 <script>
 $(document).ready(function() {
     $('#ordersTable').DataTable({
-        "order": [[0, "desc"]]
+        "order": [[0, "desc"]] // เรียงจาก IDล่าสุดไปเก่าสุดเป็นค่าเริ่มต้น
     });
 });
 </script>
+
+<?php 
+// เพิ่มส่วนท้ายของเทมเพลตเข้ามา
+include 'footer.php'; 
+?>
