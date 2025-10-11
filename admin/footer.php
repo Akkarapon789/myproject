@@ -6,10 +6,7 @@
 <script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-    $("#menu-toggle").click(function(e) {
-        e.preventDefault();
-        $("#wrapper").toggleClass("toggled");
-    });
+    $("#menu-toggle").click(function(e) { /* ... */ });
 </script>
 
 </body>

@@ -1,21 +1,10 @@
 <?php
-// admin/products.php (Upgraded with DataTables)
+// admin/products.php (Corrected for DataTables)
 session_start();
 include '../config/connectdb.php';
-include 'header.php';
+include 'header.php'; // ⭐️ ต้องเรียก header.php ก่อนเสมอ ⭐️
 
-// โค้ด PHP สำหรับการลบข้อมูล (ส่วนนี้ไม่ต้องแก้ไข)
-if (isset($_GET['delete'])) {
-    $id = intval($_GET['delete']);
-    // (ควรมีโค้ดลบรูปภาพจริงจาก server ที่นี่ด้วย)
-    $stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    header("Location: products.php");
-    exit();
-}
-
-// โค้ด PHP สำหรับดึงข้อมูลมาแสดง (ส่วนนี้ไม่ต้องแก้ไข)
+// โค้ด PHP สำหรับดึงข้อมูล (ส่วนนี้ถูกต้องแล้ว)
 $sql = "SELECT p.*, c.title AS category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.id DESC";
 $result = $conn->query($sql);
 ?>
@@ -64,6 +53,10 @@ $result = $conn->query($sql);
         </table>
     </div>
 </div>
+<?php
+include 'footer.php'; // ⭐️ ต้องเรียก footer.php เพื่อโหลด JS ⭐️
+?>
+
 <script>
 $(document).ready(function() {
     $('#productsTable').DataTable({
@@ -79,7 +72,3 @@ $(document).ready(function() {
     });
 });
 </script>
-
-<?php
-include 'footer.php';
-?>
