@@ -14,7 +14,7 @@ if (isset($_GET['delete'])) {
     $stmt_img->execute();
     $result_img = $stmt_img->get_result()->fetch_assoc();
     if ($result_img && !empty($result_img['image_url'])) {
-        $image_path = '../uploads/' . $result_img['image_url'];
+        $image_path = '../' . $result_img['image_url'];
         if (file_exists($image_path)) {
             unlink($image_path); // ลบไฟล์รูปภาพจริง
         }
@@ -79,7 +79,7 @@ $result = $conn->query($sql);
                         <td class="text-center"><?= $row['id']; ?></td>
                         <td class="text-center">
                             <?php if (!empty($row['image_url'])): ?>
-                                <img src="../uploads/<?= htmlspecialchars($row['image_url']); ?>" width="80" class="rounded">
+                                <img src="../<?= htmlspecialchars($row['image_url']); ?>" width="80" class="rounded">
                             <?php else: ?>
                                 <span class="text-muted">ไม่มีภาพ</span>
                             <?php endif; ?>
