@@ -24,7 +24,7 @@
             <a href="categories.php" class="list-group-item list-group-item-action"><i class="fas fa-tags"></i> จัดการหมวดหมู่</a>
             <a href="orders.php" class="list-group-item list-group-item-action"><i class="fas fa-shopping-cart"></i> จัดการออเดอร์</a>
             <a href="users.php" class="list-group-item list-group-item-action"><i class="fas fa-users"></i> จัดการผู้ใช้</a>
-            <a href="../" class="list-group-item list-group-item-action bg-secondary mt-auto"><i class="fas fa-sign-out-alt"></i> กลับไปหน้าเว็บ</a>
+            <a href="../paegs/index.php" class="list-group-item list-group-item-action bg-secondary mt-auto"><i class="fas fa-sign-out-alt"></i> กลับไปหน้าเว็บ</a>
         </div>
     </div>
     <div id="page-content-wrapper">
