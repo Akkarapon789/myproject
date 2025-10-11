@@ -1,0 +1,131 @@
+/* includes/css/style.css */
+
+/* --- 1. Import Font & CSS Variables --- */
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #2155CD;
+    --secondary-color: #0AA1DD;
+    --accent-color: #FDDE55;
+    --text-dark: #212529;
+    --text-light: #6c757d;
+    --bg-light: #f8f9fa;
+    --border-color: #dee2e6;
+}
+
+/* --- 2. Global Styles --- */
+body {
+    font-family: 'Prompt', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+}
+
+/* --- 3. Navbar Styles --- */
+.navbar-main {
+    background-color: #fff;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 0;
+    transition: all 0.3s ease;
+}
+.navbar-brand span {
+    color: var(--primary-color);
+}
+#searchInput {
+    border-radius: 50px;
+    border: 1px solid var(--border-color);
+}
+#searchInput:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(33, 85, 205, 0.25);
+}
+
+/* --- 4. Hero Section --- */
+.hero-section {
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1974&auto=format&fit=crop') center center/cover no-repeat;
+    color: #fff;
+    padding: 6rem 0;
+    text-align: center;
+}
+.hero-section .display-4 {
+    font-weight: 700;
+}
+.hero-section .lead {
+    max-width: 600px;
+    margin: 1rem auto;
+}
+
+/* --- 5. Category Section --- */
+.category-item img {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+.category-item a:hover img {
+    transform: scale(1.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+.category-item small {
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+/* --- 6. Product Card Styles --- */
+.product-card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+.product-card .card-img-top {
+    aspect-ratio: 3 / 4; /* สัดส่วนภาพหนังสือที่สวยงาม */
+    object-fit: cover;
+}
+.product-card .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* แสดง ... เมื่อชื่อยาวไป */
+}
+.product-card .product-price-new {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+.product-card .product-price-old {
+    color: var(--text-light);
+    text-decoration: line-through;
+}
+.product-card .btn {
+    border-radius: 50px;
+    font-weight: 500;
+}
+
+/* --- 7. Footer Styles --- */
+.footer-main {
+    background-color: #212529;
+    color: #fff;
+}
+.footer-main a {
+    color: #adb5bd;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.footer-main a:hover {
+    color: #fff;
+}
+.footer-social-icon {
+    font-size: 1.5rem;
+}
