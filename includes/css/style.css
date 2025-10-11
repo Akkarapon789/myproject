@@ -98,6 +98,23 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #fff;
     color: var(--primary-color);
 }
+.navbar-main {
+    /* (1) ตรวจสอบให้แน่ใจว่า Navbar มี z-index สูงพอ */
+    position: sticky; /* คุณใช้ sticky-top อยู่แล้ว */
+    z-index: 1030; /* ค่ามาตรฐานของ Bootstrap Navbar คือ 1030 */
+    overflow: visible; /* ⭐️ (2) สำคัญ: ป้องกันการถูกตัด */
+}
+
+/* ⭐️ (3) ให้ Dropdown Container มี z-index ที่สูงกว่า Navbar */
+.navbar-nav .nav-item.dropdown {
+    z-index: 1050; /* ใช้ค่าสูงกว่า Navbar เพื่อให้ Dropdown เมนูอยู่ด้านบน */
+}
+
+/* ⭐️ (4) ปรับ Dropdown Menu ให้อยู่ด้านบนสุด */
+.dropdown-menu {
+    z-index: 1051; /* ให้สูงกว่า Container แม่ไปอีกขั้น */
+    /* ... ไม่ต้องเปลี่ยน position เป็น absolute เพราะ Bootstrap จัดการให้แล้ว ... */
+}
 
 
 /* --- Footer & Category Grid Styles (เหมือนเดิม) --- */
