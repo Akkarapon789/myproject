@@ -3,15 +3,13 @@
 session_start();
 include '../config/connectdb.php'; 
 
-// 1. เรียกใช้ไฟล์ฟังก์ชันที่อยู่ในโฟลเดอร์เดียวกัน
 require_once 'categories.php';
 require_once 'products.php'; 
 
 $is_logged_in = isset($_SESSION['role']);
 
-// 2. เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล
 $categories = getAllCategories($conn); 
-$products = getAllProducts($conn, 8); // ดึงสินค้าแนะนำมา 8 ชิ้น
+$products = getAllProducts($conn, 8);
 
 ?>
 <!doctype html>

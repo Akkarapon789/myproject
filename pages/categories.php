@@ -14,7 +14,7 @@ function getAllCategories($conn): array
     }
 
     // 2. ดึงข้อมูลที่จำเป็นทั้งหมด รวมถึง image_url
-    $sql = "SELECT id, title, slug, image_url FROM categories ORDER BY title ASC";
+    $sql = "SELECT id, title, slug, image_url FROM categories ORDER BY id ASC";
     $result = $conn->query($sql);
     
     $categories = [];
@@ -27,4 +27,3 @@ function getAllCategories($conn): array
     // 5. คืนค่า array ที่มีข้อมูล (หรือ array ว่าง ถ้าไม่เจอ)
     return $categories;
 }
-// ⭐️ สังเกตว่าปีกกาปิด `}` ที่เกินมาตรงนี้ได้ถูกลบออกไปแล้ว

@@ -1,27 +1,26 @@
 <?php
+// pages/category.php (Correct & Final Version)
 session_start();
 include '../config/connectdb.php';
 $is_logged_in = isset($_SESSION['role']);
 
-// 1. รับ ID ของหมวดหมู่จาก URL
 $category_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($category_id === 0) {
-    die("ไม่พบหมวดหมู่ที่ระบุ");
+    die("ไม่พบหมวดหมู่ที่ระบุ (URL ต้องมี ?id=... ต่อท้าย)");
 }
 
-// 2. ดึงข้อมูลของหมวดหมู่นี้เพื่อแสดงชื่อ
 $stmt_cat = $conn->prepare("SELECT title FROM categories WHERE id = ?");
 $stmt_cat->bind_param("i", $category_id);
 $stmt_cat->execute();
-$category = $stmt_cat->get_result()->fetch_assoc();
+$category_result = $stmt_cat->get_result();
+$category = $category_result->fetch_assoc();
 $stmt_cat->close();
 
 if (!$category) {
-    die("หมวดหมู่ไม่ถูกต้อง");
+    die("หมวดหมู่ ID: $category_id ไม่ถูกต้อง หรือไม่มีในระบบ");
 }
 
-// 3. ดึงสินค้าทั้งหมดที่อยู่ในหมวดหมู่นี้
-$stmt_prod = $conn->prepare("SELECT * FROM products WHERE category_id = ? ORDER BY id ASC");
+$stmt_prod = $conn->prepare("SELECT * FROM products WHERE category_id = ? ORDER BY id DESC");
 $stmt_prod->bind_param("i", $category_id);
 $stmt_prod->execute();
 $products_result = $stmt_prod->get_result();
