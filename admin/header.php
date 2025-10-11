@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="css/admin_style.css">
 </head>
 <body>
@@ -22,6 +21,7 @@
             <a href="index.php" class="list-group-item list-group-item-action"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
             <a href="products.php" class="list-group-item list-group-item-action"><i class="fas fa-box"></i> จัดการสินค้า</a>
             <a href="categories.php" class="list-group-item list-group-item-action"><i class="fas fa-tags"></i> จัดการหมวดหมู่</a>
+            <a href="promotions.php" class="list-group-item list-group-item-action"><i class="fas fa-percent"></i> จัดการโปรโมชั่น</a>
             <a href="orders.php" class="list-group-item list-group-item-action"><i class="fas fa-shopping-cart"></i> จัดการออเดอร์</a>
             <a href="users.php" class="list-group-item list-group-item-action"><i class="fas fa-users"></i> จัดการผู้ใช้</a>
             <a href="../pages/index.php" class="list-group-item list-group-item-action bg-secondary mt-auto"><i class="fas fa-sign-out-alt"></i> กลับไปหน้าเว็บ</a>
