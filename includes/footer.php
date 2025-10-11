@@ -60,15 +60,19 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 $(document).ready(function(){
+    // ใช้ Event Delegation เพื่อให้ทำงานกับสินค้าที่โหลดมาทีหลัง (เช่น ในหน้า all_products)
     $(document).on('click', '.js-quick-view', function(e) {
-        e.preventDefault();
+        e.preventDefault(); // หยุดการทำงานปกติของลิงก์
+
         var productId = $(this).data('id');
         var quickViewModal = new bootstrap.Modal(document.getElementById('quickViewModal'));
 
+        // ดึงข้อมูลสินค้าด้วย AJAX
         $.ajax({
             url: `../pages/ajax/get_product_details.php?id=${productId}`,
             type: 'GET',
@@ -76,6 +80,7 @@ $(document).ready(function(){
             success: function(response) {
                 if (response.success) {
                     const product = response.data;
+                    // นำข้อมูลไปใส่ใน Modal
                     $('#quickViewImage').attr('src', `../${product.image_url || 'assets/default.jpg'}`);
                     $('#quickViewTitle').text(product.title);
                     $('#quickViewCategory').text(`หมวดหมู่: ${product.category_name || 'ไม่ระบุ'}`);
@@ -83,6 +88,8 @@ $(document).ready(function(){
                     $('#quickViewPrice').text(`฿${parseFloat(product.price).toFixed(2)}`);
                     $('#quickViewProductId').val(product.id);
                     $('#quickViewFullDetails').attr('href', `../pages/product_detail.php?id=${product.id}`);
+                    
+                    // แสดง Modal
                     quickViewModal.show();
                 } else {
                     alert('ไม่พบข้อมูลสินค้า');
