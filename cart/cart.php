@@ -1,12 +1,11 @@
 <?php
+// cart/cart.php (Upgraded with SweetAlert2)
 session_start();
 include '../config/connectdb.php';
 
 $cart_items = $_SESSION['cart'] ?? [];
 $cart_total = 0;
 
-// ⭐️ 1. ดึงโปรโมชั่นที่ "ใช้ได้" ทั้งหมดมาแสดงใน dropdown ⭐️
-// (โปรโมชั่นที่ยังไม่หมดอายุ)
 $today = date('Y-m-d');
 $promo_result = $conn->query("SELECT * FROM promotions WHERE start_date <= '{$today}' AND end_date >= '{$today}'");
 
@@ -20,6 +19,7 @@ include '../includes/navbar.php';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../includes/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
 
@@ -94,12 +94,18 @@ include '../includes/navbar.php';
         </div>
     </div>
     <?php else: ?>
-        <?php endif; ?>
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+            <h3>ตะกร้าของคุณว่างเปล่า</h3>
+            <a href="../pages/all_products.php" class="btn btn-primary mt-3">เลือกซื้อสินค้า</a>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?php include '../includes/footer.php'; ?>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 $(document).ready(function() {
@@ -119,12 +125,26 @@ $(document).ready(function() {
                 // แสดง/ซ่อนแถวส่วนลด
                 if (response.discount_value > 0) {
                     $('#discount-row').show();
+                    // แสดง popup สวยๆ บอกว่าใช้ส่วนลดสำเร็จ
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'ใช้ส่วนลดสำเร็จ!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
                 } else {
                     $('#discount-row').hide();
                 }
             },
             error: function() {
-                alert('เกิดข้อผิดพลาดในการใช้โปรโมชั่น');
+                // เปลี่ยนจาก alert() ธรรมดา มาเป็น SweetAlert
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถใช้โปรโมชั่นได้ กรุณาลองใหม่อีกครั้ง'
+                });
             }
         });
     });
