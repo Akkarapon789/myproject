@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (in_array($fileType, $allowTypes)) {
             // พยายามย้ายไฟล์ไปยังโฟลเดอร์ปลายทาง
             if (move_uploaded_file($_FILES["image"]["tmp_name"], $targetFilePath)) {
-                $image_url = "uploads/" . $fileName; // หากสำเร็จ กำหนด path ของรูป
+                $image_url =   $fileName; // หากสำเร็จ กำหนด path ของรูป
             } else {
                 // หากย้ายไฟล์ไม่สำเร็จ
                 $_SESSION['error'] = "เกิดข้อผิดพลาดในการอัปโหลดไฟล์ภาพ! (อาจเกี่ยวกับ Folder Permissions)";
