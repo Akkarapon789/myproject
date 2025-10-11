@@ -1,5 +1,5 @@
 <?php
-// cart/payment.php
+// cart/payment.php (Updated with correct QR code image)
 session_start();
 include '../config/connectdb.php';
 
@@ -46,7 +46,7 @@ include '../includes/navbar.php';
                         <h2 class="display-5 fw-bold text-primary">฿<?= number_format($order['total'], 2) ?></h2>
                     </div>
 
-                    <img src="../assets/qr/promptpay.jpg" class="img-fluid rounded mb-4" style="max-width: 250px;">
+                    <img src="../assets/qr/promptpay.jpg" class="img-fluid rounded mb-4" style="max-width: 250px;" alt="QR Code for Payment">
 
                     <div class="alert alert-light border">
                         <h5 class="alert-heading">หรือโอนผ่านบัญชีธนาคาร</h5>
