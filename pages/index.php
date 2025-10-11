@@ -22,7 +22,8 @@ function getProductImageUrl(string $title): string {
     <title>The Bookmark Society - ร้านหนังสือออนไลน์สำหรับคนรักการอ่าน</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="../includes/css/style.css"> </head>
+    <link rel="stylesheet" href="../includes/css/style.css"> 
+</head>
 <body>
 
 <?php include '../includes/navbar.php'; ?>
@@ -63,7 +64,7 @@ function getProductImageUrl(string $title): string {
             <div class="col">
                 <div class="card product-card h-100">
                     <a href="product_detail.php?id=<?= $product['id'] ?>" class="text-decoration-none">
-                        <img src="<?= getProductImageUrl($product['title']) ?>" class="card-img-top" alt="<?= htmlspecialchars($product['title']) ?>">
+                        <img src="../<?= htmlspecialchars($product['image_url'] ?? 'default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($product['title']) ?>">
                     </a>
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">
@@ -71,11 +72,11 @@ function getProductImageUrl(string $title): string {
                         </h5>
                         <div class="mt-auto">
                             <div class="mb-2">
-                                <span class="product-price-new">฿<?= number_format($product['price'] * 0.8, 2) ?></span>
-                                <span class="product-price-old">฿<?= number_format($product['price'], 2) ?></span>
+                                <span class="product-price-new">฿<?= number_format($product['price'], 2) ?></span>
                             </div>
                             <?php if ($is_logged_in): ?>
-                                <form action="../cart/add.php" method="POST" class="d-grid">
+                                <form action="../cart/cart_actions.php" method="POST" class="d-grid">
+                                    <input type="hidden" name="action" value="add">
                                     <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
                                     <button type="submit" class="btn btn-primary"><i class="fas fa-cart-plus"></i> เพิ่มลงตะกร้า</button>
                                 </form>

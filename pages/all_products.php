@@ -10,7 +10,8 @@ $is_logged_in = isset($_SESSION['role']);
     <title>สินค้าทั้งหมด - The Bookmark Society</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="../includes/css/style.css"> </head>
+    <link rel="stylesheet" href="../includes/css/style.css">
+</head>
 <body>
 
 <?php include '../includes/navbar.php'; ?>
@@ -40,7 +41,6 @@ $is_logged_in = isset($_SESSION['role']);
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// ฟังก์ชันสำหรับโหลดสินค้า
 function loadProducts(url) {
     fetch(url)
         .then(res => res.text())
@@ -51,7 +51,6 @@ function loadProducts(url) {
         .catch(err => console.error(err));
 }
 
-// AJAX สำหรับ Pagination
 document.addEventListener('click', function(e){
     const link = e.target.closest('.pagination a.page-link');
     if(link){
@@ -60,7 +59,6 @@ document.addEventListener('click', function(e){
     }
 });
 
-// AJAX สำหรับ Sort
 document.getElementById('sort-select').addEventListener('change', function(){
     const sortValue = this.value;
     const url = `fetch_products.php?page=1&sort=${sortValue}`;

@@ -126,7 +126,8 @@ $order_id = $_GET['order_id'] ?? 0; // รับค่า order_id มาจา�
       if (progress >= 100) {
         clearInterval(interval);
         setTimeout(() => {
-          window.location.href = "success.php?order_id=<?= $order_id ?>";
+          // เปลี่ยนเป้าหมายสุดท้ายไปที่ thank_you.php
+          window.location.href = "thank_you.php?order_id=<?= $order_id ?>";
         }, 500); // รออีกนิดก่อน redirect
       }
     }, 80); // 80ms ต่อรอบ ~8s ถึง 100%
