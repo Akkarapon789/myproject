@@ -1,5 +1,5 @@
 <?php
-// pages/index.php (Corrected & Final Version)
+// pages/index.php (Correct & Final Version)
 session_start();
 include '../config/connectdb.php'; 
 
@@ -35,31 +35,32 @@ $products = getAllProducts($conn, 8);
 
 <div class="container my-5">
 
-    <section class="category-section text-center mb-5 py-4">
-        <h2 class="mb-4">สำรวจตามหมวดหมู่</h2>
-        <div class="d-flex flex-wrap justify-content-center gap-4">
+    <section class="category-section mb-5 py-4">
+        <h2 class="text-center mb-4">สำรวจตามหมวดหมู่</h2>
+        
+        <div class="category-grid">
             <?php if (!empty($categories)): ?>
                 <?php foreach ($categories as $cat): ?>
                     <div class="category-item">
                         <a href="category.php?id=<?= $cat['id'] ?>" class="text-decoration-none category-icon-link">
-                            <div class="icon-circle">
+                             <div class="icon-circle">
                                 <?php
                                     $icon = 'fa-book'; // ไอคอนเริ่มต้น
-                                    if ($cat['id'] == 1) $icon = 'fa-feather-alt';      // วรรณกรรม
-                                    if ($cat['id'] == 2) $icon = 'fa-atlas';            // สารคดี
-                                    if ($cat['id'] == 3) $icon = 'fa-brain';            // จิตวิทยา
-                                    if ($cat['id'] == 4) $icon = 'fa-palette';          // ศิลปะ
-                                    if ($cat['id'] == 5) $icon = 'fa-briefcase';        // ธุรกิจ
-                                    if ($cat['id'] == 6) $icon = 'fa-ellipsis-h';       // อื่นๆ
+                                    if ($cat['id'] == 1) $icon = 'fa-feather-alt';
+                                    if ($cat['id'] == 2) $icon = 'fa-atlas';
+                                    if ($cat['id'] == 3) $icon = 'fa-brain';
+                                    if ($cat['id'] == 4) $icon = 'fa-palette';
+                                    if ($cat['id'] == 5) $icon = 'fa-briefcase';
+                                    if ($cat['id'] == 6) $icon = 'fa-ellipsis-h';
                                 ?>
                                 <i class="fas <?= $icon ?> fa-2x"></i>
                             </div>
-                        <small class="d-block mt-2"><?= htmlspecialchars($cat['title']) ?></small>
+                            <small class="d-block mt-2"><?= htmlspecialchars($cat['title']) ?></small>
                         </a>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <p class="text-muted">ยังไม่มีข้อมูลหมวดหมู่ในระบบ</p>
+                <p class="text-muted w-100 text-center">ยังไม่มีข้อมูลหมวดหมู่ในระบบ</p>
             <?php endif; ?>
         </div>
     </section>
@@ -100,7 +101,7 @@ $products = getAllProducts($conn, 8);
                 </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                 <p class="text-muted col-12 text-center">ยังไม่มีสินค้าในระบบ กรุณารอAdminเพิ่มสินค้าในระบบ </p>
+                 <p class="text-muted col-12 text-center">ยังไม่มีสินค้าในระบบ กรุณาเพิ่มสินค้าในหน้า Admin</p>
             <?php endif; ?>
         </div>
     </section>

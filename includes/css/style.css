@@ -148,3 +148,24 @@ h1, h2, h3, h4, h5, h6 {
     transform: scale(1.1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
+.category-grid {
+    display: grid;
+    /* สร้าง 6 คอลัมน์ โดยแต่ละคอลัมน์มีความกว้างเท่ากัน (1fr) */
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem; /* ระยะห่างระหว่างไอเท็ม */
+    text-align: center;
+}
+@media (max-width: 992px) {
+    .category-grid {
+        /* เมื่อจอเล็กลง ให้เปลี่ยนเป็น 3 คอลัมน์ */
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem; /* เพิ่มระยะห่างให้กดง่ายขึ้น */
+    }
+}
+
+@media (max-width: 576px) {
+    .category-grid {
+        /* เมื่อจอเล็กมาก ให้เปลี่ยนเป็น 2 คอลัมน์ */
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
