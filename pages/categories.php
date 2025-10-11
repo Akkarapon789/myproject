@@ -8,21 +8,23 @@
  */
 function getAllCategories($conn): array
 {
-    // ตรวจสอบว่าการเชื่อมต่อถูกต้องหรือไม่
+    // 1. ตรวจสอบว่าการเชื่อมต่อถูกต้องหรือไม่
     if (!$conn || $conn->connect_error) {
-        // ในสถานการณ์จริง ควรบันทึก log แต่สำหรับตอนนี้คืนค่าว่างไปก่อน
+        // หากเชื่อมต่อไม่ได้ ให้คืนค่าเป็น array ว่างๆ ทันที
         return [];
     }
 
-    // ⭐️ ใช้ Prepared Statement เพื่อความปลอดภัยสูงสุด
+    // 2. ดึงข้อมูลที่จำเป็นทั้งหมด รวมถึง image_url
     $sql = "SELECT id, title, slug, image_url FROM categories ORDER BY title ASC";
     $result = $conn->query($sql);
     
     $categories = [];
+    // 3. ตรวจสอบว่ามีผลลัพธ์และมีข้อมูลอย่างน้อย 1 แถวหรือไม่
     if ($result && $result->num_rows > 0) {
-        // ดึงข้อมูลทั้งหมดมาเก็บใน array
+        // 4. ดึงข้อมูลทั้งหมดมาเก็บใน array ทีเดียว (ประสิทธิภาพดีกว่า)
         $categories = $result->fetch_all(MYSQLI_ASSOC);
     }
     
+    // 5. คืนค่า array ที่มีข้อมูล (หรือ array ว่าง ถ้าไม่เจอ)
     return $categories;
 }

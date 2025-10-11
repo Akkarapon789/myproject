@@ -44,7 +44,7 @@ $products = getAllProducts($conn, 8); // ดึงสินค้าแนะน
                 <?php foreach ($categories as $cat): ?>
                     <div class="category-item">
                         <a href="category.php?id=<?= $cat['id'] ?>" class="text-decoration-none">
-                            <img src="../<?= htmlspecialchars($cat['image_url'] ?? 'assets/default.jpg') ?>" alt="<?= htmlspecialchars($cat['title']) ?>" style="width: 90px; height: 90px; object-fit: cover;">
+                            <img src="../<?= htmlspecialchars($cat['image_url'] ?? 'assets/default-category.png') ?>" alt="<?= htmlspecialchars($cat['title']) ?>" style="width: 90px; height: 90px; object-fit: cover;">
                             <small class="d-block mt-2"><?= htmlspecialchars($cat['title']) ?></small>
                         </a>
                     </div>
@@ -68,7 +68,7 @@ $products = getAllProducts($conn, 8); // ดึงสินค้าแนะน
                 <div class="col">
                     <div class="card product-card h-100">
                         <a href="product_detail.php?id=<?= $product['id'] ?>" class="text-decoration-none">
-                            <img src="../<?= htmlspecialchars($product['image_url'] ?? 'assets/default.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($product['title']) ?>">
+                            <img src="../<?= htmlspecialchars($product['image_url'] ?? 'assets/default-product.png') ?>" class="card-img-top" alt="<?= htmlspecialchars($product['title']) ?>">
                         </a>
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">
