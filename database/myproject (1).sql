@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Oct 11, 2025 at 12:00 AM
+-- Generation Time: Oct 11, 2025 at 01:47 PM
 -- Server version: 10.5.29-MariaDB-0+deb11u1
 -- PHP Version: 7.4.33
 
@@ -76,6 +76,20 @@ INSERT INTO `orders` (`id`, `user_id`, `fullname`, `email`, `phone`, `address`, 
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `order_items`
+--
+
+CREATE TABLE `order_items` (
+  `id` int(11) NOT NULL,
+  `order_id` int(10) UNSIGNED NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `price` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `products`
 --
 
@@ -83,6 +97,7 @@ CREATE TABLE `products` (
   `id` int(11) NOT NULL,
   `category_id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
   `price` decimal(10,2) NOT NULL DEFAULT 0.00,
   `stock` int(11) NOT NULL DEFAULT 0,
   `image_url` varchar(255) DEFAULT NULL,
@@ -93,10 +108,28 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`id`, `category_id`, `title`, `price`, `stock`, `image_url`, `created_at`) VALUES
-(1, 1, 'หนังสือเรียนภาษาอังกฤษ', '150.00', 20, 'uploads/book1.jpg', '2025-10-10 16:58:04'),
-(2, 2, 'เสื้อยืดลายกราฟิก', '299.00', 15, 'uploads/shirt1.jpg', '2025-10-10 16:58:04'),
-(3, 3, 'หูฟังบลูทูธ', '899.00', 10, 'uploads/headphone1.jpg', '2025-10-10 16:58:04');
+INSERT INTO `products` (`id`, `category_id`, `title`, `slug`, `price`, `stock`, `image_url`, `created_at`) VALUES
+(1, 1, 'หนังสือเรียนภาษาอังกฤษ', '', '150.00', 20, 'uploads/book1.jpg', '2025-10-10 16:58:04'),
+(2, 2, 'เสื้อยืดลายกราฟิก', '', '299.00', 15, 'uploads/shirt1.jpg', '2025-10-10 16:58:04'),
+(3, 3, 'หูฟังบลูทูธ', '', '899.00', 10, 'uploads/headphone1.jpg', '2025-10-10 16:58:04'),
+(4, 1, 'yuo', 'yuo', '452.00', 40, NULL, '2025-10-11 03:52:04'),
+(5, 1, 'jkgkk', 'jkgkk', '142.00', 44, NULL, '2025-10-11 03:56:55'),
+(6, 1, '9uu', '9uu', '677.00', 12, 'uploads/1760158031_ 2568-10-10 เวลา 11.54.48 PM.png', '2025-10-11 04:47:11');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `reviews`
+--
+
+CREATE TABLE `reviews` (
+  `id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `rating` tinyint(3) UNSIGNED NOT NULL,
+  `comment` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ;
 
 -- --------------------------------------------------------
 
@@ -152,11 +185,27 @@ ALTER TABLE `orders`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `order_items`
+--
+ALTER TABLE `order_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_order_id` (`order_id`),
+  ADD KEY `idx_product_id` (`product_id`);
+
+--
 -- Indexes for table `products`
 --
 ALTER TABLE `products`
   ADD PRIMARY KEY (`id`),
   ADD KEY `category_id` (`category_id`);
+
+--
+-- Indexes for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_product_id` (`product_id`),
+  ADD KEY `idx_user_id` (`user_id`);
 
 --
 -- Indexes for table `user`
@@ -182,10 +231,22 @@ ALTER TABLE `orders`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `order_items`
+--
+ALTER TABLE `order_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `reviews`
+--
+ALTER TABLE `reviews`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `user`
@@ -198,10 +259,24 @@ ALTER TABLE `user`
 --
 
 --
+-- Constraints for table `order_items`
+--
+ALTER TABLE `order_items`
+  ADD CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_order_items_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `products`
 --
 ALTER TABLE `products`
   ADD CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD CONSTRAINT `fk_reviews_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_reviews_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
