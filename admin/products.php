@@ -1,39 +1,30 @@
 <?php
 session_start();
-include '../config/connectdb.php'; // ✅ ตรวจสอบให้แน่ใจว่า path ถูกต้อง เช่น ../config/connectdb.php
+include '../config/connectdb.php';
 
-// เปิด error (ชั่วคราวตอนดีบั๊ก)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// ✅ ตรวจสอบการลบสินค้า
+// ✅ ลบสินค้า (เมื่อยืนยันแล้ว)
 if (isset($_GET['delete'])) {
-    $id = intval($_GET['delete']);
-    $stmt = $conn->prepare("SELECT image FROM products WHERE id = ?");
-    $stmt->execute([$id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $id = $_GET['delete'];
 
-    if ($row && !empty($row['image'])) {
-        $imgPath = "../uploads/" . $row['image'];
-        if (file_exists($imgPath)) unlink($imgPath);
+    $stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
+    if (!$stmt) {
+        die("SQL Prepare Error: " . $conn->error);
     }
 
-    $del = $conn->prepare("DELETE FROM products WHERE id = ?");
-    $del->execute([$id]);
+    $stmt->bind_param("i", $id);
+    if ($stmt->execute()) {
+        $_SESSION['success'] = "ลบสินค้าสำเร็จ!";
+    } else {
+        $_SESSION['error'] = "ไม่สามารถลบสินค้าได้: " . $stmt->error;
+    }
 
-    $_SESSION['success'] = "ลบสินค้าสำเร็จ!";
     header("Location: products.php");
     exit();
 }
 
-// ✅ ดึงข้อมูลสินค้า
-$sql = "SELECT p.*, c.name AS category_name 
-        FROM products p 
-        LEFT JOIN categories c ON p.category_id = c.id 
-        ORDER BY p.id DESC";
-$stmt = $conn->prepare($sql);
-$stmt->execute();
-$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// ✅ ดึงข้อมูลสินค้าทั้งหมด
+$sql = "SELECT * FROM products ORDER BY id DESC";
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -41,116 +32,122 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <title>จัดการสินค้า</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-light">
 
-<div class="container py-5">
-    <div class="card shadow-lg border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">📦 จัดการสินค้า</h4>
-            <a href="add_product.php" class="btn btn-light btn-sm">➕ เพิ่มสินค้า</a>
-        </div>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>📦 จัดการสินค้า</h3>
+        <a href="add_product.php" class="btn btn-primary">➕ เพิ่มสินค้าใหม่</a>
+    </div>
 
+    <div class="card shadow-sm">
         <div class="card-body">
-            <?php if (count($products) > 0): ?>
-            <div class="table-responsive">
-                <table id="productTable" class="table table-striped table-bordered align-middle">
-                    <thead class="table-primary">
-                        <tr>
-                            <th>#</th>
-                            <th>รูปภาพ</th>
-                            <th>ชื่อสินค้า</th>
-                            <th>หมวดหมู่</th>
-                            <th>ราคา</th>
-                            <th>จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($products as $index => $p): ?>
-                        <tr>
-                            <td><?= $index + 1 ?></td>
-                            <td>
-                                <?php if (!empty($p['image'])): ?>
-                                    <img src="../uploads/<?= htmlspecialchars($p['image']) ?>" width="70" class="rounded">
-                                <?php else: ?>
-                                    <span class="text-muted">ไม่มีรูป</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><?= htmlspecialchars($p['title']) ?></td>
-                            <td><?= htmlspecialchars($p['category_name'] ?? '-') ?></td>
-                            <td><?= number_format($p['price'], 2) ?> ฿</td>
-                            <td>
-                                <a href="edit_product.php?id=<?= $p['id'] ?>" class="btn btn-sm btn-warning">แก้ไข</a>
-                                <button class="btn btn-sm btn-danger btn-delete" 
-                                        data-id="<?= $p['id'] ?>" 
-                                        data-name="<?= htmlspecialchars($p['title']) ?>">ลบ</button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            <?php else: ?>
-                <div class="alert alert-warning text-center">
-                    ยังไม่มีข้อมูลสินค้าในระบบ
-                </div>
-            <?php endif; ?>
+            <table id="productTable" class="table table-striped table-bordered align-middle">
+                <thead class="table-primary">
+                    <tr class="text-center">
+                        <th>#</th>
+                        <th>ชื่อสินค้า</th>
+                        <th>ราคา</th>
+                        <th>หมวดหมู่</th>
+                        <th>รูปภาพ</th>
+                        <th>การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                    <tr>
+                        <td class="text-center"><?= $row['id']; ?></td>
+                        <td><?= htmlspecialchars($row['title']); ?></td>
+                        <td class="text-end"><?= number_format($row['price'], 2); ?> ฿</td>
+                        <td><?= htmlspecialchars($row['category']); ?></td>
+                        <td class="text-center">
+                            <?php if (!empty($row['image'])): ?>
+                                <img src="../uploads/<?= htmlspecialchars($row['image']); ?>" width="80" class="rounded">
+                            <?php else: ?>
+                                <span class="text-muted">ไม่มีภาพ</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-center">
+                            <a href="edit_product.php?id=<?= $row['id']; ?>" class="btn btn-sm btn-warning">แก้ไข</a>
+                            <button class="btn btn-sm btn-danger" onclick="confirmDelete(<?= $row['id']; ?>)">ลบ</button>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<!-- ✅ SweetAlert แจ้งเตือนสำเร็จ -->
+<!-- ✅ Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#productTable').DataTable({
+        "language": {
+            "lengthMenu": "แสดง _MENU_ รายการต่อหน้า",
+            "zeroRecords": "ไม่พบข้อมูล",
+            "info": "แสดงหน้า _PAGE_ จาก _PAGES_",
+            "infoEmpty": "ไม่มีข้อมูล",
+            "search": "ค้นหา:",
+            "paginate": {
+                "first": "หน้าแรก",
+                "last": "หน้าสุดท้าย",
+                "next": "ถัดไป",
+                "previous": "ก่อนหน้า"
+            }
+        }
+    });
+});
+
+// ✅ SweetAlert ยืนยันก่อนลบ
+function confirmDelete(id) {
+    Swal.fire({
+        title: "คุณแน่ใจหรือไม่?",
+        text: "หากลบแล้วจะไม่สามารถกู้คืนได้!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "ลบเลย",
+        cancelButtonText: "ยกเลิก",
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location = "products.php?delete=" + id;
+        }
+    });
+}
+</script>
+
+<!-- ✅ SweetAlert แจ้งเตือน -->
 <?php if (isset($_SESSION['success'])): ?>
 <script>
 Swal.fire({
     icon: 'success',
     title: 'สำเร็จ!',
-    text: '<?= addslashes($_SESSION['success']) ?>',
-    showConfirmButton: false,
-    timer: 1800
+    text: '<?= $_SESSION['success']; ?>',
+    timer: 1500,
+    showConfirmButton: false
 });
 </script>
 <?php unset($_SESSION['success']); endif; ?>
 
-<!-- ✅ DataTable & SweetAlert Delete -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<?php if (isset($_SESSION['error'])): ?>
 <script>
-$(document).ready(function() {
-    $('#productTable').DataTable({
-        language: {
-            search: "ค้นหา:",
-            lengthMenu: "แสดง _MENU_ รายการ",
-            info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
-            paginate: { previous: "ก่อนหน้า", next: "ถัดไป" }
-        },
-        pageLength: 10
-    });
-
-    $('.btn-delete').on('click', function() {
-        const id = $(this).data('id');
-        const name = $(this).data('name');
-
-        Swal.fire({
-            title: `ลบสินค้า: ${name}?`,
-            text: "การลบนี้ไม่สามารถย้อนกลับได้!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'ลบเลย',
-            cancelButtonText: 'ยกเลิก'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location = 'products.php?delete=' + id;
-            }
-        });
-    });
+Swal.fire({
+    icon: 'error',
+    title: 'เกิดข้อผิดพลาด!',
+    text: '<?= $_SESSION['error']; ?>'
 });
 </script>
+<?php unset($_SESSION['error']); endif; ?>
+
 </body>
 </html>
