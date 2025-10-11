@@ -68,7 +68,7 @@ $result = $conn->query("SELECT * FROM `orders` ORDER BY user_id ASC");
     </div>
 </div>
 
-<?php include 'footer.php'; ?>
+
 
 <script>
 $(document).ready(function() {
