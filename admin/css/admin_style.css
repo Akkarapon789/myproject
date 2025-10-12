@@ -86,9 +86,9 @@ body {
 /* ⭐️⭐️⭐️ แก้ไขตรงนี้ ⭐️⭐️⭐️ */
 .chart-area, .chart-pie {
     position: relative;
-    height: 100%; /* สั่งให้สูงเต็ม 100% ของกล่องที่มันอยู่ */
-    width: 100%;
+    /* เราจะควบคุมความสูงผ่าน HTML โดยตรง ไม่ใช่ที่นี่ */
 }
+
 
 /* --- Responsive Toggling --- */
 @media (max-width: 768px) {
