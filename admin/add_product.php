@@ -21,7 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($_FILES['images']['name'] as $i => $name) {
                 if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
                     $targetDir = "../uploads/";
-                    $fileName = time() . "_" . basename($name);
+                    // สร้างชื่อไฟล์ใหม่ที่ไม่ซ้ำกัน
+                    $fileExtension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+                    $fileName = time() . '_' . uniqid() . '.' . $fileExtension;
                     $targetFilePath = $targetDir . $fileName;
 
                     if (move_uploaded_file($_FILES["images"]["tmp_name"][$i], $targetFilePath)) {
@@ -108,7 +110,7 @@ include 'header.php';
                 <textarea class="form-control" id="description" name="description" rows="5"></textarea>
             </div>
             <div class="mb-3">
-                <label for="images" class="form-label">รูปภาพสินค้า (เลือกได้หลายรูป)</label>
+                <label for="images" class="form-label">รูปภาพสินค้า (เลือกได้หลายรูป, รูปแรกคือรูปปก)</label>
                 <input class="form-control" type="file" id="images" name="images[]" multiple accept="image/*">
             </div>
             <div class="d-flex justify-content-end gap-2">
