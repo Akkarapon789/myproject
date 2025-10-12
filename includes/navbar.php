@@ -67,10 +67,28 @@ if (!empty($_SESSION['cart'])) {
 </nav>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
-        crossorigin="anonymous">
-</script>
 <script>
-$(document).ready(function(){ /* ... โค้ด search ... */ });
+$(document).ready(function(){
+    $('#searchInput').on('keyup', function(){
+        let query = $(this).val().trim();
+        if(query.length < 2){ // เริ่มค้นหาเมื่อพิมพ์ 2 ตัวอักษรขึ้นไป
+            $('#searchResults').hide();
+            return;
+        }
+        $.ajax({
+            url: '../search/search_ajax.php', // ตรวจสอบ Path นี้
+            method: 'POST',
+            data: {query: query},
+            success: function(data){
+                $('#searchResults').html(data).show();
+            }
+        });
+    });
+    // คลิกข้างนอกเพื่อซ่อนผลการค้นหา
+    $(document).click(function(e){
+        if (!$(e.target).closest('#searchInput, #searchResults').length) {
+            $('#searchResults').hide();
+        }
+    });
+});
 </script>
