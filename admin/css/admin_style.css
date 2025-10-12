@@ -88,7 +88,7 @@ body {
     position: relative;
     width: 100%;
     /* กำหนดให้ความสูงยืดหยุ่นตามพื้นที่ที่เหลือ */
-    flex-grow: 1; 
+    flex-grow: 5; 
 }
 
 /* --- Responsive Toggling --- */
