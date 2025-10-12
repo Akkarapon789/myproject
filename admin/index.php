@@ -1,32 +1,22 @@
 <?php
-// admin/index.php (Corrected & Final Version)
+// admin/index.php (Corrected Card Height)
 session_start();
 include '../config/connectdb.php';
 include 'header.php';
 
-// --- ฟังก์ชันช่วยดึงข้อมูลตัวเลขเดียว ---
+// --- (โค้ด PHP สำหรับดึงข้อมูลทั้งหมดเหมือนเดิม) ---
 function getSingleValue($conn, $sql) {
     $result = $conn->query($sql);
     $value = ($result && $result->num_rows > 0) ? $result->fetch_array()[0] : 0;
     return $value ?? 0;
 }
-
-// === 1. ดึงข้อมูลสำหรับ Stat Cards ===
 $total_sales    = getSingleValue($conn, "SELECT SUM(total) FROM orders WHERE status = 'completed'");
 $total_orders   = getSingleValue($conn, "SELECT COUNT(id) FROM orders");
 $total_products = getSingleValue($conn, "SELECT COUNT(id) FROM products");
 $total_users    = getSingleValue($conn, "SELECT COUNT(user_id) FROM `user`");
-
-
-// === 2. ดึงข้อมูลสำหรับกราฟ ===
-// กราฟยอดขาย 12 เดือนล่าสุด
 $sales_by_month_labels = [];
 $sales_by_month_data = [];
-$sql_sales = "SELECT DATE_FORMAT(created_at, '%b %y') AS month, SUM(total) AS monthly_sales 
-              FROM orders 
-              WHERE status = 'completed' AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-              GROUP BY DATE_FORMAT(created_at, '%Y-%m') 
-              ORDER BY DATE_FORMAT(created_at, '%Y-%m') ASC";
+$sql_sales = "SELECT DATE_FORMAT(created_at, '%b %y') AS month, SUM(total) AS monthly_sales FROM orders WHERE status = 'completed' AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH) GROUP BY DATE_FORMAT(created_at, '%Y-%m') ORDER BY DATE_FORMAT(created_at, '%Y-%m') ASC";
 $result_sales = $conn->query($sql_sales);
 if ($result_sales) {
     while($row = $result_sales->fetch_assoc()) {
@@ -34,16 +24,9 @@ if ($result_sales) {
         $sales_by_month_data[] = $row['monthly_sales'];
     }
 }
-
-// กราฟ 5 หมวดหมู่ขายดี
 $category_labels = [];
 $category_data = [];
-$sql_cats = "SELECT c.title, SUM(oi.quantity) AS total_quantity
-             FROM order_items oi
-             JOIN products p ON oi.product_id = p.id
-             JOIN categories c ON p.category_id = c.id
-             GROUP BY c.id, c.title
-             ORDER BY total_quantity DESC LIMIT 5";
+$sql_cats = "SELECT c.title, SUM(oi.quantity) AS total_quantity FROM order_items oi JOIN products p ON oi.product_id = p.id JOIN categories c ON p.category_id = c.id GROUP BY c.id, c.title ORDER BY total_quantity DESC LIMIT 5";
 $result_cats = $conn->query($sql_cats);
 if ($result_cats) {
     while($row = $result_cats->fetch_assoc()){
@@ -51,9 +34,6 @@ if ($result_cats) {
         $category_data[] = $row['total_quantity'];
     }
 }
-
-
-// === 3. ดึงข้อมูล 5 ออเดอร์ล่าสุด ===
 $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders ORDER BY created_at DESC LIMIT 5");
 
 ?>
@@ -120,11 +100,11 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
 
 <div class="row">
     <div class="col-xl-8 col-lg-7">
-        <div class="card shadow mb-4 d-flex flex-column">
+        <div class="card shadow mb-4 h-100">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">ภาพรวมยอดขายรายเดือน</h6>
             </div>
-            <div class="card-body flex-grow-1">
+            <div class="card-body">
                 <div class="chart-area">
                     <canvas id="salesChart"></canvas>
                 </div>
@@ -132,11 +112,11 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
         </div>
     </div>
     <div class="col-xl-4 col-lg-5">
-        <div class="card shadow mb-4 d-flex flex-column">
+        <div class="card shadow mb-4 h-100">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">5 หมวดหมู่ขายดี (ตามจำนวนชิ้น)</h6>
             </div>
-            <div class="card-body flex-grow-1 d-flex flex-column">
+            <div class="card-body">
                 <div class="chart-pie pt-4">
                     <canvas id="categoryChart"></canvas>
                 </div>
@@ -146,7 +126,9 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
 </div>
 
 <div class="card shadow-sm mb-4 mt-4">
-    <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">5 คำสั่งซื้อล่าสุด</h6></div>
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">5 คำสั่งซื้อล่าสุด</h6>
+    </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover align-middle">
