@@ -115,6 +115,11 @@ h1, h2, h3, h4, h5, h6 {
     z-index: 1051; /* ให้สูงกว่า Container แม่ไปอีกขั้น */
     /* ... ไม่ต้องเปลี่ยน position เป็น absolute เพราะ Bootstrap จัดการให้แล้ว ... */
 }
+.chart-area {
+  position: relative;
+  height: 25rem; /* ⭐️ เพิ่มความสูงเป็น 25rem ⭐️ */
+  width: 100%;
+}
 
 
 /* --- Footer & Category Grid Styles (เหมือนเดิม) --- */
