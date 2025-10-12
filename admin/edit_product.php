@@ -1,156 +1,142 @@
 <?php
+// admin/edit_product.php (Upgraded for Multiple Images)
 session_start();
-include '../config/connectdb.php'; // 1. เชื่อมต่อฐานข้อมูล
+include '../config/connectdb.php';
 
-// ตรวจสอบว่ามีการส่ง id มาหรือไม่
-if (!isset($_GET['id']) || empty($_GET['id'])) {
-    $_SESSION['error'] = "ไม่ได้ระบุ ID ของสินค้า";
-    header("Location: products.php");
-    exit();
+$id_to_edit = isset($_GET['id']) ? intval($_GET['id']) : 0;
+if ($id_to_edit === 0) {
+    die("ไม่ได้ระบุ ID สินค้า");
 }
 
-$id = intval($_GET['id']); // แปลง id เป็นตัวเลขเพื่อความปลอดภัย
-
-// 2. ดึงข้อมูลสินค้าเดิมเพื่อมาแสดงในฟอร์ม
-$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$result = $stmt->get_result();
-$product = $result->fetch_assoc();
-$stmt->close();
-
-// หากไม่พบสินค้า ให้กลับไปหน้าหลัก
-if (!$product) {
-    $_SESSION['error'] = "ไม่พบสินค้า ID: {$id}";
-    header("Location: products.php");
-    exit();
-}
-
-// 3. ส่วนของการอัปเดตข้อมูลเมื่อกดบันทึก
+// --- ส่วนของการอัปเดตข้อมูล ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $conn->begin_transaction();
+    try {
+        // 1. อัปเดตข้อมูล Text พื้นฐาน
+        $title = $_POST['title'];
+        $price = $_POST['price'];
+        $stock = $_POST['stock'];
+        $category_id = $_POST['category_id'];
+        $description = $_POST['description'] ?? '';
+        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
 
-    // รับค่าจากฟอร์ม
-    $category_id = $_POST['category_id'] ?? $product['category_id'];
-    $title       = $_POST['title']       ?? $product['title'];
-    $price       = $_POST['price']       ?? $product['price'];
-    $stock       = $_POST['stock']       ?? $product['stock'];
+        $stmt_update_prod = $conn->prepare("UPDATE products SET title=?, slug=?, price=?, stock=?, category_id=?, description=? WHERE id=?");
+        $stmt_update_prod->bind_param("ssdiisi", $title, $slug, $price, $stock, $category_id, $description, $id_to_edit);
+        $stmt_update_prod->execute();
+        $stmt_update_prod->close();
 
-    // สร้าง Slug ใหม่อีกครั้ง เผื่อมีการเปลี่ยนชื่อสินค้า
-    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
+        // 2. จัดการการลบรูปภาพที่ถูกเลือก
+        if (!empty($_POST['delete_images'])) {
+            $images_to_delete = $_POST['delete_images'];
+            $delete_ids = implode(',', array_map('intval', $images_to_delete)); // '1,2,3'
 
-    // ใช้ URL รูปภาพเดิมเป็นค่าเริ่มต้น
-    $image_url = $product['image_url'];
-
-    // 4. จัดการการอัปโหลดรูปภาพใหม่ (ถ้ามี)
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-
-        // ลบรูปภาพเก่าออกจาก Server ก่อน (ถ้ามี)
-        // **จุดสำคัญ:** เราใช้ Path จาก DB โดยตรงในการหาไฟล์เพื่อลบ
-        if (!empty($product['image_url']) && file_exists('../' . $product['image_url'])) {
-            unlink('../' . $product['image_url']);
+            // ดึง URL ของไฟล์ที่จะลบก่อน
+            $result_urls = $conn->query("SELECT image_url FROM product_images WHERE id IN ($delete_ids)");
+            while($row = $result_urls->fetch_assoc()) {
+                if (file_exists('../' . $row['image_url'])) {
+                    unlink('../' . $row['image_url']); // ลบไฟล์จริง
+                }
+            }
+            
+            // ลบข้อมูลออกจากฐานข้อมูล
+            $conn->query("DELETE FROM product_images WHERE id IN ($delete_ids)");
         }
 
-        // เริ่มกระบวนการอัปโหลดรูปใหม่
-        $targetDir    = "../uploads/";
-        $fileName     = time() . "_" . basename($_FILES["image"]["name"]);
-        $targetFilePath = $targetDir . $fileName;
-
-        // **จุดสำคัญ:** บันทึก Path แบบเต็ม `uploads/filename.jpg` ลง DB เหมือนตอน Add
-        if (move_uploaded_file($_FILES["image"]["tmp_name"], $targetFilePath)) {
-            $image_url = "uploads/" . $fileName;
+        // 3. จัดการการอัปโหลดรูปภาพใหม่
+        if (isset($_FILES['new_images']) && !empty($_FILES['new_images']['name'][0])) {
+            $stmt_images = $conn->prepare("INSERT INTO product_images (product_id, image_url) VALUES (?, ?)");
+            foreach ($_FILES['new_images']['name'] as $i => $name) {
+                if ($_FILES['new_images']['error'][$i] === UPLOAD_ERR_OK) {
+                    $targetDir = "../uploads/";
+                    $fileName = time() . "_" . basename($name);
+                    $targetFilePath = $targetDir . $fileName;
+                    if (move_uploaded_file($_FILES["new_images"]["tmp_name"][$i], $targetFilePath)) {
+                        $image_path = "uploads/" . $fileName;
+                        $stmt_images->bind_param("is", $id_to_edit, $image_path);
+                        $stmt_images->execute();
+                    }
+                }
+            }
+            $stmt_images->close();
         }
+
+        // 4. ⭐️ อัปเดตรูปภาพหลัก (Main Image) ให้เป็นรูปแรกในแกลเลอรีเสมอ ⭐️
+        $result_first_img = $conn->query("SELECT image_url FROM product_images WHERE product_id = $id_to_edit ORDER BY id ASC LIMIT 1");
+        $new_main_image = ($result_first_img->num_rows > 0) ? $result_first_img->fetch_assoc()['image_url'] : null;
+        
+        $stmt_update_main_img = $conn->prepare("UPDATE products SET image_url = ? WHERE id = ?");
+        $stmt_update_main_img->bind_param("si", $new_main_image, $id_to_edit);
+        $stmt_update_main_img->execute();
+        $stmt_update_main_img->close();
+
+
+        $conn->commit();
+        $_SESSION['success'] = "แก้ไขสินค้า '$title' สำเร็จ!";
+        header("Location: products.php");
+        exit();
+
+    } catch (mysqli_sql_exception $exception) {
+        $conn->rollback();
+        $error = "เกิดข้อผิดพลาด: " . $exception->getMessage();
     }
-
-    // 5. อัปเดตข้อมูลลงฐานข้อมูล
-    // **หมายเหตุ:** ผมตัดฟิลด์ description ออกไปเพราะไม่มีในตาราง `products` ของคุณ
-    // แต่เพิ่ม slug กับ stock เข้ามาให้ครบถ้วน
-    $update_stmt = $conn->prepare("UPDATE products SET category_id=?, title=?, slug=?, price=?, stock=?, image_url=? WHERE id=?");
-    $update_stmt->bind_param("issdisi", $category_id, $title, $slug, $price, $stock, $image_url, $id);
-
-    if ($update_stmt->execute()) {
-        $_SESSION['success'] = "อัปเดตข้อมูลสินค้า '$title' สำเร็จ!";
-    } else {
-        $_SESSION['error'] = "เกิดข้อผิดพลาดในการอัปเดต: " . $update_stmt->error;
-    }
-    $update_stmt->close();
-
-    header("Location: products.php");
-    exit();
 }
 
-// 6. ดึงข้อมูลหมวดหมู่ทั้งหมดสำหรับ Dropdown
-// **จุดสำคัญ:** แก้ไขชื่อคอลัมน์จาก name เป็น title ให้ตรงกับ DB
+// --- ดึงข้อมูลเดิมมาแสดงในฟอร์ม ---
+$stmt_select_prod = $conn->prepare("SELECT * FROM products WHERE id = ?");
+$stmt_select_prod->bind_param("i", $id_to_edit);
+$stmt_select_prod->execute();
+$product = $stmt_select_prod->get_result()->fetch_assoc();
+$stmt_select_prod->close();
+
+// ดึงรูปภาพในแกลเลอรี
+$gallery_result = $conn->query("SELECT * FROM product_images WHERE product_id = $id_to_edit ORDER BY id ASC");
+
+// ดึงหมวดหมู่ทั้งหมด
 $categories_result = $conn->query("SELECT * FROM categories ORDER BY title ASC");
 
+if (!$product) die("ไม่พบสินค้า");
+include 'header.php';
 ?>
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <title>แก้ไขสินค้า</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
 
-<div class="container py-5">
-    <div class="card shadow-lg border-0 mx-auto" style="max-width: 800px;">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">🛠️ แก้ไขสินค้า: <?= htmlspecialchars($product['title']) ?></h4>
-        </div>
-        <div class="card-body p-4">
-            <form method="POST" enctype="multipart/form-data">
+<h1 class="h3 mb-4 text-gray-800">✏️ แก้ไขสินค้า: <?= htmlspecialchars($product['title']) ?></h1>
+<?php if (isset($error)): ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
 
-                <div class="mb-3">
-                    <label for="title" class="form-label">ชื่อสินค้า</label>
-                    <input type="text" id="title" name="title" class="form-control" value="<?= htmlspecialchars($product['title']) ?>" required>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="price" class="form-label">ราคา</label>
-                        <input type="number" step="0.01" id="price" name="price" class="form-control" value="<?= htmlspecialchars($product['price']) ?>" required>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form action="edit_product.php?id=<?= $id_to_edit ?>" method="POST" enctype="multipart/form-data">
+            <hr class="my-4">
+            
+            <div class="mb-4">
+                <h5 class="mb-3">จัดการรูปภาพ</h5>
+                <div class="row g-3">
+                    <?php while($img = $gallery_result->fetch_assoc()): ?>
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="position-relative">
+                            <img src="../<?= htmlspecialchars($img['image_url']) ?>" class="img-thumbnail w-100" style="aspect-ratio: 1/1; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 p-1">
+                                <input class="form-check-input bg-danger border-danger" type="checkbox" name="delete_images[]" value="<?= $img['id'] ?>" title="เลือกลบ">
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="stock" class="form-label">จำนวนคงเหลือ (Stock)</label>
-                        <input type="number" id="stock" name="stock" class="form-control" value="<?= htmlspecialchars($product['stock']) ?>" required>
-                    </div>
+                    <?php endwhile; ?>
                 </div>
+                <?php if ($gallery_result->num_rows > 0): ?>
+                    <small class="form-text text-muted">ติ๊กที่ช่องสี่เหลี่ยมบนรูปภาพที่ต้องการลบ แล้วกด "บันทึกการแก้ไข"</small>
+                <?php else: ?>
+                    <p class="text-muted">ยังไม่มีรูปภาพสำหรับสินค้านี้</p>
+                <?php endif; ?>
+            </div>
+            
+            <div class="mb-3">
+                <label for="new_images" class="form-label">เพิ่มรูปภาพใหม่</label>
+                <input class="form-control" type="file" id="new_images" name="new_images[]" multiple accept="image/*">
+            </div>
 
-                <div class="mb-3">
-                    <label for="category_id" class="form-label">หมวดหมู่</label>
-                    <select id="category_id" name="category_id" class="form-select" required>
-                        <option value="">-- เลือกหมวดหมู่ --</option>
-                        <?php while ($cat = $categories_result->fetch_assoc()): ?>
-                            <option value="<?= $cat['id'] ?>" <?= $cat['id'] == $product['category_id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($cat['title']) ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">รูปภาพปัจจุบัน</label><br>
-                    <?php if (!empty($product['image_url'])): ?>
-                        <img src="../<?= htmlspecialchars($product['image_url']) ?>" alt="product" width="150" class="rounded mb-2 border">
-                    <?php else: ?>
-                        <p class="text-muted">ไม่มีรูปภาพ</p>
-                    <?php endif; ?>
-                </div>
-
-                <div class="mb-3">
-                    <label for="image" class="form-label">อัปโหลดรูปใหม่ (หากต้องการเปลี่ยน)</label>
-                    <input type="file" id="image" name="image" class="form-control" accept="image/*">
-                </div>
-
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                    <a href="products.php" class="btn btn-secondary">ยกเลิก</a>
-                    <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
-                </div>
-
-            </form>
-        </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="products.php" class="btn btn-secondary">ยกเลิก</a>
+                <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+            </div>
+        </form>
     </div>
 </div>
-
-</body>
-</html>
+<?php include 'footer.php'; ?>
