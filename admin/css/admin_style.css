@@ -87,7 +87,7 @@ body {
 .chart-area {
     position: relative;
     /* กลับมาใช้ความสูงคงที่เพื่อให้กราฟเต็มกรอบ */
-    height: 24rem; 
+    height: 100%; 
     width: 100%;
 }
 
