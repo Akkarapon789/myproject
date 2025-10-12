@@ -27,7 +27,7 @@ if (!empty($_SESSION['cart'])) {
                 <input id="searchInput" class="form-control" type="text" placeholder="ค้นหาหนังสือ, ผู้แต่ง..." autocomplete="off">
                 <div id="searchResults" class="list-group position-absolute w-100 shadow-sm mt-1" style="z-index: 2000; display: none; max-height: 300px; overflow-y: auto;"></div>
             </div>
-
+            
             <ul class="navbar-nav ms-auto align-items-center">
                 <li class="nav-item">
                     <a class="nav-link" href="../pages/all_products.php">สินค้าทั้งหมด</a>
@@ -43,7 +43,7 @@ if (!empty($_SESSION['cart'])) {
                         </a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                             <img src="https://i.pravatar.cc/40" alt="avatar" width="32" height="32" class="rounded-circle">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
