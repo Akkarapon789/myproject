@@ -1,5 +1,6 @@
 <?php
 // includes/navbar.php (Corrected & Final Version)
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
