@@ -22,10 +22,10 @@ $total_users    = getSingleValue($conn, "SELECT COUNT(user_id) FROM `user`");
 // กราฟยอดขาย 12 เดือนล่าสุด
 $sales_by_month_labels = [];
 $sales_by_month_data = [];
-$sql_sales = "SELECT DATE_FORMAT(created_at, '%b %y') AS month, SUM(total) AS monthly_sales
-              FROM orders
+$sql_sales = "SELECT DATE_FORMAT(created_at, '%b %y') AS month, SUM(total) AS monthly_sales 
+              FROM orders 
               WHERE status = 'completed' AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-              GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+              GROUP BY DATE_FORMAT(created_at, '%Y-%m') 
               ORDER BY DATE_FORMAT(created_at, '%Y-%m') ASC";
 $result_sales = $conn->query($sql_sales);
 if ($result_sales) {
@@ -120,40 +120,26 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
 
 <div class="row">
     <div class="col-xl-8 col-lg-7">
-        <div class="card shadow mb-4 d-flex flex-column">
+        <div class="card shadow mb-4 d-flex flex-column h-100">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">ภาพรวมยอดขายรายเดือน</h6>
             </div>
-            <div class="card-body flex-grow-1 d-flex align-items-center justify-content-center">
-                <?php if (!empty($sales_by_month_data)): ?>
-                    <div class="chart-area">
-                        <canvas id="salesChart"></canvas>
-                    </div>
-                <?php else: ?>
-                    <div class="text-center text-muted">
-                        <i class="fas fa-chart-line fa-3x mb-3"></i>
-                        <p>ยังไม่มีข้อมูลยอดขาย</p>
-                    </div>
-                <?php endif; ?>
+            <div class="card-body flex-grow-1 d-flex">
+                <div class="chart-area w-100">
+                    <canvas id="salesChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-xl-4 col-lg-5">
-        <div class="card shadow mb-4 d-flex flex-column">
+        <div class="card shadow mb-4 d-flex flex-column h-100">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">5 หมวดหมู่ขายดี (ตามจำนวนชิ้น)</h6>
             </div>
-            <div class="card-body flex-grow-1 d-flex align-items-center justify-content-center">
-                <?php if (!empty($category_data)): ?>
-                    <div class="chart-pie pt-4">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                <?php else: ?>
-                     <div class="text-center text-muted">
-                        <i class="fas fa-chart-pie fa-3x mb-3"></i>
-                        <p>ยังไม่มีข้อมูลการขาย</p>
-                    </div>
-                <?php endif; ?>
+            <div class="card-body flex-grow-1 d-flex flex-column">
+                <div class="chart-pie pt-4">
+                    <canvas id="categoryChart"></canvas>
+                </div>
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-/* admin/css/admin_style.css (Corrected Chart Height) */
+/* admin/css/admin_style.css (Corrected Chart Layout - FINAL) */
 
 body {
     font-family: 'Prompt', sans-serif;
@@ -84,20 +84,11 @@ body {
 .font-weight-bold { font-weight: 700 !important; }
 
 /* ⭐️⭐️⭐️ แก้ไขตรงนี้ ⭐️⭐️⭐️ */
-.chart-area {
+.chart-area, .chart-pie {
     position: relative;
-    /* กลับมาใช้ความสูงคงที่เพื่อให้กราฟเต็มกรอบ */
-    height: 100%; 
+    height: 100%; /* สั่งให้สูงเต็ม 100% ของกล่องที่มันอยู่ */
     width: 100%;
 }
-
-.chart-pie {
-    position: relative;
-    /* ให้กราฟวงกลมยืดหยุ่นได้เหมือนเดิม */
-    width: 100%;
-    flex-grow: 1; 
-}
-
 
 /* --- Responsive Toggling --- */
 @media (max-width: 768px) {
