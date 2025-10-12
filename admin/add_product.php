@@ -1,11 +1,11 @@
 <?php
-// admin/add_product.php (Upgraded for Multiple Images)
+// admin/add_product.php (Corrected & Final Version)
 session_start();
 include '../config/connectdb.php';
 
-// --- ส่วนของการบันทึกข้อมูล ---
+// --- ส่วนของการบันทึกข้อมูล (เมื่อกดปุ่มบันทึก) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $conn->begin_transaction(); // เริ่ม Transaction
+    $conn->begin_transaction();
     try {
         $category_id = $_POST['category_id'];
         $title = $_POST['title'];
@@ -13,41 +13,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stock = $_POST['stock'];
         $description = $_POST['description'] ?? '';
         $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
-        $main_image_url = null; // เตรียมตัวแปรสำหรับรูปภาพหลัก
+        $main_image_url = null;
+        $other_image_paths = [];
 
-        // ⭐️ 1. จัดการการอัปโหลดรูปภาพ (แบบหลายไฟล์) ⭐️
+        // 1. จัดการการอัปโหลดรูปภาพ
         if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
-            $file_count = count($_FILES['images']['name']);
-            for ($i = 0; $i < $file_count; $i++) {
+            foreach ($_FILES['images']['name'] as $i => $name) {
                 if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
                     $targetDir = "../uploads/";
-                    $fileName = time() . "_" . basename($_FILES["images"]["name"][$i]);
+                    $fileName = time() . "_" . basename($name);
                     $targetFilePath = $targetDir . $fileName;
 
                     if (move_uploaded_file($_FILES["images"]["tmp_name"][$i], $targetFilePath)) {
                         $image_path = "uploads/" . $fileName;
-                        
-                        // ⭐️ 2. กำหนดให้รูปแรกเป็นรูปภาพหลัก (Main Image) ⭐️
-                        if ($i === 0) {
-                            $main_image_url = $image_path;
+                        if ($main_image_url === null) {
+                            $main_image_url = $image_path; // รูปแรกเป็นรูปหลัก
                         }
-                        // เก็บ Path ของรูปภาพอื่นๆ ไว้ใน array เพื่อบันทึกทีหลัง
-                        $other_image_paths[] = $image_path;
+                        $other_image_paths[] = $image_path; // เก็บทุกรูป (รวมรูปหลัก)
                     }
                 }
             }
         }
 
-        // 3. บันทึกข้อมูลสินค้าหลักลงตาราง `products` พร้อมรูปภาพหลัก
+        // 2. บันทึกข้อมูลสินค้าหลัก
         $stmt_product = $conn->prepare("INSERT INTO products (category_id, title, slug, price, stock, image_url, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt_product->bind_param("issdis", $category_id, $title, $slug, $price, $stock, $main_image_url, $description);
+        $stmt_product->bind_param("issdiss", $category_id, $title, $slug, $price, $stock, $main_image_url, $description);
         $stmt_product->execute();
-        
-        // 4. ดึง ID ของสินค้าล่าสุดที่เพิ่งสร้าง
         $last_product_id = $conn->insert_id;
         $stmt_product->close();
 
-        // ⭐️ 5. วนลูปบันทึกรูปภาพเพิ่มเติมลงตาราง `product_images` ⭐️
+        // 3. บันทึกรูปภาพเพิ่มเติม
         if (!empty($other_image_paths)) {
             $stmt_images = $conn->prepare("INSERT INTO product_images (product_id, image_url) VALUES (?, ?)");
             foreach ($other_image_paths as $path) {
@@ -57,17 +52,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_images->close();
         }
 
-        $conn->commit(); // ยืนยันการทำรายการทั้งหมด
+        $conn->commit();
         $_SESSION['success'] = "เพิ่มสินค้า '$title' สำเร็จ!";
         header("Location: products.php");
         exit();
 
     } catch (mysqli_sql_exception $exception) {
-        $conn->rollback(); // ยกเลิกการทำรายการทั้งหมดหากมีข้อผิดพลาด
+        $conn->rollback();
         $error = "เกิดข้อผิดพลาด: " . $exception->getMessage();
     }
 }
+
+// ⭐️ ดึงข้อมูลหมวดหมู่สำหรับ Dropdown (ต้องอยู่ก่อน include header) ⭐️
 $categories_result = $conn->query("SELECT * FROM categories ORDER BY title ASC");
+
+// เรียกใช้ header หลังจากเตรียมข้อมูลเสร็จ
 include 'header.php';
 ?>
 
@@ -77,6 +76,37 @@ include 'header.php';
 <div class="card shadow-sm">
     <div class="card-body">
         <form action="add_product.php" method="POST" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="title" class="form-label">ชื่อสินค้า</label>
+                    <input type="text" class="form-control" id="title" name="title" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="category_id" class="form-label">หมวดหมู่</label>
+                    <select class="form-select" id="category_id" name="category_id" required>
+                        <option value="" disabled selected>-- กรุณาเลือก --</option>
+                        <?php if ($categories_result && $categories_result->num_rows > 0): ?>
+                            <?php while($cat = $categories_result->fetch_assoc()): ?>
+                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['title']) ?></option>
+                            <?php endwhile; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="price" class="form-label">ราคา</label>
+                    <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="stock" class="form-label">จำนวนคงเหลือ (สต็อก)</label>
+                    <input type="number" class="form-control" id="stock" name="stock" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">คำอธิบายสินค้า</label>
+                <textarea class="form-control" id="description" name="description" rows="5"></textarea>
+            </div>
             <div class="mb-3">
                 <label for="images" class="form-label">รูปภาพสินค้า (เลือกได้หลายรูป)</label>
                 <input class="form-control" type="file" id="images" name="images[]" multiple accept="image/*">
