@@ -86,9 +86,9 @@ body {
 /* ⭐️⭐️⭐️ แก้ไขตรงนี้ ⭐️⭐️⭐️ */
 .chart-area, .chart-pie {
     position: relative;
-    /* เราจะควบคุมความสูงผ่าน HTML โดยตรง ไม่ใช่ที่นี่ */
+    height: 100%; /* สั่งให้สูงเต็ม 100% ของกล่องที่มันอยู่ */
+    width: 100%;
 }
-
 
 /* --- Responsive Toggling --- */
 @media (max-width: 768px) {
@@ -114,10 +114,4 @@ body {
 }
 .dataTables_wrapper .page-link:hover {
     color: #224abe;
-}
-/* --- Fix Sidebar Stretch Issue --- */
-#wrapper {
-    align-items: flex-start; /* ป้องกัน sidebar ดึงความสูงจาก content */
-    height: 100vh;           /* ให้ wrapper สูงเท่าหน้าจอจริงเท่านั้น */
-    overflow-y: auto;        /* ถ้าเนื้อหายาวเกิน ให้ scroll แค่ฝั่ง content */
 }
