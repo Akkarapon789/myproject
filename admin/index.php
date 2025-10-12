@@ -125,7 +125,7 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
                 <h6 class="m-0 font-weight-bold text-primary">ภาพรวมยอดขายรายเดือน</h6>
             </div>
             <div class="card-body flex-grow-1 d-flex">
-                <div class="chart-area w-100">
+                <div class="chart-area w-100" style="height: 320px;">
                     <canvas id="salesChart"></canvas>
                 </div>
             </div>
@@ -133,7 +133,7 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
     </div>
     <div class="col-xl-4 col-lg-5">
         <div class="card shadow mb-4 d-flex flex-column h-100">
-            <div class="card-header py-3">
+            <div class="card-header py-3" style="height: 320px;">
                 <h6 class="m-0 font-weight-bold text-primary">5 หมวดหมู่ขายดี (ตามจำนวนชิ้น)</h6>
             </div>
             <div class="card-body flex-grow-1 d-flex flex-column">
