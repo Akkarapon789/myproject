@@ -17,6 +17,7 @@ $total_orders   = getSingleValue($conn, "SELECT COUNT(id) FROM orders");
 $total_products = getSingleValue($conn, "SELECT COUNT(id) FROM products");
 $total_users    = getSingleValue($conn, "SELECT COUNT(user_id) FROM `user`");
 
+
 // === 2. ดึงข้อมูลสำหรับกราฟ ===
 // กราฟยอดขาย 12 เดือนล่าสุด
 $sales_by_month_labels = [];
@@ -51,10 +52,12 @@ if ($result_cats) {
     }
 }
 
+
 // === 3. ดึงข้อมูล 5 ออเดอร์ล่าสุด ===
 $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders ORDER BY created_at DESC LIMIT 5");
 
 ?>
+
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">แดชบอร์ด</h1>
     <span class="d-none d-sm-inline-block text-muted" id="live-clock"></span>
@@ -117,20 +120,28 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
 
 <div class="row">
     <div class="col-xl-8 col-lg-7">
-        <div class="card shadow mb-4">
+        <div class="card shadow mb-4 h-100">
             <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">ภาพรวมยอดขายรายเดือน</h6></div>
-            <div class="card-body"><div class="chart-area"><canvas id="salesChart"></canvas></div></div>
+            <div class="card-body d-flex flex-column">
+                <div class="chart-area flex-grow-1">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
     <div class="col-xl-4 col-lg-5">
-        <div class="card shadow mb-4">
+        <div class="card shadow mb-4 h-100">
             <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">5 หมวดหมู่ขายดี (ตามจำนวนชิ้น)</h6></div>
-            <div class="card-body"><div class="chart-pie pt-4"><canvas id="categoryChart"></canvas></div></div>
+            <div class="card-body d-flex flex-column">
+                <div class="chart-pie flex-grow-1 pt-4">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="card shadow-sm mb-4">
+<div class="card shadow-sm mb-4 mt-4">
     <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">5 คำสั่งซื้อล่าสุด</h6></div>
     <div class="card-body">
         <div class="table-responsive">
@@ -144,14 +155,18 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while($order = $recent_orders->fetch_assoc()): ?>
-                    <tr>
-                        <td><a href="order_details.php?id=<?= $order['id'] ?>">#<?= $order['id'] ?></a></td>
-                        <td><?= htmlspecialchars($order['fullname']) ?></td>
-                        <td class="text-end">฿<?= number_format($order['total'], 2) ?></td>
-                        <td class="text-center"><span class="badge bg-<?= ($order['status'] == 'completed' ? 'success' : 'warning text-dark') ?>"><?= htmlspecialchars(ucfirst($order['status'])) ?></span></td>
-                    </tr>
-                    <?php endwhile; ?>
+                    <?php if ($recent_orders && $recent_orders->num_rows > 0): ?>
+                        <?php while($order = $recent_orders->fetch_assoc()): ?>
+                        <tr>
+                            <td><a href="order_details.php?id=<?= $order['id'] ?>">#<?= $order['id'] ?></a></td>
+                            <td><?= htmlspecialchars($order['fullname']) ?></td>
+                            <td class="text-end">฿<?= number_format($order['total'], 2) ?></td>
+                            <td class="text-center"><span class="badge bg-<?= ($order['status'] == 'completed' ? 'success' : 'warning text-dark') ?>"><?= htmlspecialchars(ucfirst($order['status'])) ?></span></td>
+                        </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr><td colspan="4" class="text-center text-muted">ยังไม่มีคำสั่งซื้อ</td></tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -162,7 +177,7 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
 
 <script>
 $(document).ready(function() {
-    // --- 🚀 ลูกเล่นที่ 1: Animated Counters ---
+    // --- Animated Counters ---
     $('[data-count]').each(function () {
         $(this).prop('Counter', 0).animate({
             Counter: $(this).data('count')
@@ -170,16 +185,16 @@ $(document).ready(function() {
             duration: 1500,
             easing: 'swing',
             step: function (now) {
-                if ($(this).data('count').toString().includes('.')) { // ถ้าเป็นเลขทศนิยม (ยอดขาย)
+                if ($(this).data('count').toString().includes('.')) {
                     $(this).text('฿' + parseFloat(now).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-                } else { // ถ้าเป็นเลขจำนวนเต็ม
+                } else {
                     $(this).text(Math.ceil(now).toLocaleString('en-US'));
                 }
             }
         });
     });
 
-    // --- ⏰ ลูกเล่นที่ 2: Live Clock ---
+    // --- Live Clock ---
     function updateClock() {
         const now = new Date();
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
@@ -188,7 +203,7 @@ $(document).ready(function() {
     updateClock();
     setInterval(updateClock, 1000);
 
-    // --- 📊 แก้ไขกราฟให้ทำงาน ---
+    // --- Charts ---
     // กราฟเส้น (ยอดขาย)
     new Chart(document.getElementById("salesChart"), {
         type: 'line',
@@ -219,7 +234,20 @@ $(document).ready(function() {
                 backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
             }],
         },
-        options: { maintainAspectRatio: false, cutout: '80%', plugins: { legend: { position: 'bottom' } } }
+        options: { 
+            maintainAspectRatio: false, 
+            cutout: '80%', 
+            plugins: { 
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: 'Prompt'
+                        }
+                    }
+                } 
+            } 
+        }
     });
 });
 </script>
