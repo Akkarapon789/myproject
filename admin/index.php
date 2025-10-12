@@ -1,5 +1,5 @@
 <?php
-// admin/index.php (Upgraded with Animations & Charts)
+// admin/index.php (Corrected Card Layout)
 session_start();
 include '../config/connectdb.php';
 include 'header.php';
@@ -123,7 +123,7 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
         <div class="card shadow mb-4 h-100">
             <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">ภาพรวมยอดขายรายเดือน</h6></div>
             <div class="card-body d-flex flex-column">
-                <div class="chart-area flex-grow-1">
+                <div class="chart-area">
                     <canvas id="salesChart"></canvas>
                 </div>
             </div>
@@ -133,7 +133,7 @@ $recent_orders = $conn->query("SELECT id, fullname, total, status FROM orders OR
         <div class="card shadow mb-4 h-100">
             <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">5 หมวดหมู่ขายดี (ตามจำนวนชิ้น)</h6></div>
             <div class="card-body d-flex flex-column">
-                <div class="chart-pie flex-grow-1 pt-4">
+                <div class="chart-pie pt-4">
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
@@ -204,7 +204,6 @@ $(document).ready(function() {
     setInterval(updateClock, 1000);
 
     // --- Charts ---
-    // กราฟเส้น (ยอดขาย)
     new Chart(document.getElementById("salesChart"), {
         type: 'line',
         data: {
@@ -224,7 +223,6 @@ $(document).ready(function() {
         }
     });
 
-    // กราฟวงกลม (หมวดหมู่)
     new Chart(document.getElementById("categoryChart"), {
         type: 'doughnut',
         data: {
@@ -240,11 +238,7 @@ $(document).ready(function() {
             plugins: { 
                 legend: { 
                     position: 'bottom',
-                    labels: {
-                        font: {
-                            family: 'Prompt'
-                        }
-                    }
+                    labels: { font: { family: 'Prompt' } }
                 } 
             } 
         }

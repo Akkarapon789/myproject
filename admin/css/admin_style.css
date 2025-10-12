@@ -6,8 +6,81 @@ body {
     background-color: #f8f9fa;
 }
 
-/* ... (โค้ดส่วนอื่นๆ เหมือนเดิม) ... */
+#wrapper {
+    display: flex;
+}
 
+/* --- Sidebar Styles --- */
+#sidebar-wrapper {
+    width: 250px;
+    min-height: 100vh;
+    background-color: #1f2937;
+    color: #d1d5db;
+    transition: margin .25s ease-out;
+    display: flex;
+    flex-direction: column;
+}
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -250px;
+}
+.sidebar-heading {
+    padding: 1rem 1.25rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-bottom: 1px solid #4b5563;
+    color: #ffffff;
+}
+.list-group-item {
+    background-color: transparent;
+    color: #d1d5db;
+    border: none;
+    padding: 0.9rem 1.25rem;
+    transition: all 0.2s ease-in-out;
+}
+.list-group-item.active,
+.list-group-item.active:focus {
+    background-color: #4e73df !important;
+    color: #ffffff;
+    font-weight: 600;
+}
+.list-group-item:hover:not(.active) {
+    background-color: #374151;
+    color: #ffffff;
+}
+.list-group-item i {
+    margin-right: 10px;
+}
+
+/* --- Page Content & Navbar Styles --- */
+#page-content-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+.navbar {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, .15) !important;
+}
+
+/* --- Card & Table Styles --- */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, .15) !important;
+}
+.table thead {
+    background-color: #4e73df;
+    color: white;
+}
+.table th {
+    font-weight: 600;
+}
+
+/* --- Dashboard Specific Styles --- */
+.border-left-primary {  border-left: 0.25rem solid #4e73df !important; }
+.border-left-success {  border-left: 0.25rem solid #1cc88a !important; }
+.border-left-info {     border-left: 0.25rem solid #36b9cc !important; }
+.border-left-warning {  border-left: 0.25rem solid #f6c23e !important; }
+.text-xs { font-size: 0.8rem; }
+.text-gray-800 { color: #5a5c69 !important; }
 .font-weight-bold { font-weight: 700 !important; }
 
 /* ⭐️⭐️⭐️ แก้ไขตรงนี้ ⭐️⭐️⭐️ */
@@ -18,4 +91,28 @@ body {
     flex-grow: 1; 
 }
 
-/* ... (โค้ด DataTables และ Responsive เหมือนเดิม) ... */
+/* --- Responsive Toggling --- */
+@media (max-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: -250px;
+    }
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: 0;
+    }
+}
+
+/* --- DataTables Custom Styles --- */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1rem;
+}
+.dataTables_wrapper .page-item.active .page-link {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+.dataTables_wrapper .page-link {
+    color: #4e73df;
+}
+.dataTables_wrapper .page-link:hover {
+    color: #224abe;
+}
