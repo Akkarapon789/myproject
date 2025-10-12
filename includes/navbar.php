@@ -27,7 +27,7 @@ if (!empty($_SESSION['cart'])) {
                 <input id="searchInput" class="form-control" type="text" placeholder="ค้นหาหนังสือ, ผู้แต่ง..." autocomplete="off">
                 <div id="searchResults" class="list-group position-absolute w-100 shadow-sm mt-1" style="z-index: 2000; display: none; max-height: 300px; overflow-y: auto;"></div>
             </div>
-            
+
             <ul class="navbar-nav ms-auto align-items-center">
                 <li class="nav-item">
                     <a class="nav-link" href="../pages/all_products.php">สินค้าทั้งหมด</a>
@@ -65,30 +65,3 @@ if (!empty($_SESSION['cart'])) {
         </div>
     </div>
 </nav>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(document).ready(function(){
-    $('#searchInput').on('keyup', function(){
-        let query = $(this).val().trim();
-        if(query.length < 2){ // เริ่มค้นหาเมื่อพิมพ์ 2 ตัวอักษรขึ้นไป
-            $('#searchResults').hide();
-            return;
-        }
-        $.ajax({
-            url: '../search/search_ajax.php', // ตรวจสอบ Path นี้
-            method: 'POST',
-            data: {query: query},
-            success: function(data){
-                $('#searchResults').html(data).show();
-            }
-        });
-    });
-    // คลิกข้างนอกเพื่อซ่อนผลการค้นหา
-    $(document).click(function(e){
-        if (!$(e.target).closest('#searchInput, #searchResults').length) {
-            $('#searchResults').hide();
-        }
-    });
-});
-</script>
