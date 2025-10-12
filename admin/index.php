@@ -1,5 +1,5 @@
 <?php
-// admin/index.php (Corrected Card Layout)
+// admin/index.php (Corrected Chart Layout)
 session_start();
 include '../config/connectdb.php';
 include 'header.php';
