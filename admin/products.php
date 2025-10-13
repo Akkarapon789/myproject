@@ -59,7 +59,7 @@ include 'footer.php'; // ⭐️ ต้องเรียก footer.php เพื
 
 <script>
 $(document).ready(function() {
-    // โค้ด DataTables เดิม (ไม่มีการแก้ไข)
+    // โค้ด DataTables เดิม ไม่ต้องแก้ไข
     $('#productsTable').DataTable({
         "order": [[ 0, "desc" ]],
         "language": {
@@ -72,26 +72,27 @@ $(document).ready(function() {
         }
     });
 
-    // เพิ่มโค้ดส่วนนี้เพื่อดักจับการคลิกปุ่มลบ
+    // === เพิ่มส่วนนี้เข้าไป ===
+    // สำหรับจัดการการคลิกปุ่มลบที่มี class="delete-btn"
     $('.delete-btn').on('click', function(e) {
-        e.preventDefault(); // หยุดการทำงานของลิงก์ทันที
-        const deleteUrl = $(this).attr('href'); // เก็บ URL ของปุ่มที่ถูกคลิก
+        e.preventDefault(); // หยุดการทำงานของลิงก์ปกติ
+        const deleteUrl = $(this).attr('href'); // ดึง URL ที่จะไป
 
         Swal.fire({
-            title: 'ยืนยันการลบ',
-            text: "คุณต้องการลบสินค้าชิ้นนี้ใช่หรือไม่?",
+            title: 'คุณแน่ใจหรือไม่?',
+            text: "คุณจะไม่สามารถกู้คืนข้อมูลสินค้านี้ได้!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
             confirmButtonText: 'ใช่, ลบเลย!',
             cancelButtonText: 'ยกเลิก'
         }).then((result) => {
             if (result.isConfirmed) {
-                // หากผู้ใช้กดยืนยัน ให้ไปที่ URL สำหรับลบ
+                // ถ้าผู้ใช้กดยืนยัน ให้ไปที่ URL สำหรับลบ
                 window.location.href = deleteUrl;
             }
-        });
+        })
     });
 });
 </script>
