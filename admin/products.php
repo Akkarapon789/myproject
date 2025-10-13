@@ -45,7 +45,7 @@ $result = $conn->query($sql);
                         <td class="text-center"><?= $row['stock']; ?></td>
                         <td class="text-center">
                             <a href="edit_product.php?id=<?= $row['id']; ?>" class="btn btn-sm btn-warning">แก้ไข</a>
-                            <a href="products.php?delete=<?= $row['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('ยืนยันการลบสินค้าชิ้นนี้?')">ลบ</a>
+                            <a href="delete_product.php?id=<?= $row['id']; ?>" class="btn btn-sm btn-danger delete-btn">ลบ</a>
                         </td>
                     </tr>
                 <?php endwhile; ?>
@@ -59,6 +59,7 @@ include 'footer.php'; // ⭐️ ต้องเรียก footer.php เพื
 
 <script>
 $(document).ready(function() {
+    // โค้ด DataTables เดิม (ไม่มีการแก้ไข)
     $('#productsTable').DataTable({
         "order": [[ 0, "desc" ]],
         "language": {
@@ -69,6 +70,28 @@ $(document).ready(function() {
             "zeroRecords": "ไม่พบข้อมูลที่ตรงกับการค้นหา",
             "paginate": { "previous": "ก่อนหน้า", "next": "ถัดไป" }
         }
+    });
+
+    // เพิ่มโค้ดส่วนนี้เพื่อดักจับการคลิกปุ่มลบ
+    $('.delete-btn').on('click', function(e) {
+        e.preventDefault(); // หยุดการทำงานของลิงก์ทันที
+        const deleteUrl = $(this).attr('href'); // เก็บ URL ของปุ่มที่ถูกคลิก
+
+        Swal.fire({
+            title: 'ยืนยันการลบ',
+            text: "คุณต้องการลบสินค้าชิ้นนี้ใช่หรือไม่?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'ใช่, ลบเลย!',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // หากผู้ใช้กดยืนยัน ให้ไปที่ URL สำหรับลบ
+                window.location.href = deleteUrl;
+            }
+        });
     });
 });
 </script>
