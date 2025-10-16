@@ -39,7 +39,7 @@
                             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <a class="dropdown-item" href="#">โปรไฟล์</a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#">ออกจากระบบ</a>
+                                <a class="dropdown-item" href="../auth/login.php">ออกจากระบบ</a>
                             </div>
                         </li>
                     </ul>
