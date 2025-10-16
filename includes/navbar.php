@@ -58,7 +58,7 @@ if (!empty($_SESSION['cart'])) {
                     <li class="nav-item ms-lg-2">
                         <a href="../auth/login.php" class="btn btn-outline-primary btn-sm">เข้าสู่ระบบ</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item ms-lg-2">
                         <a href="../auth/sign-up.php" class="btn btn-primary btn-sm">สมัครสมาชิก</a>
                     </li>
                 <?php endif; ?>
