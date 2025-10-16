@@ -125,7 +125,7 @@ h1, h2, h3, h4, h5, h6 {
 /* --- Footer & Category Grid Styles (เหมือนเดิม) --- */
 .footer-main { background-color: #212529; color: #ffffff; }
 .footer-main a { color: #adb5bd; text-decoration: none; transition: color 0.2s; }
-.footer-main a:hover { color: #fff; }
+.footer-main a:hover { color: #7a7a1f; }
 .category-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; text-align: center; }
 @media (max-width: 992px) { .category-grid { grid-template-columns: repeat(3, 1fr); gap: 2rem; } }
 @media (max-width: 576px) { .category-grid { grid-template-columns: repeat(2, 1fr); } }
