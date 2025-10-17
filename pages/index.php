@@ -35,7 +35,7 @@ $products = getAllProducts($conn, 8);
 
 <div class="container my-5">
     <section class="category-section mb-5 py-4">
-        <h2 class="text-center mb-4">สำรวจตามหมวดหมู่</h2>
+        <h2 class="text-center mb-4">หมวดหมู่หนังสือ</h2>
         <div class="category-grid">
             <?php if (!empty($categories)): ?>
                 <?php foreach ($categories as $cat): ?>
