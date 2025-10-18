@@ -75,7 +75,6 @@ include 'header.php';
 
             <div class="mb-3">
                 <label for="birthday" class="form-label">วันเดือนปีเกิด</label>
-                
                 <input type="date" class="form-control" id="birthday" name="birthday" value="<?= htmlspecialchars($user['birthday']) ?>">
             </div>
             <div class="mb-3">
