@@ -106,7 +106,6 @@ if (isset($_POST['submit'])) {
     $password  = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $address   = $_POST['address'];
     $phone     = $_POST['phone'];
-    $birthday  = $_POST['date'];
     
     // ตรวจสอบอีเมลเพื่อกำหนด role อัตโนมัติ
     if (str_ends_with($email, "@admin.gmail.com")) {
@@ -150,7 +149,7 @@ if (isset($_POST['submit'])) {
 
     // ถ้าไม่ซ้ำ → บันทึกข้อมูล
     $sql = "INSERT INTO user (firstname, lastname, email, password, address, phone, role)
-            VALUES ('$firstname','$lastname','$email','$password','$address','$birthday','$phone','$role')";
+            VALUES ('$firstname','$lastname','$email','$password','$address','$phone','$role')";
 
     if (mysqli_query($conn, $sql)) {
         echo "<script>
