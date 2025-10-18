@@ -12,11 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'];
     $phone = $_POST['phone'];
     $address = $_POST['address'];
-    $birthday = $_POST['date'];
+    $birthday = $_POST['birthday']; // <-- **แก้ไข 1**: เปลี่ยนจาก $_POST['date'] เป็น $_POST['birthday']
     $role = $_POST['role']; // รับค่า role
 
-    $stmt = $conn->prepare("UPDATE `user` SET firstname=?, lastname=?, email=?, phone=?, address=?, role=? WHERE user_id=?");
-    $stmt->bind_param("ssssssi", $firstname, $lastname, $email, $phone, $address,$birthday, $role, $id_to_edit);
+    // <-- **แก้ไข 2**: เพิ่ม `birthday` = ? ในคำสั่ง UPDATE
+    $stmt = $conn->prepare("UPDATE `user` SET firstname=?, lastname=?, email=?, phone=?, address=?, birthday=?, role=? WHERE user_id=?");
+    
+    // <-- **แก้ไข 3**: เปลี่ยน bind_param จาก "ssssssi" (7 ตัว) เป็น "sssssssi" (8 ตัว) ให้ตรงกับจำนวน ?
+    $stmt->bind_param("sssssssi", $firstname, $lastname, $email, $phone, $address, $birthday, $role, $id_to_edit);
 
     if ($stmt->execute()) {
         $_SESSION['success'] = "แก้ไขข้อมูลผู้ใช้สำเร็จ!";
@@ -69,9 +72,11 @@ include 'header.php';
                 <label for="address" class="form-label">ที่อยู่</label>
                 <textarea class="form-control" id="address" name="address" rows="3"><?= htmlspecialchars($user['address']) ?></textarea>
             </div>
+
             <div class="mb-3">
-                <label for="date" class="form-label">วันเดือนปีเกิด</label>
-                <textarea class="form-control" id="date" name="birthday" ><?= htmlspecialchars($user['date']) ?></textarea>
+                <label for="birthday" class="form-label">วันเดือนปีเกิด</label>
+                
+                <input type="date" class="form-control" id="birthday" name="birthday" value="<?= htmlspecialchars($user['birthday']) ?>">
             </div>
             <div class="mb-3">
                 <label for="role" class="form-label">สิทธิ์การใช้งาน</label>
