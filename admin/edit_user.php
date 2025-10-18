@@ -69,6 +69,10 @@ include 'header.php';
                 <textarea class="form-control" id="address" name="address" rows="3"><?= htmlspecialchars($user['address']) ?></textarea>
             </div>
             <div class="mb-3">
+                <label for="date" class="form-label">วันเดือนปีเกิด</label>
+                <textarea class="form-control" id="date" name="birthday" ><?= htmlspecialchars($user['date']) ?></textarea>
+            </div>
+            <div class="mb-3">
                 <label for="role" class="form-label">สิทธิ์การใช้งาน</label>
                 <select class="form-select" id="role" name="role">
                     <option value="user" <?= $user['role'] == 'user' ? 'selected' : '' ?>>User</option>
