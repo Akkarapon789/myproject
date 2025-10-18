@@ -9,12 +9,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'];
     $phone = $_POST['phone'];
     $address = $_POST['address'];
-    $birthday = $_POST['date'];
+    $birthday = $_POST['birthday']; // <-- **แก้ไข 1**: เปลี่ยนจาก $_POST['date']
     $role = $_POST['role'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // เข้ารหัสรหัสผ่าน
 
-    $stmt = $conn->prepare("INSERT INTO `user` (firstname, lastname, email, password, phone, address, role) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssss", $firstname, $lastname, $email, $password, $phone, $address,$birthday, $role);
+    // <-- **แก้ไข 2**: เพิ่ม `birthday` และ `?` ตัวที่ 7
+    $stmt = $conn->prepare("INSERT INTO `user` (firstname, lastname, email, password, phone, address, birthday, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    
+    // <-- **แก้ไข 3**: เปลี่ยน "sssssss" (7 ตัว) เป็น "ssssssss" (8 ตัว)
+    $stmt->bind_param("ssssssss", $firstname, $lastname, $email, $password, $phone, $address, $birthday, $role);
 
     if ($stmt->execute()) {
         $_SESSION['success'] = "เพิ่มผู้ใช้ใหม่สำเร็จ!";
@@ -60,9 +63,11 @@ include 'header.php';
                 <label for="address" class="form-label">ที่อยู่</label>
                 <textarea class="form-control" id="address" name="address" rows="3"></textarea>
             </div>
+
             <div class="mb-3">
-                <label for="date" class="form-label">วันเดือนปีเกิด</label>
-                <textarea class="form-control" id="date" name="birthday"></textarea>
+                <label for="birthday" class="form-label">วันเดือนปีเกิด</label>
+                
+                <input type="date" class="form-control" id="birthday" name="birthday">
             </div>
             <div class="mb-3">
                 <label for="role" class="form-label">สิทธิ์การใช้งาน</label>
