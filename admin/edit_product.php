@@ -1,5 +1,5 @@
 <?php
-// admin/edit_product.php (Corrected & Final Version)
+// admin/edit_product.php (Corrected for PHP 7.4)
 session_start();
 include '../config/connectdb.php';
 
@@ -31,26 +31,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_update_prod->execute();
         $stmt_update_prod->close();
 
+        // ===== START: ส่วนที่แก้ไข =====
         // จัดการการลบรูปภาพที่ถูกเลือก
         if (!empty($_POST['delete_images']) && is_array($_POST['delete_images'])) {
             $images_to_delete = $_POST['delete_images'];
             $placeholders = implode(',', array_fill(0, count($images_to_delete), '?'));
             $types = str_repeat('i', count($images_to_delete));
 
-            // ดึง URL ของไฟล์ที่จะลบก่อน
-            $result_urls = $conn->execute_query("SELECT image_url FROM product_images WHERE id IN ($placeholders)", $images_to_delete);
+            // 1. ดึง URL ของไฟล์ที่จะลบก่อน (ด้วย prepare, bind, execute)
+            // (execute_query() ใช้ได้กับ PHP 8.2+ เท่านั้น)
+            $stmt_select_urls = $conn->prepare("SELECT image_url FROM product_images WHERE id IN ($placeholders)");
+            $stmt_select_urls->bind_param($types, ...$images_to_delete);
+            $stmt_select_urls->execute();
+            $result_urls = $stmt_select_urls->get_result();
+
+            // 2. ลบไฟล์จริงออกจาก server
             while($row = $result_urls->fetch_assoc()) {
-                if (file_exists('../' . $row['image_url'])) {
+                if (!empty($row['image_url']) && file_exists('../' . $row['image_url'])) {
                     unlink('../' . $row['image_url']);
                 }
             }
+            $stmt_select_urls->close(); // ปิด statement ที่เปิดใหม่
             
-            // ลบข้อมูลออกจากฐานข้อมูล
+            // 3. ลบข้อมูลออกจากฐานข้อมูล
             $stmt_delete = $conn->prepare("DELETE FROM product_images WHERE id IN ($placeholders)");
             $stmt_delete->bind_param($types, ...$images_to_delete);
             $stmt_delete->execute();
             $stmt_delete->close();
         }
+        // ===== END: ส่วนที่แก้ไข =====
 
         // จัดการการอัปโหลดรูปภาพใหม่
         if (isset($_FILES['new_images']) && !empty($_FILES['new_images']['name'][0])) {
