@@ -30,7 +30,6 @@ $result = $conn->query("SELECT * FROM `user` ORDER BY user_id DESC");
                     <th>ID</th>
                     <th>ชื่อ-นามสกุล</th>
                     <th>Email</th>
-                    <th>วันเดือนปีเกิด</th>>
                     <th>สิทธิ์</th>
                     <th class="text-center">จัดการ</th>
                 </tr>
