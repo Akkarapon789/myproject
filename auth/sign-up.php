@@ -76,10 +76,10 @@ if (!function_exists('str_ends_with')) {
             </div>
         </div>
         <label>
-            <input type="checkbox" id="subscribe" name="subscribe" />
+            <input type="checkbox" id="subscribe" name="subscribe" require />
             ยอมรับเงื่อนไขและข้อตกลงของระบบนี้
         </label>
-        
+
         <button type="submit" name="submit" class="btn btn-primary w-100 mb-2">สมัครสมาชิก</button>
         <button type="reset" name="reset" class="btn btn-outline-secondary w-100">ล้างข้อมูล</button>
         <div class="text-center mt-3">
