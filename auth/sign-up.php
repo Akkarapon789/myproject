@@ -76,7 +76,7 @@ if (!function_exists('str_ends_with')) {
             </div>
         </div>
         <label>
-            <input type="checkbox" id="subscribe" name="subscribe" require />
+            <input type="checkbox" id="subscribe" name="subscribe" required />
             ยอมรับเงื่อนไขและข้อตกลงของระบบนี้
         </label>
 
