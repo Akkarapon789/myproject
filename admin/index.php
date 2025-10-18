@@ -210,7 +210,7 @@ $(document).ready(function() {
     // --- Charts ---
     <?php if (!empty($sales_by_month_data)): ?>
     new Chart(document.getElementById("salesChart"), {
-        type: 'Bar',
+        type: 'line',
         data: {
             labels: <?= json_encode($sales_by_month_labels) ?>,
             datasets: [{
