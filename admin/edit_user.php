@@ -12,10 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'];
     $phone = $_POST['phone'];
     $address = $_POST['address'];
+    $birthday = $_POST['date'];
     $role = $_POST['role']; // รับค่า role
 
     $stmt = $conn->prepare("UPDATE `user` SET firstname=?, lastname=?, email=?, phone=?, address=?, role=? WHERE user_id=?");
-    $stmt->bind_param("ssssssi", $firstname, $lastname, $email, $phone, $address, $role, $id_to_edit);
+    $stmt->bind_param("ssssssi", $firstname, $lastname, $email, $phone, $address,$birthday, $role, $id_to_edit);
 
     if ($stmt->execute()) {
         $_SESSION['success'] = "แก้ไขข้อมูลผู้ใช้สำเร็จ!";

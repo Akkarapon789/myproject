@@ -9,11 +9,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'];
     $phone = $_POST['phone'];
     $address = $_POST['address'];
+    $birthday = $_POST['date'];
     $role = $_POST['role'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // เข้ารหัสรหัสผ่าน
 
     $stmt = $conn->prepare("INSERT INTO `user` (firstname, lastname, email, password, phone, address, role) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssss", $firstname, $lastname, $email, $password, $phone, $address, $role);
+    $stmt->bind_param("sssssss", $firstname, $lastname, $email, $password, $phone, $address,$birthday, $role);
 
     if ($stmt->execute()) {
         $_SESSION['success'] = "เพิ่มผู้ใช้ใหม่สำเร็จ!";
@@ -58,6 +59,10 @@ include 'header.php';
             <div class="mb-3">
                 <label for="address" class="form-label">ที่อยู่</label>
                 <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="date" class="form-label">วันเดือนปีเกิด</label>
+                <textarea class="form-control" id="date" name="birthday"></textarea>
             </div>
             <div class="mb-3">
                 <label for="role" class="form-label">สิทธิ์การใช้งาน</label>
