@@ -75,6 +75,12 @@ if (!function_exists('str_ends_with')) {
             <input type="text" name="phone" class="form-control" required>
             </div>
         </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+            <label class="form-label">วันเดือนปีเกิด</label>
+            <input type="date" name="birthday" class="form-control" required>
+            </div>
+        </div>
         <label>
             <input type="checkbox" id="subscribe" name="subscribe" required />
             ยอมรับเงื่อนไขและข้อตกลงของระบบนี้
